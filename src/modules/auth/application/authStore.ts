@@ -5,11 +5,16 @@ import { createStore, useStore } from "zustand";
 import { getUser, loginUser } from "../infrastructure";
 import { ICredentials } from "../infrastructure/loginUser";
 import { IUser } from "../types";
+import { auth } from "../infrastructure/firebaseConfig";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
 
 const AUTH_KEY = "fake_store_is_authenticated";
 
-// could be also https://www.npmjs.com/package/zustand-persist lib for advanced use cases
-const isLoggedIn = () => localStorage.getItem(AUTH_KEY) === "true";
+const isLoggedIn = () => !!auth.currentUser;
 
 interface IStore {
   isAuthenticated: boolean;
@@ -36,26 +41,20 @@ export const useAuthStore = <T>(selector: (state: IStore) => T) => {
 
 export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
   return createStore<IStore>((set) => {
-    if (isLoggedIn()) {
-      set({ state: "loading" });
-
-      getUser()
-        .then((user) => {
-          set({
-            user,
-            isAuthenticated: true,
-            state: "finished",
-          });
-        })
-        .catch(() => {
-          set({
-            isError: true,
-            state: "finished",
-          });
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        set({
+          user: user as unknown as IUser,
+          isAuthenticated: true,
+          state: "finished",
         });
-    } else {
-      set({ state: "finished" });
-    }
+      } else {
+        set({
+          isAuthenticated: false,
+          state: "finished",
+        });
+      }
+    });
 
     return {
       isAuthenticated: false,
@@ -67,19 +66,19 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
         set({ state: "loading" });
 
         try {
-          await loginUser(credentials);
-          const user = await getUser();
-
-          localStorage.setItem(AUTH_KEY, "true");
+          await signInWithEmailAndPassword(
+            auth,
+            credentials.email,
+            credentials.password
+          );
+          const user = auth.currentUser;
 
           set({
             isAuthenticated: true,
             state: "finished",
-            user,
+            user: user as unknown as IUser,
           });
         } catch (e) {
-          localStorage.setItem(AUTH_KEY, "false");
-
           set({
             isAuthenticated: false,
             state: "finished",
@@ -90,18 +89,22 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
         }
       },
       logout: async () => {
-        set({
-          state: "loading",
-        });
+        set({ state: "loading" });
 
-        return new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
-          localStorage.setItem(AUTH_KEY, "false");
+        try {
+          await signOut(auth);
           set({
             isAuthenticated: false,
             state: "finished",
             user: undefined,
           });
-        });
+        } catch (e) {
+          set({
+            state: "finished",
+          });
+
+          throw e;
+        }
       },
     };
   });

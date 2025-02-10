@@ -11,46 +11,47 @@ export const useNavItems = () => {
 // todo: translations
 export const NAV_ITEMS: Array<INavItem> = [
   {
-    label: "Inspiration",
+    label: "Products",
     children: [
       {
-        label: "Explore Choc UI",
-        subLabel: "Set of prebuilt components",
-        href: "https://choc-ui.com/",
+        label: "Manage your products",
+        subLabel: "Create, edit, delete your products",
+        href: "/products",
       },
       {
-        label: "Explore Chakra UI Templates",
-        subLabel: "Set of opensource prebuilt components",
-        href: "https://chakra-templates.dev/",
+        label: "Entries",
+        subLabel: "Add product entries",
+        href: "/entries",
       },
       {
-        label: "Tailwind UI",
-        subLabel: "Prebuilt e-commerce components",
-        href: "https://tailwindui.com/components#product-ecommerce",
+        label: "Dispatches",
+        subLabel: "Add product dispatches",
+        href: "/dispatches",
       },
     ],
   },
   {
-    label: "Demo Providers",
+    label: "Stock",
     children: [
       {
-        label: "Vite.js",
-        subLabel: "Next generation Frontend Tooling",
-        href: "https://vitejs.dev/",
+        label: "Products inventory",
+        subLabel: "Check products stock / inventory",
+        href: "/stock",
       },
       {
-        label: "Fake Store API",
-        subLabel: "Free rest API for e-commerce",
-        href: "https://fakestoreapi.com/",
+        label: "Products per lot",
+        subLabel: "Check products location per lot",
+        href: "/lot",
+      },
+      {
+        label: "Move products",
+        subLabel: "Rearrange products location",
+        href: "/stock/move",
       },
     ],
   },
   {
-    label: "Our Products",
-    href: "/products",
-  },
-  {
-    label: "Cart",
-    href: "/cart/1",
+    label: "Labeling",
+    href: "/labeling",
   },
 ];

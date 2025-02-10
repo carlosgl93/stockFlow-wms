@@ -24,7 +24,7 @@ export const EmptyForm: Story = {};
 
 export const WithCredentialsFilledByDefault: Story = {
   args: {
-    initialUsername: "johndoe",
+    initialEmail: "johndoe",
     initialPassword: "supersecret",
   },
 };
@@ -34,7 +34,7 @@ export const SigningIn: Story = {
     const canvas = within(canvasElement);
 
     await step("Enter credentials", async () => {
-      await userEvent.type(canvas.getByLabelText(/Username/), "johndoe");
+      await userEvent.type(canvas.getByLabelText(/Email/), "johndoe");
       await userEvent.type(canvas.getByLabelText(/Password/), "supersecret");
     });
 

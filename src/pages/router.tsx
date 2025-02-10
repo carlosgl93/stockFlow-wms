@@ -7,6 +7,10 @@ import { cartPageLoader } from "./Cart/loader";
 import { homePageLoader } from "./Home/loader";
 import { productPageLoader } from "./Product/loader";
 import { productsPageLoader } from "./Products/loader";
+import { entriesPageLoader } from "./Entries/loader";
+import { stockPageLoader } from "./Stock/loader";
+import { dispatchesPageLoader } from "./Dispatches/loader";
+import { lotPageLoader } from "./Lot/loader";
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +44,36 @@ export const router = createBrowserRouter([
         path: "/cart/:cartId",
         loader: cartPageLoader,
         lazy: () => import("./Cart"),
+      },
+      {
+        path: "/entries",
+        loader: dispatchesPageLoader,
+        lazy: () => import("./Entries"),
+      },
+      {
+        path: "/dispatches",
+        loader: entriesPageLoader,
+
+        lazy: () => import("./Dispatches"),
+      },
+      {
+        path: "/stock",
+        loader: stockPageLoader,
+
+        lazy: () => import("./Stock"),
+      },
+      {
+        path: "/lot",
+        loader: lotPageLoader,
+        lazy: () => import("./Lot"),
+      },
+      {
+        path: "/move",
+        lazy: () => import("./Move"),
+      },
+      {
+        path: "/labeling",
+        lazy: () => import("./Labeling"),
       },
     ],
   },
