@@ -25,3 +25,4 @@ storybook-static
 .env.*
 !.env.template
 .pnpm-store
+.firebase
