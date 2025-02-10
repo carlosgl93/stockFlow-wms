@@ -1,7 +1,7 @@
 import { httpService } from "utils";
 
 export interface ICredentials {
-  username: string;
+  email: string;
   password: string;
 }
 

@@ -21,14 +21,14 @@ import { useAuthStore } from "../application";
 import { useSignInNotifications } from "./useSignInNotifications";
 
 interface IProps {
-  initialUsername?: string;
+  initialEmail?: string;
   initialPassword?: string;
 }
 
-export const SignInForm = ({ initialUsername, initialPassword }: IProps) => {
+export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
   const secondaryColor = useSecondaryTextColor();
 
-  const [username, setUsername] = useState(initialUsername);
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
 
   const [notifySuccess, notifyFailure] = useSignInNotifications();
@@ -58,21 +58,21 @@ export const SignInForm = ({ initialUsername, initialPassword }: IProps) => {
           onSubmit={(e) => {
             e.preventDefault();
 
-            if (!username || !password) {
+            if (!email || !password) {
               return;
             }
 
-            login({ username, password })
+            login({ email, password })
               .then(() => notifySuccess())
               .catch(() => notifyFailure());
           }}
         >
           <TextInput
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.currentTarget.value)}
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.currentTarget.value)}
           >
-            {t("Username")}
+            {t("Email")}
           </TextInput>
           <TextInput
             id="password"

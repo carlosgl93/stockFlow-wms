@@ -15,7 +15,17 @@ import {
 } from "@chakra-ui/react";
 import { useSecondaryTextColor } from "theme";
 
-const PricingSection = () => {
+interface IPlan {
+  name: string;
+  price: string;
+  features: string[];
+}
+
+interface IPricingSectionProps {
+  plans: IPlan[];
+}
+
+const PricingSection = ({ plans }: IPricingSectionProps) => {
   const sectionBg = useColorModeValue("gray.50", "gray.700");
   const textColor = useSecondaryTextColor();
 
@@ -48,56 +58,18 @@ const PricingSection = () => {
         spacing={10}
         py={10}
       >
-        <PriceWrapper>
-          <Box py={4} px={12}>
-            <Text fontWeight="500" fontSize="2xl">
-              Hobby
-            </Text>
-            <HStack justifyContent="center">
-              <Text fontSize="3xl" fontWeight="600">
-                $
-              </Text>
-              <Text fontSize="5xl" fontWeight="900">
-                79
-              </Text>
-              <Text fontSize="3xl" color="gray.500">
-                /month
-              </Text>
-            </HStack>
-          </Box>
-          <VStack bg={sectionBg} py={4} borderBottomRadius={"xl"}>
-            <List spacing={3} textAlign="start" px={12}>
-              <ListItem>
-                <CheckIcon /> unlimited build minutes
-              </ListItem>
-              <ListItem>
-                <CheckIcon /> Lorem, ipsum dolor.
-              </ListItem>
-              <ListItem>
-                <CheckIcon /> 5TB Lorem, ipsum dolor.
-              </ListItem>
-            </List>
-            <Box w="80%" pt={7}>
-              <Button w="full" colorScheme="orange" variant="outline">
-                Start trial
-              </Button>
-            </Box>
-          </VStack>
-        </PriceWrapper>
-
-        <PriceWrapper>
-          <Box position="relative">
-            <MostPopularBadge />
+        {plans.map((plan) => (
+          <PriceWrapper key={plan.name}>
             <Box py={4} px={12}>
               <Text fontWeight="500" fontSize="2xl">
-                Growth
+                {plan.name}
               </Text>
               <HStack justifyContent="center">
                 <Text fontSize="3xl" fontWeight="600">
                   $
                 </Text>
                 <Text fontSize="5xl" fontWeight="900">
-                  149
+                  {plan.price}
                 </Text>
                 <Text fontSize="3xl" color="gray.500">
                   /month
@@ -106,66 +78,20 @@ const PricingSection = () => {
             </Box>
             <VStack bg={sectionBg} py={4} borderBottomRadius={"xl"}>
               <List spacing={3} textAlign="start" px={12}>
-                <ListItem>
-                  <CheckIcon /> unlimited build minutes
-                </ListItem>
-                <ListItem>
-                  <CheckIcon /> Lorem, ipsum dolor.
-                </ListItem>
-                <ListItem>
-                  <CheckIcon /> 5TB Lorem, ipsum dolor.
-                </ListItem>
-                <ListItem>
-                  <CheckIcon /> 5TB Lorem, ipsum dolor.
-                </ListItem>
-                <ListItem>
-                  <CheckIcon /> 5TB Lorem, ipsum dolor.
-                </ListItem>
+                {plan.features.map((feature, index) => (
+                  <ListItem key={index}>
+                    <CheckIcon /> {feature}
+                  </ListItem>
+                ))}
               </List>
               <Box w="80%" pt={7}>
-                <Button w="full" colorScheme="orange">
+                <Button w="full" colorScheme="orange" variant="outline">
                   Start trial
                 </Button>
               </Box>
             </VStack>
-          </Box>
-        </PriceWrapper>
-        <PriceWrapper>
-          <Box py={4} px={12}>
-            <Text fontWeight="500" fontSize="2xl">
-              Scale
-            </Text>
-            <HStack justifyContent="center">
-              <Text fontSize="3xl" fontWeight="600">
-                $
-              </Text>
-              <Text fontSize="5xl" fontWeight="900">
-                349
-              </Text>
-              <Text fontSize="3xl" color="gray.500">
-                /month
-              </Text>
-            </HStack>
-          </Box>
-          <VStack bg={sectionBg} py={4} borderBottomRadius="xl">
-            <List spacing={3} textAlign="start" px={12}>
-              <ListItem>
-                <CheckIcon /> unlimited build minutes
-              </ListItem>
-              <ListItem>
-                <CheckIcon /> Lorem, ipsum dolor.
-              </ListItem>
-              <ListItem>
-                <CheckIcon /> 5TB Lorem, ipsum dolor.
-              </ListItem>
-            </List>
-            <Box w="80%" pt={7}>
-              <Button w="full" colorScheme="orange" variant="outline">
-                Start trial
-              </Button>
-            </Box>
-          </VStack>
-        </PriceWrapper>
+          </PriceWrapper>
+        ))}
       </Stack>
     </Box>
   );

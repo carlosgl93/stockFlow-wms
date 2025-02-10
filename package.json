@@ -13,7 +13,8 @@
     "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
     "test-storybook": "pnpm exec test-storybook --watch",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "emulators": "firebase emulators:start"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -22,6 +23,7 @@
     "@emotion/styled": "^11.13.0",
     "@fontsource/inter": "^4.5.15",
     "@tanstack/react-query": "^4.36.1",
+    "firebase": "^11.3.0",
     "framer-motion": "^9.1.7",
     "intl-messageformat": "^10.5.14",
     "ky": "^0.33.3",

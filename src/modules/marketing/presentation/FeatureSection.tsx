@@ -15,7 +15,16 @@ import {
 } from "@chakra-ui/react";
 import { useBrandColor, useSecondaryTextColor } from "theme";
 
-const FeatureSection = () => {
+interface IFeature {
+  title: string;
+  description: string;
+}
+
+interface IFeatureSectionProps {
+  features: IFeature[];
+}
+
+const FeatureSection = ({ features }: IFeatureSectionProps) => {
   const brandColor = useBrandColor();
   const textColor = useSecondaryTextColor();
 
@@ -92,30 +101,11 @@ const FeatureSection = () => {
                 md: 10,
               }}
             >
-              <Feature title="Invite team members">
-                Improve your conversion rates by monitoring exactly what’s going
-                on while your customers are in trial.
-              </Feature>
-              <Feature title="Unify your payments stack">
-                Manage all your online and offline sales in one place with a
-                single integration, simplifying reporting and reconciliation.
-              </Feature>
-              <Feature title="Own your in-store experience">
-                Provide a seamless customer experience across channels, like
-                reserving online and picking up in store.
-              </Feature>
-              <Feature title="Grow your platform’s revenue">
-                Add in-person payments to your platform or marketplace. Using
-                Terminal with Connect.
-              </Feature>
-              <Feature title="Clear overview for efficient tracking">
-                Handle your subscriptions and transactions efficiently with the
-                clear overview in Dashboard. Fea
-              </Feature>
-              <Feature title="Decide how you integrate Payments">
-                Love to code? Decide how you integrate Payments and build
-                advanced and reliable products yourself from scratch.
-              </Feature>
+              {features.map((feature, index) => (
+                <Feature key={index} title={feature.title}>
+                  {feature.description}
+                </Feature>
+              ))}
             </Stack>
           </GridItem>
         </SimpleGrid>

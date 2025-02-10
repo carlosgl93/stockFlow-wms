@@ -13,10 +13,12 @@ import {
 import { useBrandColor, useSecondaryTextColor } from "theme";
 
 interface IProps {
-  productNumber: number;
+  title: string;
+  subtitle: string;
+  description: string;
 }
 
-const HeroSection = ({ productNumber }: IProps) => {
+const HeroSection = ({ title, subtitle, description }: IProps) => {
   const brandColor = useBrandColor();
   const textColor = useSecondaryTextColor();
 
@@ -33,15 +35,13 @@ const HeroSection = ({ productNumber }: IProps) => {
           fontSize={{ base: "3xl", sm: "4xl", md: "6xl", lg: "7xl" }}
           lineHeight={"110%"}
         >
-          Make money from <br />
-          <Text as="span" color={brandColor}>
-            your products
-          </Text>
+          {title}
         </Heading>
         <Text fontSize={{ base: "md", md: "lg", lg: "xl" }} color={textColor}>
-          We are a brand new e-commerce service with a lot of potential to
-          growth. At this point, we have about {productNumber} products in our
-          store and plenty of trusted clients that will soon extend their offer.
+          {subtitle}
+        </Text>
+        <Text fontSize={{ base: "md", md: "lg", lg: "xl" }} color={textColor}>
+          {description}
         </Text>
         <VStack
           spacing={3}
