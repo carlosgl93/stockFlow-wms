@@ -13,7 +13,6 @@ import {
 } from "@chakra-ui/react";
 
 import { Link, useNavigate } from "shared/Router";
-import { useNotImplementedYetToast } from "shared/Toast";
 
 import { useAuthStore } from "modules/auth/application";
 
@@ -21,6 +20,8 @@ import { ToggleModeButton } from "../ToggleModeButton";
 import { DesktopNav } from "./DesktopNav";
 import { LoaderBar } from "./LoaderBar";
 import { MobileNav } from "./MobileNav";
+import LocaleSelector from "../LocaleSelector";
+import { t } from "utils";
 
 export const Navbar = () => {
   const { isOpen, onToggle } = useDisclosure();
@@ -66,6 +67,7 @@ export const Navbar = () => {
           </Flex>
         </Flex>
         <HStack direction={"row"} spacing={4}>
+          <LocaleSelector />
           <SignInButton />
           <SignUpButton />
           <LogoutButton />
@@ -89,13 +91,13 @@ const SignInButton = () => {
 
   return (
     <Button fontWeight={400} variant="link" as={Link} to="/sign-in">
-      Sign In
+      {t("Sign In")}
     </Button>
   );
 };
 
 const SignUpButton = () => {
-  const notImplemented = useNotImplementedYetToast();
+  // const notImplemented = useNotImplementedYetToast();
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
 
   if (isAuthenticated) {
@@ -104,11 +106,12 @@ const SignUpButton = () => {
 
   return (
     <Button
+      as={Link}
+      to="/sign-up"
       display={{ base: "none", md: "inline-flex" }}
       colorScheme="orange"
-      onClick={notImplemented}
     >
-      Sign Up
+      {t("Sign Up")}
     </Button>
   );
 };

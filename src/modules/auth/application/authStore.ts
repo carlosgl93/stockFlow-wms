@@ -1,16 +1,16 @@
 import { createContext, useContext } from "react";
-
 import { createStore, useStore } from "zustand";
-
-import { getUser, loginUser } from "../infrastructure";
 import { ICredentials } from "../infrastructure/loginUser";
 import { IUser } from "../types";
-import { auth } from "../infrastructure/firebaseConfig";
+import { auth, db } from "../infrastructure/firebaseConfig";
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { Logger } from "utils/logger";
 
 const AUTH_KEY = "fake_store_is_authenticated";
 
@@ -23,6 +23,7 @@ interface IStore {
   user: IUser;
   login: (credentials: ICredentials) => Promise<void>;
   logout: () => Promise<void>;
+  signup: (credentials: ICredentials & { tenant: string }) => Promise<void>;
 }
 
 export type AuthStore = ReturnType<typeof initializeAuthStore>;
@@ -101,6 +102,41 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
         } catch (e) {
           set({
             state: "finished",
+          });
+
+          throw e;
+        }
+      },
+      signup: async (credentials: ICredentials & { tenant: string }) => {
+        set({ state: "loading" });
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            credentials.email,
+            credentials.password
+          );
+          const user = userCredential.user;
+
+          // Store tenant information in Firestore
+          await setDoc(
+            doc(db, "tenants", credentials.tenant, "users", user.uid),
+            {
+              email: credentials.email,
+              tenant: credentials.tenant,
+            }
+          );
+
+          set({
+            isAuthenticated: true,
+            state: "finished",
+            user: user as unknown as IUser,
+          });
+        } catch (e) {
+          set({
+            isAuthenticated: false,
+            state: "finished",
+            user: undefined,
           });
 
           throw e;
