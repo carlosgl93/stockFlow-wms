@@ -31,6 +31,10 @@ export const router = createBrowserRouter([
         lazy: () => import("./SignIn"),
       },
       {
+        path: "/sign-up",
+        lazy: () => import("./SignUp"),
+      },
+      {
         path: "/products",
         loader: productsPageLoader,
         lazy: () => import("./Products"),

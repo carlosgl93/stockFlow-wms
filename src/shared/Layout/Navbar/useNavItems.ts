@@ -8,7 +8,6 @@ export const useNavItems = () => {
   return isAuthenticated ? NAV_ITEMS : NAV_ITEMS.slice(0, NAV_ITEMS.length - 1);
 };
 
-// todo: translations
 export const NAV_ITEMS: Array<INavItem> = [
   {
     label: "Products",

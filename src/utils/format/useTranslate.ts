@@ -1,8 +1,8 @@
+import { useLocale } from "./LocaleProvider";
 import IntlMessageFormat, {
   PrimitiveType,
   FormatXMLElementFn,
 } from "intl-messageformat";
-import { useLocale } from "./LocaleProvider";
 import { en, es } from "./localeDicts";
 
 type Messages = {
@@ -22,10 +22,15 @@ type Format<T> =
     >
   | undefined;
 
-export function t<T = void>(message: string, values?: Format<T>) {
+export const useTranslate = () => {
   const { locale } = useLocale();
-  const translatedMessage = messages[locale][message] || message;
-  return new IntlMessageFormat(translatedMessage, locale).format(
-    values
-  ) as string;
-}
+
+  const t = <T = void>(message: string, values?: Format<T>) => {
+    const translatedMessage = messages[locale][message] || message;
+    return new IntlMessageFormat(translatedMessage, locale).format(
+      values
+    ) as string;
+  };
+
+  return { t };
+};

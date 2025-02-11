@@ -1,0 +1,17 @@
+export const navItems = {
+  Products: "Products",
+  "Manage your products": "Manage your products",
+  "Create, edit, delete your products": "Create, edit, delete your products",
+  Entries: "Entries",
+  "Add product entries": "Add product entries",
+  Dispatches: "Dispatches",
+  "Add product dispatches": "Add product dispatches",
+  Stock: "Stock",
+  "Products inventory": "Products inventory",
+  "Check products stock / inventory": "Check products stock / inventory",
+  "Products per lot": "Products per lot",
+  "Check products location per lot": "Check products location per lot",
+  "Move products": "Move products",
+  "Rearrange products location": "Rearrange products location",
+  Labeling: "Labeling",
+};

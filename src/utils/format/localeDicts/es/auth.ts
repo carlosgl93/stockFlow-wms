@@ -1,0 +1,20 @@
+export const auth = {
+  "Sign in to your account": "Inicia sesión en tu cuenta",
+  "to enjoy all of our cool {link} ✌️":
+    "para disfrutar de todas nuestras {link} ✌️",
+  features: "características",
+  Email: "Correo electrónico",
+  Password: "Contraseña",
+  "Remember me": "Recuérdame",
+  "Forgot password?": "¿Olvidaste tu contraseña?",
+  "Sign in": "Iniciar sesión",
+  "Sign In": "Iniciar sesión",
+  "Logged in successfully.": "Inicio de sesión exitoso.",
+  "Sign up for an account": "Regístra tu cuenta",
+  "Confirm Password": "Confirmar Contraseña",
+  "Sign up": "Regístrate",
+  "Account created successfully.": "Cuenta creada exitosamente.",
+  "Sign Up": "Registrarse",
+  Logout: "Cerrar sesión",
+  "Company name": "Empresa",
+};

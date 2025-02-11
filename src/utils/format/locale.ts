@@ -11,6 +11,11 @@ const Locale = {
     dateFormat: "d MMMM YYYY",
     dateTimeFormat: "d MMMM YYYY h:mm",
   },
+  es: {
+    defaultCurrency: "CLP",
+    dateFormat: "D MMMM YYYY",
+    dateTimeFormat: "D MMMM YYYY h:mm",
+  },
 };
 
 export const getLocale = (value = locale) => {
@@ -19,6 +24,8 @@ export const getLocale = (value = locale) => {
       return Locale["en"];
     case "pl":
       return Locale["pl"];
+    case "es":
+      return Locale["es"];
     default:
       return Locale["en"];
   }

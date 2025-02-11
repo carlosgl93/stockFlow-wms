@@ -17,6 +17,7 @@ import { Link, useLocation } from "shared/Router";
 
 import { INavItem } from "./INavItem";
 import { useNavItems } from "./useNavItems";
+import { t } from "utils";
 
 export const DesktopNav = () => {
   const { pathname } = useLocation();
@@ -42,7 +43,7 @@ export const DesktopNav = () => {
                     color: brandColor,
                   }}
                 >
-                  {navItem.label}
+                  {t(navItem.label)}
                 </ChLink>
               ) : (
                 <ChLink
@@ -53,7 +54,7 @@ export const DesktopNav = () => {
                     color: brandColor,
                   }}
                 >
-                  {navItem.label}
+                  {t(navItem.label)}
                 </ChLink>
               )}
             </PopoverTrigger>
@@ -101,9 +102,9 @@ const DesktopSubNav = ({ label, href, subLabel }: INavItem) => {
             _groupHover={{ color: brandColor }}
             fontWeight="bold"
           >
-            {label}
+            {t(label)}
           </Text>
-          <Text fontSize={"sm"}>{subLabel}</Text>
+          {subLabel && <Text fontSize={"sm"}>{t(subLabel)}</Text>}
         </Box>
         <Flex
           transition="all .3s ease"
