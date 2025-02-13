@@ -17,7 +17,7 @@ import { Link, useLocation } from "shared/Router";
 
 import { INavItem } from "./INavItem";
 import { useNavItems } from "./useNavItems";
-import { t } from "utils";
+import { useTranslate } from "utils";
 
 export const DesktopNav = () => {
   const { pathname } = useLocation();
@@ -26,63 +26,85 @@ export const DesktopNav = () => {
   const linkColor = useColorModeValue("gray.600", "gray.200");
   const popoverContentBgColor = useColorModeValue("white", "gray.800");
   const brandColor = useBrandColor();
+  const { t } = useTranslate();
 
   return (
-    <Stack direction="row" spacing={4}>
-      {navItems.map((navItem) => (
-        <Box key={navItem.label}>
-          <Popover trigger="hover" placement="bottom-start">
-            <PopoverTrigger>
-              {navItem.href ? (
-                <ChLink
-                  as={Link}
-                  p={2}
-                  to={navItem.href}
-                  color={pathname === navItem.href ? brandColor : linkColor}
-                  _hover={{
-                    color: brandColor,
-                  }}
-                >
-                  {t(navItem.label)}
-                </ChLink>
-              ) : (
-                <ChLink
-                  p={2}
-                  href={navItem.href}
-                  color={pathname === navItem.href ? brandColor : linkColor}
-                  _hover={{
-                    color: brandColor,
-                  }}
-                >
-                  {t(navItem.label)}
-                </ChLink>
-              )}
-            </PopoverTrigger>
-            {navItem.children && (
-              <PopoverContent
-                border={0}
-                boxShadow={"xl"}
-                bg={popoverContentBgColor}
-                p={4}
-                rounded={"xl"}
-                minW={"sm"}
-              >
-                <Stack>
-                  {navItem.children.map((child) => (
-                    <DesktopSubNav key={child.label} {...child} />
-                  ))}
-                </Stack>
-              </PopoverContent>
-            )}
-          </Popover>
-        </Box>
-      ))}
-    </Stack>
+    <Box maxW={"90vw"}>
+      <Stack direction="row" spacing={4}>
+        {navItems.map((navItem) => (
+          <Box key={navItem.label}>
+            <Popover trigger="hover" placement="bottom-start">
+              <PopoverTrigger>
+                {navItem.href ? (
+                  <ChLink
+                    as={Link}
+                    p={2}
+                    to={navItem.href}
+                    color={pathname === navItem.href ? brandColor : linkColor}
+                    _hover={{
+                      color: brandColor,
+                    }}
+                  >
+                    {t(navItem.label)}
+                  </ChLink>
+                ) : (
+                  <ChLink
+                    p={2}
+                    href={navItem.href}
+                    color={pathname === navItem.href ? brandColor : linkColor}
+                    _hover={{
+                      color: brandColor,
+                    }}
+                  >
+                    {t(navItem.label)}
+                  </ChLink>
+                )}
+              </PopoverTrigger>
+              <PopoverContentWrapper
+                navItem={navItem}
+                popoverContentBgColor={popoverContentBgColor}
+              />
+            </Popover>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+};
+
+const PopoverContentWrapper = ({
+  navItem,
+  popoverContentBgColor,
+}: {
+  navItem: INavItem;
+  popoverContentBgColor: string;
+}) => {
+  if (!navItem.children) {
+    return null;
+  }
+
+  return (
+    <PopoverContent
+      border={0}
+      boxShadow={"xl"}
+      bg={popoverContentBgColor}
+      p={4}
+      rounded={"xl"}
+      minW={"sm"}
+    >
+      <Stack>
+        {navItem.children.map((child) => (
+          <DesktopSubNav key={child.label} {...child} />
+        ))}
+      </Stack>
+    </PopoverContent>
   );
 };
 
 const DesktopSubNav = ({ label, href, subLabel }: INavItem) => {
   const brandColor = useBrandColor();
+
+  const { t } = useTranslate();
 
   return (
     <ChLink

@@ -13,7 +13,7 @@ export const getProductsHandler = (resolver?: GetResolver) =>
       if (resolver) return resolver(req, res, ctx);
 
       return res(
-        ctx.json(ProductFixture.createCollection([{ id: 1 }, { id: 2 }]))
+        ctx.json(ProductFixture.createCollection([{ id: "1" }, { id: "2" }]))
       );
     }
   );

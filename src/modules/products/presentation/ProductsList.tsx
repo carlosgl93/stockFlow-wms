@@ -21,13 +21,13 @@ const ProductsList = ({ products }: IProps) => {
       <ProductAddedDialog />
       {products.map((product) => (
         <GridItem key={product.id} colSpan={1}>
-          <ProductCard
+          {/* <ProductCard
             id={product.id}
             title={product.title}
             category={product.category}
             price={product.price}
             imageUrl={product.image}
-          />
+          /> */}
         </GridItem>
       ))}
     </SimpleGrid>

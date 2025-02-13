@@ -10,7 +10,10 @@ export const SignInPage = () => {
   return (
     <Page maxW="container.xl">
       <Center py={{ base: 10, md: 12 }}>
-        <SignInForm initialEmail="mor_2314" initialPassword="83r5^_" />
+        <SignInForm
+          initialEmail="admin@transagro.cl"
+          initialPassword="123456"
+        />
       </Center>
     </Page>
   );

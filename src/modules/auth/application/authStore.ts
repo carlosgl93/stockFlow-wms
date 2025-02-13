@@ -10,9 +10,6 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { Logger } from "utils/logger";
-
-const AUTH_KEY = "fake_store_is_authenticated";
 
 const isLoggedIn = () => !!auth.currentUser;
 
@@ -23,7 +20,7 @@ interface IStore {
   user: IUser;
   login: (credentials: ICredentials) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (credentials: ICredentials & { tenant: string }) => Promise<void>;
+  signup: (credentials: ICredentials) => Promise<void>;
 }
 
 export type AuthStore = ReturnType<typeof initializeAuthStore>;
@@ -107,7 +104,7 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
           throw e;
         }
       },
-      signup: async (credentials: ICredentials & { tenant: string }) => {
+      signup: async (credentials: ICredentials) => {
         set({ state: "loading" });
 
         try {
@@ -119,13 +116,9 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
           const user = userCredential.user;
 
           // Store tenant information in Firestore
-          await setDoc(
-            doc(db, "tenants", credentials.tenant, "users", user.uid),
-            {
-              email: credentials.email,
-              tenant: credentials.tenant,
-            }
-          );
+          await setDoc(doc(db, "users", user.uid), {
+            email: credentials.email,
+          });
 
           set({
             isAuthenticated: true,

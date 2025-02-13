@@ -53,16 +53,13 @@ const ProductDetails = ({ product, onBack }: IProps) => {
             w="100%"
             bgSize="cover"
             bgPos="center"
-            style={{
-              backgroundImage: `url(${product.image})`,
-            }}
           />
         </Box>
       </GridItem>
       <GridItem colSpan={1}>
         <VStack spacing={{ base: 1, lg: 3 }} w="100%" align="start">
           <PageHeader
-            title={product.title}
+            title={product.name}
             description={t("A part of out {category} collection.", {
               category: (
                 <chakra.span fontStyle="italic">{categoryLabel}</chakra.span>
@@ -74,20 +71,9 @@ const ProductDetails = ({ product, onBack }: IProps) => {
               {moneyVO.format(product.price)}
             </Text>
             <Divider orientation="vertical" />
-            <StarRating rating={product.rating.rate} />
-            <Button variant="link" colorScheme="orange">
-              {t("See all {number} reviews", { number: product.rating.count })}
-            </Button>
           </HStack>
-          <Text
-            color={secondaryColor}
-            fontSize={{ base: "md", md: "lg" }}
-            py={{ base: 4, md: 6 }}
-          >
-            {product.description}
-          </Text>
+
           <VStack w="100%">
-            <AddToCartButton productId={product.id} colorScheme="orange" />
             <Button w="100%" variant="outline" onClick={onBack}>
               {t("Back to products' list")}
             </Button>

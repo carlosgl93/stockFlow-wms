@@ -3,7 +3,6 @@ import { createBrowserRouter, ScrollRestoration } from "react-router-dom";
 
 import { Layout } from "shared/Layout";
 
-import { cartPageLoader } from "./Cart/loader";
 import { homePageLoader } from "./Home/loader";
 import { productPageLoader } from "./Product/loader";
 import { productsPageLoader } from "./Products/loader";
@@ -40,14 +39,14 @@ export const router = createBrowserRouter([
         lazy: () => import("./Products"),
       },
       {
+        path: "/products/create",
+        // loader: productsPageLoader,
+        lazy: () => import("./Products/Create"),
+      },
+      {
         path: "/products/:productId",
         loader: productPageLoader,
         lazy: () => import("./Product"),
-      },
-      {
-        path: "/cart/:cartId",
-        loader: cartPageLoader,
-        lazy: () => import("./Cart"),
       },
       {
         path: "/entries",
