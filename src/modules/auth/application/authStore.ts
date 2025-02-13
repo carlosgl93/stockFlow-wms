@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import { createStore, useStore } from "zustand";
 import { ICredentials } from "../infrastructure/loginUser";
 import { IUser } from "../types";
-import { auth, db } from "../infrastructure/firebaseConfig";
+import { auth, db } from "shared/firebase";
 import {
   signInWithEmailAndPassword,
   signOut,

@@ -1,7 +1,7 @@
 import { collection, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { IProduct } from "../types";
-import { db, storage } from "modules/auth/infrastructure/firebaseConfig";
+import { db, storage } from "shared/firebase";
 
 export const saveProduct = async (product: IProduct) => {
   // Upload safety document to Firebase Storage
@@ -20,5 +20,5 @@ export const saveProduct = async (product: IProduct) => {
     safetyDocument: undefined, // Remove the FileList from the product data
   };
   const docRef = await addDoc(collection(db, "products"), productData);
-  return { id: docRef.id, ...productData };
+  return { ...productData, id: docRef.id };
 };
