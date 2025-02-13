@@ -20,7 +20,6 @@ export const SignUpForm = ({ initialEmail, initialPassword }: IProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [tenant, setTenant] = useState("");
 
   const [notifySuccess, notifyFailure] = useSignUpNotifications();
   const signup = useAuthStore((store) => store.signup);
@@ -45,16 +44,11 @@ export const SignUpForm = ({ initialEmail, initialPassword }: IProps) => {
           onSubmit={(e) => {
             e.preventDefault();
 
-            if (
-              !email ||
-              !password ||
-              password !== confirmPassword ||
-              !tenant
-            ) {
+            if (!email || !password || password !== confirmPassword) {
               return;
             }
 
-            signup({ email, password, tenant })
+            signup({ email, password })
               .then(() => notifySuccess())
               .catch(() => notifyFailure());
           }}
@@ -84,13 +78,7 @@ export const SignUpForm = ({ initialEmail, initialPassword }: IProps) => {
           >
             {t("Confirm Password")}
           </TextInput>
-          <TextInput
-            id="tenant"
-            value={tenant}
-            onChange={(e) => setTenant(e.currentTarget.value)}
-          >
-            {t("Company name")}
-          </TextInput>
+
           <VStack w="100%" spacing={10}>
             <Button type="submit" colorScheme="blue" w="100%">
               {t("Sign up")}

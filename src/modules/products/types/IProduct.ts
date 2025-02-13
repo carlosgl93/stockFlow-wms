@@ -1,12 +1,34 @@
 import { Category } from "./Category";
-import { IRating } from "./IRating";
+import { IContainer } from "./IContainer";
+import { IUnitOfMeasure } from "./IUnitOfMeasure";
+import { RiskCategory } from "./RiskCategory";
 
 export interface IProduct {
-  id: number;
-  title: string;
-  description: string;
-  category: Category;
-  image: string;
+  id: string;
+  extCode: string;
+  internalCode: string;
+  name: string;
   price: number;
-  rating: IRating;
+  riskCategory: RiskCategory;
+  category: Category;
+  safetyDocument: FileList | null;
+  selectionType: string;
+  boxDetails?: {
+    units: number;
+    quantity: number;
+    unitOfMeasure: IUnitOfMeasure;
+    container: IContainer;
+    type: string;
+    kilos: number;
+    height: number;
+    width: number;
+    depth: number;
+    unitsPerSurface: number;
+    palletType: IPallet;
+  };
+}
+
+export enum IPallet {
+  Chinese = "Chinese",
+  European = "European",
 }

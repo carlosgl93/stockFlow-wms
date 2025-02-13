@@ -4,11 +4,11 @@ import { withRouter } from "storybook-addon-remix-react-router";
 import { getAddToCartHandler } from "utils";
 import { ProductFixture } from "utils/fixtures";
 
-import { ProductCard } from "./ProductCard";
+import { CreateProductForm } from "./CreateProductForm";
 
 const meta = {
-  title: "modules/Products/ProductCard",
-  component: ProductCard,
+  title: "modules/Products/CreateProductForm",
+  component: CreateProductForm,
   decorators: [withRouter],
   parameters: {
     layout: "centered",
@@ -16,7 +16,7 @@ const meta = {
       handlers: [getAddToCartHandler()],
     },
   },
-} satisfies Meta<typeof ProductCard>;
+} satisfies Meta<typeof CreateProductForm>;
 
 const product = ProductFixture.toStructure();
 
@@ -25,10 +25,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    id: product.id,
-    title: product.title,
-    category: product.category,
-    price: product.price,
-    imageUrl: product.image,
+    ...product,
   },
 };

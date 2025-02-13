@@ -12,7 +12,7 @@ export interface IRequireAuthProps {
 const RequireAuth = ({ children, to }: IRequireAuthProps) => {
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={to ?? "/"} />;
+  return isAuthenticated ? <>{children}</> : <Navigate to={to ?? "/sign-in"} />;
 };
 
 export { RequireAuth };

@@ -1,12 +1,12 @@
 import { Page } from "shared/Layout";
 import { InternalErrorResult } from "shared/Result";
 import { useRouteError } from "shared/Router";
-
 import {
   HeroSection,
   FeatureSection,
   PricingSection,
 } from "modules/marketing/presentation";
+import { t } from "utils";
 
 interface IProps {}
 
@@ -14,42 +14,51 @@ const HomePage = ({}: IProps) => {
   return (
     <Page maxW="container.xl" spacing={{ base: 8, lg: 20 }}>
       <HeroSection
-        title="Welcome to StockFlow"
-        subtitle="The ultimate Warehouse Management System for your business"
-        description="Manage your inventory, track shipments, and optimize your warehouse operations with StockFlow SaaS multi-tenant app."
+        title={t("Welcome to StockFlow")}
+        subtitle={t(
+          "The ultimate Warehouse Management System for your business"
+        )}
+        description={t(
+          "Manage your inventory, track shipments, and optimize your warehouse operations with StockFlow SaaS multi-tenant app."
+        )}
       />
       <FeatureSection
         features={[
           {
-            title: "Inventory Management",
-            description: "Keep track of your stock levels in real-time.",
+            title: t("Inventory Management"),
+            description: t("Keep track of your stock levels in real-time."),
           },
           {
-            title: "Order Fulfillment",
-            description: "Streamline your order processing and shipping.",
+            title: t("Order Fulfillment"),
+            description: t("Streamline your order processing and shipping."),
           },
           {
-            title: "Analytics & Reporting",
-            description: "Gain insights into your warehouse operations.",
+            title: t("Analytics & Reporting"),
+            description: t("Gain insights into your warehouse operations."),
           },
         ]}
       />
       <PricingSection
         plans={[
           {
-            name: "Basic",
-            price: "$29/month",
-            features: ["Feature 1", "Feature 2"],
+            name: t("Basic"),
+            price: t("$29/month"),
+            features: [t("Feature 1"), t("Feature 2")],
           },
           {
-            name: "Pro",
-            price: "$59/month",
-            features: ["Feature 1", "Feature 2", "Feature 3"],
+            name: t("Pro"),
+            price: t("$59/month"),
+            features: [t("Feature 1"), t("Feature 2"), t("Feature 3")],
           },
           {
-            name: "Enterprise",
-            price: "Contact us",
-            features: ["Feature 1", "Feature 2", "Feature 3", "Feature 4"],
+            name: t("Enterprise"),
+            price: t("Contact us"),
+            features: [
+              t("Feature 1"),
+              t("Feature 2"),
+              t("Feature 3"),
+              t("Feature 4"),
+            ],
           },
         ]}
       />
