@@ -7,6 +7,8 @@ import { theme } from "theme";
 import { LocaleProvider, queryClient } from "utils";
 
 import { AuthProvider } from "modules/auth/application";
+import { ThemeProvider } from "@mui/material";
+import { AppThemeProvider } from "theme/materialTheme";
 
 interface IProps {
   children: ReactNode;

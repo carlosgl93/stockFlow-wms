@@ -16,17 +16,11 @@ import {
 } from "@chakra-ui/react";
 import { useSecondaryTextColor } from "theme";
 
-import { moneyVO, t } from "utils";
+import { moneyVO, useTranslate } from "utils";
 
 import { PageHeader } from "shared/Layout";
 
-import {
-  AddToCartButton,
-  ProductAddedDialog,
-} from "modules/carts/presentation";
-
 import { IProduct } from "../types";
-import { StarRating } from "./StarRating";
 import { useCategoryLabel } from "./useCategoryLabel";
 
 interface IProps {
@@ -37,6 +31,7 @@ interface IProps {
 const ProductDetails = ({ product, onBack }: IProps) => {
   const categoryLabel = useCategoryLabel(product.category);
   const secondaryColor = useSecondaryTextColor();
+  const { t } = useTranslate();
 
   return (
     <SimpleGrid
@@ -45,7 +40,6 @@ const ProductDetails = ({ product, onBack }: IProps) => {
       columns={{ base: 1, lg: 2 }}
       gap={{ base: 6, md: 8 }}
     >
-      <ProductAddedDialog />
       <GridItem colSpan={1}>
         <Box overflow="hidden" rounded="xl">
           <Box
@@ -60,7 +54,7 @@ const ProductDetails = ({ product, onBack }: IProps) => {
         <VStack spacing={{ base: 1, lg: 3 }} w="100%" align="start">
           <PageHeader
             title={product.name}
-            description={t("A part of out {category} collection.", {
+            description={t("A part of our {category} collection.", {
               category: (
                 <chakra.span fontStyle="italic">{categoryLabel}</chakra.span>
               ),
@@ -82,57 +76,80 @@ const ProductDetails = ({ product, onBack }: IProps) => {
             <AccordionItem>
               <AccordionButton>
                 <Box as="span" flex="1" textAlign="left">
-                  {t("Features")}
+                  {t("Product Details")}
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel pb={4}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
+                <Text>
+                  {t("External Code")}: {product.extCode}
+                </Text>
+                <Text>
+                  {t("Internal Code")}: {product.internalCode}
+                </Text>
+                <Text>
+                  {t("Risk Category")}: {product.riskCategory}
+                </Text>
+                <Text>
+                  {t("Selection Type")}: {product.selectionType}
+                </Text>
               </AccordionPanel>
             </AccordionItem>
+            {product.boxDetails && (
+              <AccordionItem>
+                <AccordionButton>
+                  <Box as="span" flex="1" textAlign="left">
+                    {t("Box Details")}
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4}>
+                  <Text>
+                    {t("Units")}: {product.boxDetails.units}
+                  </Text>
+                  <Text>
+                    {t("Quantity")}: {product.boxDetails.quantity}
+                  </Text>
+                  <Text>
+                    {t("Unit of Measure")}: {product.boxDetails.unitOfMeasure}
+                  </Text>
+                  <Text>
+                    {t("Container")}: {product.boxDetails.container}
+                  </Text>
+                  <Text>
+                    {t("Type")}: {product.boxDetails.type}
+                  </Text>
+                  <Text>
+                    {t("Kilos")}: {product.boxDetails.kilos}
+                  </Text>
+                  <Text>
+                    {t("Height")}: {product.boxDetails.height}
+                  </Text>
+                  <Text>
+                    {t("Width")}: {product.boxDetails.width}
+                  </Text>
+                  <Text>
+                    {t("Depth")}: {product.boxDetails.depth}
+                  </Text>
+                  <Text>
+                    {t("Units per Surface")}:{" "}
+                    {product.boxDetails.unitsPerSurface}
+                  </Text>
+                  <Text>
+                    {t("Pallet Type")}: {product.boxDetails.palletType}
+                  </Text>
+                </AccordionPanel>
+              </AccordionItem>
+            )}
             <AccordionItem>
               <AccordionButton>
                 <Box as="span" flex="1" textAlign="left">
-                  {t("Care")}
+                  {t("Shipping Information")}
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
               <AccordionPanel pb={4}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </AccordionPanel>
-            </AccordionItem>
-            <AccordionItem>
-              <AccordionButton>
-                <Box as="span" flex="1" textAlign="left">
-                  {t("Shipping")}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </AccordionPanel>
-            </AccordionItem>
-            <AccordionItem>
-              <AccordionButton>
-                <Box as="span" flex="1" textAlign="left">
-                  {t("Returns")}
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel pb={4}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
+                <Text>{t("Shipping details will be provided here.")}</Text>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>

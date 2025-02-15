@@ -1,9 +1,40 @@
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { IProduct } from "../types";
 import { db, storage } from "shared/firebase";
+import { ValidationError } from "shared/Error";
+import { Logger } from "utils/logger";
 
 export const saveProduct = async (product: IProduct) => {
+  // Check if a product with the same name, internalCode, or extCode already exists
+  const productsRef = collection(db, "products");
+  const nameQuery = query(productsRef, where("name", "==", product.name));
+  const internalCodeQuery = query(
+    productsRef,
+    where("internalCode", "==", product.internalCode)
+  );
+  const extCodeQuery = query(
+    productsRef,
+    where("extCode", "==", product.extCode)
+  );
+
+  const [nameSnapshot, internalCodeSnapshot, extCodeSnapshot] =
+    await Promise.all([
+      getDocs(nameQuery),
+      getDocs(internalCodeQuery),
+      getDocs(extCodeQuery),
+    ]);
+
+  if (
+    !nameSnapshot.empty ||
+    !internalCodeSnapshot.empty ||
+    !extCodeSnapshot.empty
+  ) {
+    throw new ValidationError(
+      "A product with the same name, internalCode, or extCode already exists."
+    );
+  }
+
   // Upload safety document to Firebase Storage
   let safetyDocumentUrl = "";
   if (product.safetyDocument && product.safetyDocument.length > 0) {
@@ -16,8 +47,8 @@ export const saveProduct = async (product: IProduct) => {
   // Add product to Firestore
   const productData = {
     ...product,
-    safetyDocumentUrl,
-    safetyDocument: undefined, // Remove the FileList from the product data
+    safetyDocumentUrl: safetyDocumentUrl ? safetyDocumentUrl : null,
+    safetyDocument: null, // Remove the FileList from the product data
   };
   const docRef = await addDoc(collection(db, "products"), productData);
   return { ...productData, id: docRef.id };

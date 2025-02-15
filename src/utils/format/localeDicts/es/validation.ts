@@ -3,4 +3,16 @@ export const validation = {
   Required: "Requerido",
   "Field is required.": "Este campo es requirido.",
   "This field is required": "Este campo es requerido",
+  "Email must be at least 6 characters":
+    "El correo electrónico debe tener al menos 6 caracteres",
+  "Password is required": "La contraseña es requerida",
+  "Password must be at least 6 characters":
+    "La contraseña debe tener al menos 6 caracteres",
+  "Confirm Password is required":
+    "La confirmación de la contraseña es requerida",
+  "Confirm Password must be at least 6 characters":
+    "La confirmación de la contraseña debe tener al menos 6 caracteres",
+  "Passwords do not match": "Las contraseñas no coinciden",
+  "Firebase: Error (auth/user-not-found).": "Usuario no encontrado",
+  "Email is required": "El correo electrónico es requerido",
 };
