@@ -1,9 +1,11 @@
 import { useNavigate } from "shared/Router";
 
-export const useRedirect = () => {
+export const useRedirect = <T>() => {
   const navigate = useNavigate();
 
-  return (to: string) => {
-    navigate(to);
+  return (to: string, stateParams?: T) => {
+    navigate(to, {
+      state: stateParams,
+    });
   };
 };

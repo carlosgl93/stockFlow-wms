@@ -8,7 +8,7 @@ import {
   ButtonGroup,
   HeadingProps,
 } from "@chakra-ui/react";
-import { useSecondaryTextColor } from "theme";
+import { useBrandColor, useSecondaryTextColor } from "theme";
 
 interface IProps {
   title: string | ReactNode;
@@ -27,6 +27,7 @@ const PageHeader = ({
 }: IProps) => {
   const descriptionColor = useSecondaryTextColor();
   const secondaryColor = useSecondaryTextColor();
+  const colors = useBrandColor();
   return (
     <Stack
       direction={{ base: "column", lg: "row" }}
@@ -35,14 +36,13 @@ const PageHeader = ({
       justify="space-between"
       align={{ base: "start", lg: "center" }}
       position={position}
-      top={position === "sticky" ? 50 : "auto"}
-      zIndex={position === "sticky" ? 1000 : "auto"}
-      boxShadow={position === "sticky" ? "md" : "none"}
-      bg={position === "sticky" ? "grey" : "transparent"}
       padding={4}
+      borderRadius={6}
     >
       <VStack align="start" spacing={1}>
-        <Heading size={size}>{title}</Heading>
+        <Heading size={size} color={secondaryColor}>
+          {title}
+        </Heading>
         {description && <Text color={descriptionColor}>{description}</Text>}
       </VStack>
       <ButtonGroup>{children}</ButtonGroup>

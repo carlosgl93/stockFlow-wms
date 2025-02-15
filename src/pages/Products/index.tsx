@@ -1,53 +1,67 @@
 import { useState } from "react";
-
 import { SearchIcon, AddIcon } from "@chakra-ui/icons";
-
-import { Button } from "@chakra-ui/react";
-
+import { Box, Button, CircularProgress, Text } from "@chakra-ui/react";
 import { IQueryParams } from "types";
-
-import { t } from "utils";
-
+import { useLoaderData } from "shared/Router";
 import { Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 
-import { useProductsQuery } from "modules/products/infrastructure";
 import { ProductsList } from "modules/products/presentation";
-import { useAuthStore, withRequireAuth } from "modules/auth/application";
+import { withRequireAuth } from "modules/auth/application";
 import { Logger } from "utils/logger";
-import { useRedirect } from "utils";
+import { useQuery, useRedirect, useTranslate } from "utils";
+import {
+  IProductsCollection,
+  getProductsQueryKey,
+  getProductsQuery,
+} from "modules/products/infrastructure";
+import { AppThemeProvider } from "theme/materialTheme";
 
-const defaultParams: IQueryParams = { limit: 10, sort: "asc" };
+const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
 const ProductsPage = () => {
-  const logged = useAuthStore((state) => state);
   const notImplemented = useNotImplementedYetToast();
   const redirect = useRedirect();
+  const { t } = useTranslate();
 
   const [params, setParams] = useState<IQueryParams>(defaultParams);
-  const { data, isFetching } = useProductsQuery(params, {
-    keepPreviousData: true,
-  });
+  const { data, isFetching, isLoading } = useQuery(getProductsQuery(params));
+  // const loaderData: IProductsCollection =
+  //   useLoaderData() as IProductsCollection;
 
-  const noMoreProducts = data.meta.total <= params.limit;
+  Logger.info("products data", [data]);
+  if (!data) return null;
+  const { products, meta } = data || {};
+  const pages = Math.ceil(meta.total / params.limit);
+  const total = meta.total;
 
   const handleCreate = () => redirect("/products/create");
+
+  if (isLoading)
+    <Box>
+      <CircularProgress />
+    </Box>;
   return (
     <Page>
       <PageHeader
         title={t("Products list")}
         description={t("Create, edit, remove products.")}
       >
-        <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
-          {t("Search")}
-        </Button>
+        <Box display="flex" alignItems="center" gap={4}>
+          <Text>
+            {t("Total registers: ")} {total} {t("Pages:")} {pages}
+          </Text>
+          <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
+            {t("Search")}
+          </Button>
 
-        <Button leftIcon={<AddIcon />} onClick={handleCreate}>
-          {t("Create")}
-        </Button>
+          <Button leftIcon={<AddIcon />} onClick={handleCreate}>
+            {t("Create")}
+          </Button>
+        </Box>
       </PageHeader>
-      {/* <ProductsList products={data.products} /> */}
+      <ProductsList products={products} onRemove={() => {}} />
       {/* {data.products.length > 0 && (
         <Button
           w="100%"

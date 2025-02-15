@@ -1,4 +1,10 @@
 export const products = {
+  "Pages:": "Páginas",
+  "Total registers: ": "Registros totales: ",
+  "Product created": "Producto creado",
+  "Product created successfully": "Producto creado exitosamente",
+  "A product with the same name, internalCode, or extCode already exists.":
+    "Ya existe un producto con el mismo nombre, código interno o código externo.",
   "Products List": "Lista De Productos",
   "Create, Edit, Remove Products.": "Crea, Edita, Elimina Productos",
   Search: "Buscar",
@@ -70,9 +76,14 @@ export const products = {
   Width: "Ancho",
   Depth: "Profundidad",
   "Units Per Surface": "Unidades Por Superficie",
-  "Pallet Type": "Tipo De Paleta",
-  "Select Pallet Type": "Seleccionar Tipo De Paleta",
+  "Pallet Type": "Tipo De Pallet",
+  "Select Pallet Type": "Seleccionar Tipo De Pallet",
   Standard: "Estándar",
   Chinese: "Chino",
   "Create Product": "Crear Producto",
+  "Units per Surface": "Unidades por Superficie",
+  European: "Europeo / Standard",
+  "Back to products' list": "Volver a la lista de productos",
+  "A part of out {category} collection.":
+    "Parte de nuestra colección {category}.",
 };

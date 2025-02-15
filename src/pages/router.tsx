@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/products",
-        loader: productsPageLoader,
+        // loader: productsPageLoader,
         lazy: () => import("./Products"),
       },
       {

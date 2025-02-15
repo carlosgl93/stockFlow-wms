@@ -7,18 +7,16 @@ import { useNavigate } from "shared/Router";
 
 import { AddToCartButton } from "modules/carts/presentation";
 
-import { Category } from "../types";
+import { Category, IProduct } from "../types";
 import { useCategoryLabel } from "./useCategoryLabel";
 
 interface IProps {
-  id: number;
-  title: string;
-  category: Category;
-  price: number;
-  imageUrl: string;
+  product: IProduct;
 }
 
-const ProductCard = ({ title, category, price, imageUrl, id }: IProps) => {
+const ProductCard = ({
+  product: { id, name: title, category, price },
+}: IProps) => {
   const navigate = useNavigate();
   const categoryLabel = useCategoryLabel(category);
   const categoryColor = useSecondaryTextColor();
@@ -32,9 +30,6 @@ const ProductCard = ({ title, category, price, imageUrl, id }: IProps) => {
         w="lg"
         bgSize="cover"
         bgPos="center"
-        style={{
-          backgroundImage: `url(${imageUrl})`,
-        }}
       />
       <VStack w="100%" spacing={0} align="flex-start">
         <HStack
@@ -61,7 +56,6 @@ const ProductCard = ({ title, category, price, imageUrl, id }: IProps) => {
           {categoryLabel}
         </Text>
       </VStack>
-      <AddToCartButton productId={id} />
     </VStack>
   );
 };

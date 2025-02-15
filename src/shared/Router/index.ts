@@ -8,5 +8,6 @@ export {
   Link,
   Outlet,
   Navigate,
+  useLoaderData,
 } from "react-router-dom";
 export type { LoaderFunctionArgs } from "react-router-dom";

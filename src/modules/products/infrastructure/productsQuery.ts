@@ -2,14 +2,24 @@ import { UseQueryOptions } from "@tanstack/react-query";
 
 import { IQueryParams, IMeta } from "types";
 
-import { buildUrl, httpService, queryClient, useQuery } from "utils";
+import { queryClient, useQuery } from "utils";
 
 import { IProduct } from "../types";
 import { IProductDto } from "./types";
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  startAfter,
+  getCountFromServer,
+} from "firebase/firestore";
+import { db } from "shared/firebase";
+import { Logger } from "utils/logger";
 
 const defaultParams = { limit: 10, sort: "asc" };
 
-interface ICollection {
+export interface IProductsCollection {
   products: IProduct[];
   meta: IMeta;
 }
@@ -19,23 +29,38 @@ export const getProductsQueryKey = (params: IQueryParams = defaultParams) => [
   params,
 ];
 
-const getProductsQuery = (params: IQueryParams = defaultParams) => ({
+export const getProductsQuery = (params: IQueryParams = defaultParams) => ({
   queryKey: getProductsQueryKey(params),
-  queryFn: (): Promise<ICollection> =>
-    httpService
-      .get<IProductDto[]>(buildUrl("products", params))
-      .then((res) => ({
-        products: res,
-        meta: {
-          ...params,
-          total: 20,
-        },
-      })),
+  queryFn: async (): Promise<IProductsCollection> => {
+    const productsRef = collection(db, "products");
+    let productsQuery = query(productsRef, limit(params.limit));
+
+    if (params.startAfter) {
+      productsQuery = query(productsRef, startAfter(params.startAfter));
+    }
+    const querySnapshot = await getDocs(productsQuery);
+    const products: IProduct[] = [];
+    querySnapshot.forEach((doc) => {
+      products.push({ id: doc.id, ...doc.data() } as IProduct);
+    });
+
+    const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+    const countSnapshot = await getCountFromServer(productsRef);
+
+    return {
+      products,
+      meta: {
+        ...params,
+        total: countSnapshot.data().count,
+        lastVisible,
+      },
+    };
+  },
 });
 
 export const useProductsQuery = (
   params: IQueryParams = defaultParams,
-  options?: UseQueryOptions<ICollection>
+  options?: UseQueryOptions<IProductsCollection>
 ) => {
   return useQuery({
     ...getProductsQuery(params),
@@ -43,5 +68,6 @@ export const useProductsQuery = (
   });
 };
 
-export const productsLoader = async (params: IQueryParams = defaultParams) =>
-  queryClient.ensureQueryData(getProductsQuery(params));
+export const productsLoader = async (params: IQueryParams = defaultParams) => {
+  return queryClient.ensureQueryData(getProductsQuery(params));
+};

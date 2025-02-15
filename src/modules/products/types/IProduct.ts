@@ -4,14 +4,14 @@ import { IUnitOfMeasure } from "./IUnitOfMeasure";
 import { RiskCategory } from "./RiskCategory";
 
 export interface IProduct {
-  id: string;
+  id?: string;
   extCode: string;
   internalCode: string;
   name: string;
   price: number;
   riskCategory: RiskCategory;
   category: Category;
-  safetyDocument: FileList | null;
+  safetyDocument?: FileList | null;
   selectionType: string;
   boxDetails?: {
     units: number;

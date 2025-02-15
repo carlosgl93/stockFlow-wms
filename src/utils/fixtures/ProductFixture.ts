@@ -9,7 +9,6 @@ import {
 import { createFixture } from "./createFixture";
 
 export const ProductFixture = createFixture<IProduct>({
-  id: "1",
   extCode: "EXT123",
   internalCode: "INT123",
   name: "Valor 4%",
