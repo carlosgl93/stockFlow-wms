@@ -24,12 +24,19 @@ import { useToast } from "shared/Toast";
 import { ProductFixture } from "utils/fixtures";
 import { useRedirect, useTranslate } from "utils";
 import { saveProduct } from "../infrastructure/saveProduct";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ValidationError } from "shared/Error";
+import { useLocation } from "shared/Router";
 import { queryClient } from "utils";
+import { editProduct } from "../infrastructure";
 
-export const CreateProductForm = () => {
+export const CreateProductForm = ({
+  productToEdit,
+}: {
+  productToEdit?: IProduct;
+}) => {
   const redirect = useRedirect();
+  const location = useLocation();
 
   const {
     handleSubmit,
@@ -73,12 +80,45 @@ export const CreateProductForm = () => {
 
       redirect("/products");
     },
-
     onError: (error: ValidationError) => {
       Logger.error("Error creating product", [error]);
       toast({
         title: "Error",
         description: `${t("Error creating product")}, ${t(error.message)}`,
+        status: "error",
+      });
+    },
+  });
+
+  const {
+    mutate: editProductMutation,
+    isLoading: editIsLoading,
+    isError: editIsError,
+    error: editError,
+    isSuccess: editIsSuccess,
+  } = useMutation(editProduct, {
+    onSuccess: async (data) => {
+      toast({
+        title: t("Product updated"),
+        description: t("Product updated successfully"),
+        status: "success",
+      });
+      reset();
+      Logger.info("setting query data", [data]);
+      queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
+        if (old) {
+          return [...old, data];
+        }
+        return [data];
+      });
+
+      redirect("/products");
+    },
+    onError: (error: ValidationError) => {
+      Logger.error("Error updating product", [error]);
+      toast({
+        title: "Error",
+        description: `${t("Error updating product")}, ${t(error.message)}`,
         status: "error",
       });
     },
@@ -100,6 +140,10 @@ export const CreateProductForm = () => {
     }
     // Handle form submission logic here
     Logger.info("handle data store", data);
+    if (location.pathname.includes("edit")) {
+      editProductMutation({ values: data, id: productToEdit?.id || "" });
+      return;
+    }
     saveProductMutation(data);
   };
 
@@ -112,14 +156,23 @@ export const CreateProductForm = () => {
   };
 
   useEffect(() => {
-    if (import.meta.env.MODE === "development") {
+    if (import.meta.env.MODE === "development" && !productToEdit) {
       const product = ProductFixture.toStructure();
       Object.keys(product).forEach((key) => {
         setValue(key as keyof IProduct, product[key as keyof IProduct]);
       });
       trigger();
+      return;
     }
-  }, [setValue]);
+
+    if (productToEdit) {
+      Object.keys(productToEdit).forEach((key) => {
+        setValue(key as keyof IProduct, productToEdit[key as keyof IProduct]);
+      });
+      trigger();
+      return;
+    }
+  }, [setValue, productToEdit, trigger]);
 
   if (isLoading) {
     return <Box>Loading...</Box>;
@@ -421,7 +474,7 @@ export const CreateProductForm = () => {
         colorScheme="teal"
         disabled={isLoading || isSuccess}
       >
-        {t("Create Product")}
+        {productToEdit ? t("Edit Product") : t("Create Product")}
       </Button>
     </Box>
   );

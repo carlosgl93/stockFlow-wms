@@ -2,6 +2,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 import { useMediaQuery } from "@mui/material";
+import { GridColDef, DataGrid } from "@mui/x-data-grid";
 
 const commonThemeOptions = {
   typography: {

@@ -1,4 +1,4 @@
-import { ArrowBackIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon, EditIcon } from "@chakra-ui/icons";
 import { Button, CircularProgress } from "@chakra-ui/react";
 
 import { t, useQuery } from "utils";
@@ -44,6 +44,13 @@ const ProductPage = () => {
         onClick={() => navigate("/products")}
       >
         {t("Back to products' list")}
+      </Button>
+      <Button
+        leftIcon={<EditIcon />}
+        variant="link"
+        onClick={() => navigate(`/products/edit/${productId}`)}
+      >
+        {t("Edit Product")}
       </Button>
       <ProductDetails product={data} onBack={() => navigate("/products")} />
     </Page>

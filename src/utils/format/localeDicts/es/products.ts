@@ -86,4 +86,5 @@ export const products = {
   "Back to products' list": "Volver a la lista de productos",
   "A part of out {category} collection.":
     "Parte de nuestra colección {category}.",
+  "Edit Product": "Editar Producto",
 };

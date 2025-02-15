@@ -1,6 +1,6 @@
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Box, IconButton } from "@chakra-ui/react";
-import { SearchIcon, DeleteIcon } from "@chakra-ui/icons";
+import { SearchIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IProduct } from "../types";
 import { Logger } from "utils/logger";
@@ -26,7 +26,7 @@ const ProductsList = ({ products, pageSize, onRemove }: IProps) => {
     {
       field: "actions",
       headerName: "",
-      width: 100,
+      width: 150,
       renderCell: (params: GridRenderCellParams<IProduct>) => (
         <Box
           display="flex"
@@ -39,6 +39,11 @@ const ProductsList = ({ products, pageSize, onRemove }: IProps) => {
             aria-label="View Details"
             icon={<SearchIcon />}
             onClick={() => redirect(`/products/${params.row.id}`)}
+          />
+          <IconButton
+            aria-label="Edit Product"
+            icon={<EditIcon />}
+            onClick={() => redirect(`/products/edit/${params.row.id}`)}
           />
           {onRemove && (
             <IconButton

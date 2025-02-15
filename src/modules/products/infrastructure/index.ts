@@ -11,3 +11,4 @@ export {
   productLoader,
   getProductQuery,
 } from "./productQuery";
+export { editProduct } from "./editProduct";

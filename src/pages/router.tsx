@@ -49,6 +49,10 @@ export const router = createBrowserRouter([
         lazy: () => import("./Product"),
       },
       {
+        path: "/products/edit/:productId",
+        lazy: () => import("./Product/Edit"),
+      },
+      {
         path: "/entries",
         loader: dispatchesPageLoader,
         lazy: () => import("./Entries"),

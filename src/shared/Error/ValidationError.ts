@@ -5,3 +5,11 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+
+export class APIError extends Error {
+  constructor(message: string, public code?: number) {
+    super(message);
+    this.name = "APIError";
+    this.code = code;
+  }
+}
