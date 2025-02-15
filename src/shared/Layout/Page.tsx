@@ -11,7 +11,7 @@ interface IProps {
   maxW?: ContainerProps["maxW"];
 }
 
-const Page = ({ children, maxW = "container.lg", ...props }: IProps) => {
+const Page = ({ children, maxW = "container.xl", ...props }: IProps) => {
   return (
     <VStack
       as={Container}

@@ -52,6 +52,9 @@ const ProductPage = () => {
       >
         {t("Edit Product")}
       </Button>
+      <Button leftIcon={<EditIcon />} variant="link" onClick={() => {}}>
+        {t("Remove Product")}
+      </Button>
       <ProductDetails product={data} onBack={() => navigate("/products")} />
     </Page>
   );

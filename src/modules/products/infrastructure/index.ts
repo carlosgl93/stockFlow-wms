@@ -12,3 +12,4 @@ export {
   getProductQuery,
 } from "./productQuery";
 export { editProduct } from "./editProduct";
+export { useCRUDProducts } from "./useCRUDProducts";

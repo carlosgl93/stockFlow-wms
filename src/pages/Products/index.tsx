@@ -2,21 +2,14 @@ import { useState } from "react";
 import { SearchIcon, AddIcon } from "@chakra-ui/icons";
 import { Box, Button, CircularProgress, Text } from "@chakra-ui/react";
 import { IQueryParams } from "types";
-import { useLoaderData } from "shared/Router";
-import { Page, PageHeader } from "shared/Layout";
+import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 
 import { ProductsList } from "modules/products/presentation";
 import { withRequireAuth } from "modules/auth/application";
-import { Logger } from "utils/logger";
 import { useQuery, useRedirect, useTranslate } from "utils";
-import {
-  IProductsCollection,
-  getProductsQueryKey,
-  getProductsQuery,
-} from "modules/products/infrastructure";
-import { AppThemeProvider } from "theme/materialTheme";
+import { getProductsQuery } from "modules/products/infrastructure";
 
 const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
@@ -27,10 +20,7 @@ const ProductsPage = () => {
 
   const [params, setParams] = useState<IQueryParams>(defaultParams);
   const { data, isFetching, isLoading } = useQuery(getProductsQuery(params));
-  // const loaderData: IProductsCollection =
-  //   useLoaderData() as IProductsCollection;
 
-  Logger.info("products data", [data]);
   if (!data) return null;
   const { products, meta } = data || {};
   const pages = Math.ceil(meta.total / params.limit);
@@ -38,10 +28,9 @@ const ProductsPage = () => {
 
   const handleCreate = () => redirect("/products/create");
 
-  if (isLoading)
-    <Box>
-      <CircularProgress />
-    </Box>;
+  if (isLoading || isFetching) {
+    return <Loading />;
+  }
   return (
     <Page>
       <PageHeader
@@ -61,7 +50,7 @@ const ProductsPage = () => {
           </Button>
         </Box>
       </PageHeader>
-      <ProductsList products={products} onRemove={() => {}} />
+      <ProductsList products={products} />
       {/* {data.products.length > 0 && (
         <Button
           w="100%"

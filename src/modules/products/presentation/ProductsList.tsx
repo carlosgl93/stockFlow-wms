@@ -1,32 +1,32 @@
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Box, IconButton } from "@chakra-ui/react";
-import { SearchIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { Box, CircularProgress, IconButton } from "@chakra-ui/react";
+import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IProduct } from "../types";
-import { Logger } from "utils/logger";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useRedirect } from "utils";
+import { useRedirect, useTranslate } from "utils";
+import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
 
 interface IProps {
   products: IProduct[];
   pageSize?: number;
-  onRemove?: (id: string) => void;
 }
 
-const ProductsList = ({ products, pageSize, onRemove }: IProps) => {
+const ProductsList = ({ products }: IProps) => {
   const redirect = useRedirect();
+  const { removeProductMutation, isLoadingRemoveProduct } = useCRUDProducts();
+  const { t } = useTranslate();
 
   if (products.length === 0) {
     return <EmptyStateResult />;
   }
 
-  Logger.info("products", [products]);
-
   const columns: GridColDef[] = [
     {
       field: "actions",
-      headerName: "",
-      width: 150,
+      headerName: t("Actions"),
+      width: 100,
+
       renderCell: (params: GridRenderCellParams<IProduct>) => (
         <Box
           display="flex"
@@ -45,11 +45,17 @@ const ProductsList = ({ products, pageSize, onRemove }: IProps) => {
             icon={<EditIcon />}
             onClick={() => redirect(`/products/edit/${params.row.id}`)}
           />
-          {onRemove && (
+          {!isLoadingRemoveProduct ? (
             <IconButton
               aria-label="Remove Product"
               icon={<DeleteIcon />}
-              onClick={() => onRemove(params.row.id || "")}
+              onClick={() => removeProductMutation(params.row.id || "")}
+            />
+          ) : (
+            <IconButton
+              aria-label="Remove Product"
+              icon={<TimeIcon />}
+              onClick={() => removeProductMutation(params.row.id || "")}
             />
           )}
         </Box>

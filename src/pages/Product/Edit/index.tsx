@@ -3,27 +3,46 @@ import {
   ProductNotFoundResult,
 } from "modules/products/presentation";
 import { InternalErrorResult } from "shared/Result";
-import { ResourceNotFoundException, useQuery } from "utils";
+import { ResourceNotFoundException, useQuery, useTranslate } from "utils";
 import { useNavigate, useParams, useRouteError } from "shared/Router";
-import { getProductQuery } from "modules/products/infrastructure";
-import { CircularProgress } from "@chakra-ui/react";
+import {
+  getProductQuery,
+  useCRUDProducts,
+} from "modules/products/infrastructure";
+import { Loading, Page, PageHeader } from "shared/Layout";
+import { Cancel, Delete } from "shared/Actions";
 
 export const EditProductPage = () => {
   const { productId } = useParams<{ productId: string }>();
-  const navigate = useNavigate();
+  const { t } = useTranslate();
   const { data, isLoading, isError } = useQuery(
     getProductQuery(productId as string)
   );
+
+  const { removeProductMutation } = useCRUDProducts();
+
+  const navigate = useNavigate();
 
   if (isError || !data) {
     return <ProductNotFoundResult />;
   }
 
   if (isLoading) {
-    return <CircularProgress />;
+    return <Loading />;
   }
 
-  return <CreateProductForm productToEdit={data} />;
+  return (
+    <Page>
+      <PageHeader
+        title={t("Edit Product")}
+        description={t("Edit your product.")}
+        position="sticky"
+      >
+        <Cancel onCancel={() => navigate(-1)} />
+      </PageHeader>
+      <CreateProductForm productToEdit={data} />;
+    </Page>
+  );
 };
 
 export const Component = EditProductPage;

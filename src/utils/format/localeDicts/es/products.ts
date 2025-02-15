@@ -87,4 +87,11 @@ export const products = {
   "A part of out {category} collection.":
     "Parte de nuestra colección {category}.",
   "Edit Product": "Editar Producto",
+  "Product updated successfully": "Producto actualizado exitosamente",
+  "Product removed successfully": "Producto eliminado exitosamente",
+  "Error updating product": "Error actualizando producto",
+  "Error removing product": "Error eliminando producto",
+  "Products list": "Lista de productos",
+  "Create, edit, remove products.": "Crea, edita, elimina productos.",
+  "Edit your product.": "Edita tu producto.",
 };

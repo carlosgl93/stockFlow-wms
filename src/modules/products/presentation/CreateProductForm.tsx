@@ -29,6 +29,7 @@ import { ValidationError } from "shared/Error";
 import { useLocation } from "shared/Router";
 import { queryClient } from "utils";
 import { editProduct } from "../infrastructure";
+import { Loading } from "shared/Layout";
 
 export const CreateProductForm = ({
   productToEdit,
@@ -64,12 +65,6 @@ export const CreateProductForm = ({
         status: "success",
       });
       reset();
-      // await queryClient.invalidateQueries({
-      //   predicate: (query) => {
-      //     Logger.info("invalidating query", [query]);
-      //     return query.queryKey[0] === "products";
-      //   },
-      // });
       Logger.info("setting query data", [data]);
       queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
         if (old) {
@@ -175,7 +170,7 @@ export const CreateProductForm = ({
   }, [setValue, productToEdit, trigger]);
 
   if (isLoading) {
-    return <Box>Loading...</Box>;
+    return <Loading />;
   }
 
   return (

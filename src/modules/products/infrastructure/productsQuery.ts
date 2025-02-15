@@ -5,7 +5,6 @@ import { IQueryParams, IMeta } from "types";
 import { queryClient, useQuery } from "utils";
 
 import { IProduct } from "../types";
-import { IProductDto } from "./types";
 import {
   collection,
   getDocs,
@@ -15,7 +14,6 @@ import {
   getCountFromServer,
 } from "firebase/firestore";
 import { db } from "shared/firebase";
-import { Logger } from "utils/logger";
 
 const defaultParams = { limit: 10, sort: "asc" };
 
@@ -65,6 +63,11 @@ export const useProductsQuery = (
   return useQuery({
     ...getProductsQuery(params),
     ...options,
+    enabled:
+      queryClient.getQueryData(getProductsQueryKey(params)) === undefined,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
 
