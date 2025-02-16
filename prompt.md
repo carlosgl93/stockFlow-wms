@@ -84,81 +84,98 @@ When writing code, Copilot should:
 ---
 
 ERD:
+
 +------------------+ +------------------+ +------------------+
 | Product | | Stock | | Lot |
 +------------------+ +------------------+ +------------------+
-| - id: string |<------| - id: string | -- | - id: string |
+| - id: string |<----| - id: string | --| - id: string |
 | - extCode: string| | - productId: string| | | - name: string |
 | - intCode: string| | - quantity: number| | | - entryDate: date|
-| - name: string | | - lotId: string | <-- | - departureDate: date|
-| - price: number | | - updatedAt: date| | - movementHistory: string|
-| - riskCategory: enum| +------------------+ +------------------+
+| - name: string | | - lotId: string |<-- | - departureDate: |
+| - price: number | | - updatedAt: date| | date |
+| - riskCategory: | +------------------+ | - movementHistory|
+| enum | +------------------+
 | - category: enum |
-| - safetyDoc: string|
+| - safetyDoc: |
+| string |
 | - boxOrUnit: enum|
 | - boxDetails: |
-| - units: number|
-| - quantity: number|
-| - unitOfMeasure: enum|
+| - units: number |
+| - quantity: |
+| number |
+| - unitOfMeasure: |
+| enum |
 | - container: enum|
 | - type: enum |
-| - kilos: number|
-| - height: number|
-| - width: number|
-| - depth: number|
-| - unitsPerSurface: number|
-| - palletType: enum|
+| - kilos: number |
+| - height: number |
+| - width: number |
+| - depth: number |
+| - unitsPerSurface|
+| : number |
+| - palletType: |
+| enum |
 +------------------+
 
 +------------------+ +------------------+ +------------------+
 | LotProduct | | Movement | | Tag/Label |
 +------------------+ +------------------+ +------------------+
 | - id: string | | - id: string | | - id: string |
-| - lotId: string |<------| - productId: string| | - productId: string|
-| - productId: string| | - fromLotId: string| | - lotId: string |
-| - quantity: number| | - toLotId: string| | - expirationDate: date|
-+------------------+ | - date: date | | - location: string|
-+------------------+ +------------------+
+| - lotId: string |<----| - productId: | | - productId: |
+| - productId: | | string | | string |
+| string | | - fromLotId: | | - lotId: string |
+| - quantity: | | string | | - expirationDate:|
+| number | | - toLotId: string| | date |
++------------------+ | - date: date | | - location: |
++------------------+ | string |
++------------------+
 
-+------------------+
-| ProductHistory |
-+------------------+
-| - id: string |
-| - productId: string|
-| - entryDate: date|
-| - departureDate: date|
-| - details: string|
++------------------+ +------------------+ +------------------+
+| ProductHistory | | Suppliers | | Contact |
++------------------+ +------------------+ +------------------+
+| - id: string | | - company: string| | - name: string |
+| - productId: | | - idNumber: string| | - email: string |
+| string | | - businessCategory:| | - phone: string |
+| - entryDate: date| | string | +------------------+
+| - departureDate: | | - county: string |
+| date | | - region: string |
+| - details: string| | - fax: string |
++------------------+ | - phone: string |
+| - website: string|
+| - email: string |
+| - address: string|
+| - contact: IContact|
 +------------------+
 
 Entity Descriptions:
-Product: Represents a product in the warehouse.
 
-Attributes: id, extCode, intCode, name, price, riskCategory, category, safetyDoc, boxOrUnit, boxDetails, palletType.
-Stock: Represents the stock levels of a product.
+- **Product:** Represents a product in the warehouse.
+  - Attributes: id, extCode, intCode, name, price, riskCategory, category, safetyDoc, boxOrUnit, boxDetails, palletType.
+- **Stock:** Represents the stock levels of a product.
+  - Attributes: id, productId, quantity, lotId, updatedAt.
+- **Lot:** Represents a lot of products, tracking entry, departure, and movement history.
+  - Attributes: id, entryDate, departureDate, movementHistory.
+- **LotProduct:** Represents the many-to-many relationship between Lot and Product.
+  - Attributes: id, lotId, productId, quantity.
+- **Movement:** Represents the movement of products between warehouse locations.
+  - Attributes: id, productId, fromLotId, toLotId, date.
+- **Tag/Label:** Represents tags or labels assigned to products, including lot locations and expiration dates.
+  - Attributes: id, productId, lotId, expirationDate, location.
+- **ProductHistory:** Represents the history of product entries and departures within a date range.
+  - Attributes: id, productId, entryDate, departureDate, details.
+- **Suppliers:** Represents a supplier in the system.
+  - Attributes: company, idNumber, businessCategory, county, region, fax, phone, website, email, address, contact.
+- **IContact:** Represents the contact information for a supplier.
+  - Attributes: name, email, phone.
 
-Attributes: id, productId, quantity, lotId, updatedAt.
-Lot: Represents a lot of products, tracking entry, departure, and movement history.
-
-Attributes: id, entryDate, departureDate, movementHistory.
-LotProduct: Represents the many-to-many relationship between Lot and Product.
-
-Attributes: id, lotId, productId, quantity.
-Movement: Represents the movement of products between warehouse locations.
-
-Attributes: id, productId, fromLotId, toLotId, date.
-Tag/Label: Represents tags or labels assigned to products, including lot locations and expiration dates.
-
-Attributes: id, productId, lotId, expirationDate, location.
-ProductHistory: Represents the history of product entries and departures within a date range.
-
-Attributes: id, productId, entryDate, departureDate, details.
 Relationships:
-Product to Stock: One-to-Many (A product can have multiple stock entries).
-Product to LotProduct: One-to-Many (A product can be part of multiple lot products).
-Lot to LotProduct: One-to-Many (A lot can have multiple lot products).
-Product to Movement: One-to-Many (A product can have multiple movements).
-Product to Tag/Label: One-to-Many (A product can have multiple tags/labels).
-Product to ProductHistory: One-to-Many (A product can have multiple history entries).
-Lot to Tag/Label: One-to-Many (A lot can have multiple tags/labels).
+
+- **Product to Stock:** One-to-Many (A product can have multiple stock entries).
+- **Product to LotProduct:** One-to-Many (A product can be part of multiple lot products).
+- **Lot to LotProduct:** One-to-Many (A lot can have multiple lot products).
+- **Product to Movement:** One-to-Many (A product can have multiple movements).
+- **Product to Tag/Label:** One-to-Many (A product can have multiple tags/labels).
+- **Product to ProductHistory:** One-to-Many (A product can have multiple history entries).
+- **Lot to Tag/Label:** One-to-Many (A lot can have multiple tags/labels).
 
 This document serves as a guide to ensure AI-assisted code generation aligns with project standards and goals.

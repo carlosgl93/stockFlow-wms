@@ -28,7 +28,7 @@ export const getProductsQueryKey = (params: IQueryParams = defaultParams) => [
 ];
 
 export const getProductsQuery = (params: IQueryParams = defaultParams) => ({
-  queryKey: getProductsQueryKey(params),
+  queryKey: "products",
   queryFn: async (): Promise<IProductsCollection> => {
     const productsRef = collection(db, "products");
     let productsQuery = query(productsRef, limit(params.limit));
@@ -55,22 +55,3 @@ export const getProductsQuery = (params: IQueryParams = defaultParams) => ({
     };
   },
 });
-
-export const useProductsQuery = (
-  params: IQueryParams = defaultParams,
-  options?: UseQueryOptions<IProductsCollection>
-) => {
-  return useQuery({
-    ...getProductsQuery(params),
-    ...options,
-    enabled:
-      queryClient.getQueryData(getProductsQueryKey(params)) === undefined,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-  });
-};
-
-export const productsLoader = async (params: IQueryParams = defaultParams) => {
-  return queryClient.ensureQueryData(getProductsQuery(params));
-};

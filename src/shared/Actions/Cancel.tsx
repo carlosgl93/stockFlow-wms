@@ -1,6 +1,6 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { Button } from "@chakra-ui/react";
-import { useRedirect, useTranslate } from "utils";
+import { useTranslate } from "utils";
 
 export const Cancel = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslate();

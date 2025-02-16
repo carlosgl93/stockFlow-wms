@@ -4,16 +4,13 @@ import { withRouter } from "storybook-addon-remix-react-router";
 import { getAddToCartHandler, getProductsHandler } from "utils";
 
 import { Component } from "./index";
-import { productsPageLoader } from "./loader";
 
 const meta = {
   title: "pages/Products",
   component: Component,
   parameters: {
     layout: "centered",
-    reactRouter: {
-      loader: productsPageLoader,
-    },
+    reactRouter: {},
   },
   decorators: [withRouter],
 } satisfies Meta<typeof Component>;

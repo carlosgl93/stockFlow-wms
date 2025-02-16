@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@chakra-ui/react";
 import { UpdateLotParams, addLot, removeLot, updateLot } from "./mutations";
-import { useQuery, useTranslate } from "utils";
+import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { useParams } from "shared/Router";
 import { getLots } from "./queries/getLots";
 import { useState } from "react";
@@ -11,6 +11,7 @@ export const useLots = () => {
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
+  const redirect = useRedirect();
 
   const params = useParams();
 
@@ -24,6 +25,8 @@ export const useLots = () => {
         title: t("Lot added successfully."),
         status: "success",
       });
+      queryClient.invalidateQueries(["lots"]);
+      redirect("/lots");
     },
     onError: () => {
       toast({
@@ -45,6 +48,7 @@ export const useLots = () => {
           title: t("Lot updated successfully."),
           status: "success",
         });
+        queryClient.invalidateQueries(["lots"]);
       },
       onError: () => {
         toast({
@@ -65,6 +69,7 @@ export const useLots = () => {
         title: t("Lot removed successfully."),
         status: "success",
       });
+      queryClient.invalidateQueries(["lots"]);
     },
     onError: () => {
       toast({

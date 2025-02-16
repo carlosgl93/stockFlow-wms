@@ -86,14 +86,6 @@ const LotsList = ({ lots }: IProps) => {
   return (
     <Box height={400} width="100%">
       <AppThemeProvider>
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="teal"
-          onClick={() => redirect("/lots/create")}
-          mb={4}
-        >
-          {t("Create New Lot")}
-        </Button>
         <DataGrid rows={rows} columns={columns} rowCount={lots?.length} />
       </AppThemeProvider>
     </Box>

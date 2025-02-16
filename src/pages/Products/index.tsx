@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { SearchIcon, AddIcon } from "@chakra-ui/icons";
-import { Box, Button, CircularProgress, Text } from "@chakra-ui/react";
+import { Box, Button, Text } from "@chakra-ui/react";
 import { IQueryParams } from "types";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
@@ -9,7 +9,17 @@ import { useNotImplementedYetToast } from "shared/Toast";
 import { ProductsList } from "modules/products/presentation";
 import { withRequireAuth } from "modules/auth/application";
 import { useQuery, useRedirect, useTranslate } from "utils";
-import { getProductsQuery } from "modules/products/infrastructure";
+import { IProductsCollection } from "modules/products/infrastructure";
+import {
+  collection,
+  getCountFromServer,
+  getDocs,
+  limit,
+  query,
+  startAfter,
+} from "firebase/firestore";
+import { db } from "shared/firebase";
+import { IProduct } from "modules/products/types";
 
 const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
@@ -19,7 +29,34 @@ const ProductsPage = () => {
   const { t } = useTranslate();
 
   const [params, setParams] = useState<IQueryParams>(defaultParams);
-  const { data, isFetching, isLoading } = useQuery(getProductsQuery(params));
+  const { data, isFetching, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async (): Promise<IProductsCollection> => {
+      const productsRef = collection(db, "products");
+      let productsQuery = query(productsRef, limit(params.limit));
+
+      if (params.startAfter) {
+        productsQuery = query(productsRef, startAfter(params.startAfter));
+      }
+      const querySnapshot = await getDocs(productsQuery);
+      const products: IProduct[] = [];
+      querySnapshot.forEach((doc) => {
+        products.push({ id: doc.id, ...doc.data() } as IProduct);
+      });
+
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      const countSnapshot = await getCountFromServer(productsRef);
+
+      return {
+        products,
+        meta: {
+          ...params,
+          total: countSnapshot.data().count,
+          lastVisible,
+        },
+      };
+    },
+  });
 
   if (!data) return null;
   const { products, meta } = data || {};

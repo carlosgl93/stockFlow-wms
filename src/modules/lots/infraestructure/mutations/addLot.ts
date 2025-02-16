@@ -16,7 +16,7 @@ export const addLot = async (lot: ILot): Promise<void> => {
   }
 
   try {
-    const lotProductRef = collection(db, "lotProducts");
+    const lotProductRef = collection(db, "lots");
     await addDoc(lotProductRef, lot);
   } catch (error) {
     throw new APIError("Failed to add lot product", error);

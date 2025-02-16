@@ -3,9 +3,7 @@ import { createBrowserRouter, ScrollRestoration } from "react-router-dom";
 
 import { Layout } from "shared/Layout";
 
-import { homePageLoader } from "./Home/loader";
 import { productPageLoader } from "./Product/loader";
-import { productsPageLoader } from "./Products/loader";
 import { entriesPageLoader } from "./Entries/loader";
 import { stockPageLoader } from "./Stock/loader";
 import { dispatchesPageLoader } from "./Dispatches/loader";
@@ -22,7 +20,6 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        loader: homePageLoader,
         lazy: () => import("./Home"),
       },
       {
@@ -57,6 +54,10 @@ export const router = createBrowserRouter([
         lazy: () => import("./Lots"),
       },
       {
+        path: "/lots/create",
+        lazy: () => import("./Lots/Create"),
+      },
+      {
         path: "/lots/:lotProductId",
         lazy: () => import("./LotProduct/Lot"),
       },
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
         path: "/entries",
         loader: dispatchesPageLoader,
         lazy: () => import("./Entries"),
+      },
+      {
+        path: "/entries/create",
+        lazy: () => import("./Entries/Create"),
       },
       {
         path: "/dispatches",

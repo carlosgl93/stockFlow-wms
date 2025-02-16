@@ -5,17 +5,19 @@ import { LotsList } from "modules/lots/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
-import { useTranslate } from "utils";
+import { useRedirect, useTranslate } from "utils";
 import { Logger } from "utils/logger";
 
 const LotsPage = () => {
   const { t } = useTranslate();
   const notImplemented = useNotImplementedYetToast();
+  const redirect = useRedirect();
   const { getLotsData, isLoadingGetLots } = useLots();
   Logger.info("getLotsData", [getLotsData]);
 
   const handleCreate = () => {
     // TODO: implement lot creation
+    redirect("/lots/create");
   };
 
   if (isLoadingGetLots) return <Loading />;

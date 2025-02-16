@@ -13,7 +13,7 @@ export const NAV_ITEMS: Array<INavItem> = [
     label: "Stock",
     children: [
       {
-        label: "Tracking by lot",
+        label: "Lots",
         subLabel: "Manage lots and check their history",
         href: "/lots",
       },

@@ -18,4 +18,8 @@ export const lots = {
   "Tracking by lot": "Seguimiento por lote",
   "Manage lots and check their history":
     "Administra lotes y verifica su historial",
+  "Lots list": "Lista de lotes",
+  "Create, edit, remove lots.": "Crea, edita, elimina lotes.",
+  "Create Lot": "Crear lote",
+  "Create your lot.": "Crea tu lote.",
 };

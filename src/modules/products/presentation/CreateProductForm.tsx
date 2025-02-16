@@ -57,7 +57,7 @@ export const CreateProductForm = ({
     isError,
     error,
     isSuccess,
-  } = useMutation(["addProduct"], saveProduct, {
+  } = useMutation(saveProduct, {
     onSuccess: async (data) => {
       toast({
         title: t("Product created"),
@@ -66,12 +66,13 @@ export const CreateProductForm = ({
       });
       reset();
       Logger.info("setting query data", [data]);
-      queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
-        if (old) {
-          return [...old, data];
-        }
-        return [data];
-      });
+      // queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
+      //   if (old) {
+      //     return [...old, data];
+      //   }
+      //   return [data];
+      // });
+      queryClient.invalidateQueries(["products"]);
 
       redirect("/products");
     },

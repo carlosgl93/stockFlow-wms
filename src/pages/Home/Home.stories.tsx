@@ -4,16 +4,13 @@ import { withRouter } from "storybook-addon-remix-react-router";
 import { getProductsHandler } from "utils";
 
 import { Component } from "./index";
-import { homePageLoader } from "./loader";
 
 const meta = {
   title: "pages/Home",
   component: Component,
   parameters: {
     layout: "centered",
-    reactRouter: {
-      loader: homePageLoader,
-    },
+    reactRouter: {},
   },
   decorators: [withRouter],
 } satisfies Meta<typeof Component>;

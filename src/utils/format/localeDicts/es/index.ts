@@ -4,6 +4,8 @@ import { home } from "./home";
 import { products } from "./products";
 import { validation } from "./validation";
 import { lots } from "./lots";
+import { stock } from "./stock";
+import { entries } from "./entries";
 
 export const es = {
   ...auth,
@@ -11,6 +13,8 @@ export const es = {
   ...home,
   ...lots,
   ...products,
+  ...stock,
+  ...entries,
   ...validation,
   "Field is required.": "Este campo es requirido.",
   // Add more translations as needed
