@@ -51,21 +51,6 @@ const ProductsPage = () => {
         </Box>
       </PageHeader>
       <ProductsList products={products} />
-      {/* {data.products.length > 0 && (
-        <Button
-          w="100%"
-          onClick={() =>
-            setParams((params) => ({
-              ...params,
-              limit: (params?.limit ?? 10) + 10,
-            }))
-          }
-          isLoading={isFetching}
-          isDisabled={noMoreProducts}
-        >
-          {noMoreProducts ? t("No more products") : t("Show more products")}
-        </Button>
-      )} */}
     </Page>
   );
 };

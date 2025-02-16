@@ -7,7 +7,7 @@ export class ValidationError extends Error {
 }
 
 export class APIError extends Error {
-  constructor(message: string, public code?: number) {
+  constructor(message: string, error: unknown, public code?: number) {
     super(message);
     this.name = "APIError";
     this.code = code;

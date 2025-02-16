@@ -15,4 +15,8 @@ export const validation = {
   "Passwords do not match": "Las contraseñas no coinciden",
   "Firebase: Error (auth/user-not-found).": "Usuario no encontrado",
   "Email is required": "El correo electrónico es requerido",
+  "No results found": "No se encontraron resultados",
+  "Unfortunately, there is nothing for you here yet!":
+    "¡Desafortunadamente, aún no hay nada para ti aquí!",
+  "Reset filters": "Restablecer filtros",
 };
