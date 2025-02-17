@@ -85,67 +85,51 @@ When writing code, Copilot should:
 
 ERD:
 
-+------------------+ +------------------+ +------------------+
-| Product | | Stock | | Lot |
-+------------------+ +------------------+ +------------------+
-| - id: string |<----| - id: string | --| - id: string |
-| - extCode: string| | - productId: string| | | - name: string |
-| - intCode: string| | - quantity: number| | | - entryDate: date|
-| - name: string | | - lotId: string |<-- | - departureDate: |
-| - price: number | | - updatedAt: date| | date |
-| - riskCategory: | +------------------+ | - movementHistory|
-| enum | +------------------+
-| - category: enum |
-| - safetyDoc: |
-| string |
-| - boxOrUnit: enum|
-| - boxDetails: |
-| - units: number |
-| - quantity: |
-| number |
-| - unitOfMeasure: |
-| enum |
-| - container: enum|
-| - type: enum |
-| - kilos: number |
-| - height: number |
-| - width: number |
-| - depth: number |
-| - unitsPerSurface|
-| : number |
-| - palletType: |
-| enum |
-+------------------+
+| Product                   | Stock               | Lot                   |
+| ------------------------- | ------------------- | --------------------- |
+| - id: string              | - id: string        | - id: string          |
+| - extCode: string         | - productId: string | - name: string        |
+| - intCode: string         | - quantity: number  | - entryDate: date     |
+| - name: string            | - lotId: string     | - departureDate: date |
+| - price: number           | - updatedAt: date   | - movementHistory     |
+| - riskCategory: enum      |                     |                       |
+| - category: enum          |                     |                       |
+| - safetyDoc: string       |                     |                       |
+| - boxOrUnit: enum         |                     |                       |
+| - boxDetails:             |                     |                       |
+| - units: number           |                     |                       |
+| - quantity: number        |                     |                       |
+| - unitOfMeasure: enum     |                     |                       |
+| - container: enum         |                     |                       |
+| - type: enum              |                     |                       |
+| - kilos: number           |                     |                       |
+| - height: number          |                     |                       |
+| - width: number           |                     |                       |
+| - depth: number           |                     |                       |
+| - unitsPerSurface: number |                     |                       |
+| - palletType: enum        |                     |                       |
 
-+------------------+ +------------------+ +------------------+
-| LotProduct | | Movement | | Tag/Label |
-+------------------+ +------------------+ +------------------+
-| - id: string | | - id: string | | - id: string |
-| - lotId: string |<----| - productId: | | - productId: |
-| - productId: | | string | | string |
-| string | | - fromLotId: | | - lotId: string |
-| - quantity: | | string | | - expirationDate:|
-| number | | - toLotId: string| | date |
-+------------------+ | - date: date | | - location: |
-+------------------+ | string |
-+------------------+
+| LotProduct          | Movement            | Tag/Label              |
+| ------------------- | ------------------- | ---------------------- |
+| - id: string        | - id: string        | - id: string           |
+| - lotId: string     | - productId: string | - productId: string    |
+| - productId: string | - fromLotId: string | - lotId: string        |
+| - quantity: number  | - toLotId: string   | - expirationDate: date |
+|                     | - date: date        | - location: string     |
 
-+------------------+ +------------------+ +------------------+
-| ProductHistory | | Suppliers | | Contact |
-+------------------+ +------------------+ +------------------+
-| - id: string | | - company: string| | - name: string |
-| - productId: | | - idNumber: string| | - email: string |
-| string | | - businessCategory:| | - phone: string |
-| - entryDate: date| | string | +------------------+
-| - departureDate: | | - county: string |
-| date | | - region: string |
-| - details: string| | - fax: string |
-+------------------+ | - phone: string |
-| - website: string|
-| - email: string |
-| - address: string|
-| - contact: IContact|
-+------------------+
+| ProductHistory        | Suppliers                  | Contact         |
+| --------------------- | -------------------------- | --------------- |
+| - id: string          | - company: string          | - name: string  |
+| - productId: string   | - idNumber: string         | - email: string |
+| - entryDate: date     | - businessCategory: string | - phone: string |
+| - departureDate: date | - county: string           |                 |
+| - details: string     | - region: string           |                 |
+|                       | - fax: string              |                 |
+|                       | - phone: string            |                 |
+|                       | - website: string          |                 |
+|                       | - email: string            |                 |
+|                       | - address: string          |                 |
+|                       | - contact: IContact        |                 |
 
 Entity Descriptions:
 

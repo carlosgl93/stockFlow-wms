@@ -13,5 +13,4 @@ export interface IEntry {
   heightCMs: number;
   widthCMs: number;
   description: string; // equivalent to nota
-  // Add more fields as needed
 }

@@ -11,3 +11,4 @@ export {
 } from "./productQuery";
 export { editProduct } from "./editProduct";
 export { useCRUDProducts } from "./useCRUDProducts";
+export * from "./searchProduct";

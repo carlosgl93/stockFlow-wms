@@ -94,4 +94,9 @@ export const products = {
   "Products list": "Lista de productos",
   "Create, edit, remove products.": "Crea, edita, elimina productos.",
   "Edit your product.": "Edita tu producto.",
+  "No matches for that search term":
+    "No hay coincidencias para ese término de búsqueda",
+  "Search for a product": "Buscar un producto",
+  "Start by searching for a product name":
+    "Empieza buscando un nombre de producto",
 };

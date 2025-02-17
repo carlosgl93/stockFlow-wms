@@ -13,20 +13,30 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Text,
 } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEntries } from "../infraestructure/useEntries";
 import { useNotImplementedYetToast, useToast } from "shared/Toast";
 import { IEntry } from "../types";
 import { useTranslate } from "utils";
 import { Loading } from "shared/Layout";
-import { AddButton } from "shared/Actions";
+import { AddButton, Search } from "shared/Actions";
 import { Logger } from "utils/logger";
 import { useSuppliers, CreateSupplierForm } from "modules/suppliers";
 import { useLots } from "modules/lots/infraestructure";
+import { EntryFixture } from "utils/fixtures";
+import { SearchProduct } from "modules/products/presentation";
+import { IProduct } from "modules/products/types";
+import { SearchIcon } from "@chakra-ui/icons";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
+  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [productsSearched, setProductsSearched] = useState<null | IProduct[]>(
+    null
+  );
+
   const {
     addEntryMutation,
     updateEntryMutation,
@@ -37,7 +47,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers();
   const { getLotsData } = useLots();
 
-  Logger.info("getSuppliersData", [getSuppliersData, getLotsData]);
+  Logger.info("products searched", [productsSearched]);
 
   const {
     handleSubmit,
@@ -51,6 +61,10 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const toast = useToast();
   const { t } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleProductSelect = (product: IProduct) => {
+    setValue("productId", product?.id || "");
+  };
 
   const onSubmit = async (data: IEntry) => {
     const validation = await trigger();
@@ -94,7 +108,22 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     }
   }, [setValue, entryToEdit, trigger]);
 
-  if (isLoadingAddEntry || isLoadingUpdateEntry) {
+  useEffect(() => {
+    if (entryToEdit) {
+      Object.keys(entryToEdit).forEach((key) => {
+        setValue(key as keyof IEntry, entryToEdit[key as keyof IEntry]);
+      });
+      trigger();
+    } else if (import.meta.env.MODE === "development") {
+      const entry = EntryFixture.toStructure();
+      Object.keys(entry).forEach((key) => {
+        setValue(key as keyof IEntry, entry[key as keyof IEntry]);
+      });
+      trigger();
+    }
+  }, [setValue, entryToEdit, trigger]);
+
+  if (isLoadingAddEntry || isLoadingUpdateEntry || isLoadingGetSuppliers) {
     return <Loading />;
   }
 
@@ -179,22 +208,41 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
       </Box>
       <Box display="flex" justifyContent="space-around" gap={16}>
         <FormControl mb={4}>
-          <FormLabel>{t("Product ID")}</FormLabel>
+          <Box
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+          >
+            <FormLabel>{t("Product ID")}</FormLabel>
+            <Search onSearch={() => setIsSearchingProduct((prev) => !prev)} />
+          </Box>
           <Controller
             name="productId"
             control={control}
             defaultValue=""
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
-                <option value="">{t("Select the product")}</option>
-                {/* TODO: MAP OVER THE products CREATED */}
-                {/* {getProductsData?.products.map((products) => (
-                    <option key={products.id} value={products.id}>
-                      {products.company}
-                    </option>
-                  ))} */}
-              </Select>
+              <>
+                {isSearchingProduct && (
+                  <SearchProduct setResults={setProductsSearched} />
+                )}
+                {productsSearched?.length === 0 && isSearchingProduct ? null : (
+                  <Select
+                    {...field}
+                    placeholder={
+                      productsSearched?.length
+                        ? ""
+                        : t("Start by searching for a product name")
+                    }
+                  >
+                    {productsSearched?.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </>
             )}
           />
           {errors.productId && (
