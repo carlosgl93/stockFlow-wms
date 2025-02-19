@@ -2,9 +2,10 @@ export interface IEntry {
   id: string;
   supplierId: string;
   docNumber: string;
-  transporter: string; // name of the driver
+  transporterId: string; // name of the driver
   productId: string;
   lotId: string;
+  stockId: string;
   expirityDate: string;
   palletNumber: string;
   unitsNumber: number;
@@ -13,4 +14,6 @@ export interface IEntry {
   heightCMs: number;
   widthCMs: number;
   description: string; // equivalent to nota
+  createdAt?: string;
+  updatedAt?: string;
 }

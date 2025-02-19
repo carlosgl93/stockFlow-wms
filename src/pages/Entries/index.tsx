@@ -1,6 +1,9 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
-import { Page, PageHeader } from "shared/Layout";
+import { withRequireAuth } from "modules/auth/application";
+import { useEntries } from "modules/entries/infraestructure";
+import { EntriesList } from "modules/entries/presentation";
+import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 import { useRedirect, useTranslate } from "utils";
@@ -10,9 +13,10 @@ const EntriesPage = () => {
   const { t } = useTranslate();
   const redirect = useRedirect();
   const handleCreate = () => {
-    // TODO: implement lot creation
     redirect("/entries/create");
   };
+
+  const { entriesData, isLoadingGetEntries } = useEntries();
 
   return (
     <Page>
@@ -33,11 +37,15 @@ const EntriesPage = () => {
           </Button>
         </Box>
       </PageHeader>
-      {/* <LotsList lots={getLotsData?.lots} /> */}
+      {isLoadingGetEntries ? (
+        <Loading size="md" />
+      ) : (
+        <EntriesList entries={entriesData} />
+      )}
     </Page>
   );
 };
 
-export const Component = EntriesPage;
+export const Component = withRequireAuth(EntriesPage, { to: "/sign-in" });
 
 export const ErrorBoundary = ErrorPageStrategy;

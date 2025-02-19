@@ -1,7 +1,7 @@
 import { IContact } from "./IContact";
 
 export interface ISupplier {
-  id: string;
+  id?: string;
   company: string;
   idNumber: string;
   businessCategory: string;

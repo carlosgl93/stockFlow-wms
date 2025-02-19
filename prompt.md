@@ -85,29 +85,30 @@ When writing code, Copilot should:
 
 ERD:
 
-| Product                   | Stock               | Lot                   |
-| ------------------------- | ------------------- | --------------------- |
-| - id: string              | - id: string        | - id: string          |
-| - extCode: string         | - productId: string | - name: string        |
-| - intCode: string         | - quantity: number  | - entryDate: date     |
-| - name: string            | - lotId: string     | - departureDate: date |
-| - price: number           | - updatedAt: date   | - movementHistory     |
-| - riskCategory: enum      |                     |                       |
-| - category: enum          |                     |                       |
-| - safetyDoc: string       |                     |                       |
-| - boxOrUnit: enum         |                     |                       |
-| - boxDetails:             |                     |                       |
-| - units: number           |                     |                       |
-| - quantity: number        |                     |                       |
-| - unitOfMeasure: enum     |                     |                       |
-| - container: enum         |                     |                       |
-| - type: enum              |                     |                       |
-| - kilos: number           |                     |                       |
-| - height: number          |                     |                       |
-| - width: number           |                     |                       |
-| - depth: number           |                     |                       |
-| - unitsPerSurface: number |                     |                       |
-| - palletType: enum        |                     |                       |
+| Product                   | Stock                      | Lot                   |
+| ------------------------- | -------------------------- | --------------------- |
+| - id: string              | - id: string               | - id: string          |
+| - extCode: string         | - productId: string        | - name: string        |
+| - intCode: string         | - unitsNumber: number      |                       |
+|                           | - looseUnitsNumber: number | - entryDate: date     |
+| - name: string            | - lotId: string            | - departureDate: date |
+| - price: number           | - updatedAt: date          | - movementHistory     |
+| - riskCategory: enum      |                            |                       |
+| - category: enum          |                            |                       |
+| - safetyDoc: string       |                            |                       |
+| - boxOrUnit: enum         |                            |                       |
+| - boxDetails:             |                            |                       |
+| - units: number           |                            |                       |
+| - quantity: number        |                            |                       |
+| - unitOfMeasure: enum     |                            |                       |
+| - container: enum         |                            |                       |
+| - type: enum              |                            |                       |
+| - kilos: number           |                            |                       |
+| - height: number          |                            |                       |
+| - width: number           |                            |                       |
+| - depth: number           |                            |                       |
+| - unitsPerSurface: number |                            |                       |
+| - palletType: enum        |                            |                       |
 
 | LotProduct          | Movement            | Tag/Label              |
 | ------------------- | ------------------- | ---------------------- |
@@ -130,6 +131,12 @@ ERD:
 |                       | - email: string            |                 |
 |                       | - address: string          |                 |
 |                       | - contact: IContact        |                 |
+
+| Transporter    |
+| -------------- |
+| - id: string   |
+| - name: string |
+|                |
 
 Entity Descriptions:
 
@@ -163,3 +170,50 @@ Relationships:
 - **Lot to Tag/Label:** One-to-Many (A lot can have multiple tags/labels).
 
 This document serves as a guide to ensure AI-assisted code generation aligns with project standards and goals.
+
+## StockFlow WMS - Business Rules
+
+### 1. Product Management Rules
+
+- A product **must** have a unique `extCode` or `intCode`.
+- Products **must** be categorized into predefined `riskCategory` and `category` enums.
+- The `safetyDoc` **must** be uploaded for hazardous products (`riskCategory` = Toxic, Corrosive, Auto Flammable).
+- Products added **must** specify if they are stored as `boxOrUnit`.
+- If stored as a **box**, `units` per box and `quantity` of boxes **must** be provided.
+- **Product dimensions (`height`, `width`, `depth`, `kilos`) must be provided** if stored in a pallet.
+
+### 2. Stock Management Rules
+
+- Stock **must always be associated** with a product and a `lotId`.
+- A product's **stock quantity cannot go negative** (ensure inventory integrity).
+- Updating stock **must trigger** an `updatedAt` timestamp.
+- Stock movements **must be recorded** in `ProductHistory`.
+
+### 3. Lot Management Rules
+
+- A **lot cannot be deleted if there is stock assigned to it**.
+- Each product entry **must be assigned to a lot**.
+- Lots **must track** `entryDate`, `departureDate`, and `movementHistory`.
+- If a lot is **expired**, stock **must be flagged** for review.
+
+### 4. Tracking & Labeling Rules
+
+- Each product **must have at least one assigned tag/label**.
+- Products with expiration dates **must have a tag/label** for tracking.
+- A label **must include the `expirationDate` and `location`**.
+
+### 5. Movements & Product History Rules
+
+- Any product movement **must be logged** in `Movement` and `ProductHistory`.
+- A product **must have an assigned `fromLotId` and `toLotId`** when moved.
+- **No duplicate movements** (same product, same source and destination, within a short timeframe).
+
+### 6. Supplier & Transporter Rules
+
+- A supplier **must have a valid `idNumber`** (RUT, tax ID, etc.).
+- A supplier **must be linked to at least one product**.
+- A transporter **must have a registered `name`** before being assigned to deliveries.
+
+---
+
+These rules help maintain **data integrity, prevent inconsistencies, and ensure smooth warehouse operations**.

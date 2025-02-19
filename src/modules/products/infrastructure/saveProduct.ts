@@ -60,5 +60,6 @@ export const saveProduct = async (product: IProduct) => {
     safetyDocument: null, // Remove the FileList from the product data
   };
   const docRef = await addDoc(collection(db, "products"), productData);
-  return { ...productData, id: docRef.id };
+  productData.id = docRef.id;
+  return productData;
 };

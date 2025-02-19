@@ -11,31 +11,52 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  ModalFooter,
   useDisclosure,
-  Text,
 } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useEntries } from "../infraestructure/useEntries";
-import { useNotImplementedYetToast, useToast } from "shared/Toast";
+import { useToast } from "shared/Toast";
 import { IEntry } from "../types";
 import { useTranslate } from "utils";
-import { Loading } from "shared/Layout";
-import { AddButton, Search } from "shared/Actions";
+import { FlexBox, FlexColumn, Loading } from "shared/Layout";
+import { AddButton, Search as SearchButton } from "shared/Actions";
 import { Logger } from "utils/logger";
-import { useSuppliers, CreateSupplierForm } from "modules/suppliers";
+import {
+  useSuppliers,
+  CreateSupplierForm,
+  ISupplier,
+  searchSupplier,
+} from "modules/suppliers";
 import { useLots } from "modules/lots/infraestructure";
 import { EntryFixture } from "utils/fixtures";
-import { SearchProduct } from "modules/products/presentation";
 import { IProduct } from "modules/products/types";
-import { SearchIcon } from "@chakra-ui/icons";
+import { searchProduct, useProducts } from "modules/products/infrastructure";
+import { Search } from "shared/Form";
+import { ITransporter } from "modules/transporters/types";
+import {
+  searchTransporter,
+  useTransporters,
+} from "modules/transporters/infrastructure";
+import { CreateProductForm } from "modules/products/presentation";
+import { CreateTransporterForm } from "modules/transporters/presentation";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
+  const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-  const [productsSearched, setProductsSearched] = useState<null | IProduct[]>(
-    null
-  );
+  const [searchResults, setSearchedResults] = useState<
+    null | (IProduct | ITransporter | ISupplier)[]
+  >(null);
+
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
+  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
+  const { products: getProductsData } = useProducts(5);
+
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [transporters, setTransporters] = useState<ITransporter[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
 
   const {
     addEntryMutation,
@@ -44,27 +65,58 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     isLoadingUpdateEntry,
   } = useEntries();
 
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers();
   const { getLotsData } = useLots();
-
-  Logger.info("products searched", [productsSearched]);
 
   const {
     handleSubmit,
     control,
     setValue,
     formState: { errors },
-    reset,
     trigger,
     watch,
   } = useForm<IEntry>();
   const toast = useToast();
   const { t } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenCreateTransporter,
+    onOpen: onOpenCreateTransporter,
+    onClose: onCloseCreateTransporter,
+  } = useDisclosure();
 
-  const handleProductSelect = (product: IProduct) => {
-    setValue("productId", product?.id || "");
-  };
+  const {
+    isOpen: isOpenCreateProduct,
+    onOpen: onOpenCreateProduct,
+    onClose: onCloseCreateProduct,
+  } = useDisclosure();
+
+  const handleNewSupplier = useCallback(
+    (newSupplier: ISupplier) => {
+      setSuppliers((prev) => [...prev, newSupplier]);
+      Logger.info("new supplier", [newSupplier]);
+      setValue("supplierId", newSupplier.id || "");
+      onClose();
+    },
+    [setValue, onClose]
+  );
+
+  const handleNewTransporter = useCallback(
+    (newTransporter: ITransporter) => {
+      setTransporters((prev) => [...prev, newTransporter]);
+      setValue("transporterId", newTransporter.id || "");
+      onCloseCreateTransporter();
+    },
+    [setValue, onCloseCreateTransporter]
+  );
+
+  const handleNewProduct = useCallback(
+    (newProduct: IProduct) => {
+      setProducts((prev) => [...prev, newProduct]);
+      setValue("productId", newProduct.id || "");
+      onCloseCreateProduct();
+    },
+    [setValue, onCloseCreateProduct]
+  );
 
   const onSubmit = async (data: IEntry) => {
     const validation = await trigger();
@@ -105,15 +157,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         setValue(key as keyof IEntry, entryToEdit[key as keyof IEntry]);
       });
       trigger();
-    }
-  }, [setValue, entryToEdit, trigger]);
-
-  useEffect(() => {
-    if (entryToEdit) {
-      Object.keys(entryToEdit).forEach((key) => {
-        setValue(key as keyof IEntry, entryToEdit[key as keyof IEntry]);
-      });
-      trigger();
     } else if (import.meta.env.MODE === "development") {
       const entry = EntryFixture.toStructure();
       Object.keys(entry).forEach((key) => {
@@ -123,7 +166,45 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     }
   }, [setValue, entryToEdit, trigger]);
 
-  if (isLoadingAddEntry || isLoadingUpdateEntry || isLoadingGetSuppliers) {
+  useEffect(() => {
+    const uniqueSuppliers = [
+      ...((searchResults as ISupplier[]) || []),
+      ...(getSuppliersData?.suppliers || []),
+    ].filter(
+      (supplier, index, self) =>
+        index === self.findIndex((s) => s.id === supplier.id)
+    );
+    setSuppliers(uniqueSuppliers);
+  }, [searchResults, getSuppliersData?.suppliers, isOpen]);
+
+  useEffect(() => {
+    const uniqueTransporters = [
+      ...((searchResults as ITransporter[]) || []),
+      ...(getTransporters || []),
+    ].filter(
+      (transporter, index, self) =>
+        index === self.findIndex((s) => s.id === transporter.id)
+    );
+    setTransporters(uniqueTransporters);
+  }, [
+    searchResults,
+    getTransporters,
+    isOpenCreateProduct,
+    isOpenCreateTransporter,
+  ]);
+
+  useEffect(() => {
+    const uniqueProducts = [
+      ...((searchResults as IProduct[]) || []),
+      ...(getProductsData || []),
+    ].filter(
+      (product, index, self) =>
+        index === self.findIndex((s) => s.id === product.id)
+    );
+    setProducts(uniqueProducts);
+  }, [searchResults, getProductsData, isOpenCreateProduct]);
+
+  if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
   }
 
@@ -137,27 +218,53 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     >
       <Box display="flex" justifyContent="space-around" gap={16}>
         <FormControl mb={4}>
-          <FormLabel>{t("Supplier ID")}</FormLabel>
-          <Box display="flex" alignItems="center" gap={2}>
+          <FlexBox mb={2}>
+            <FormLabel>{t("Supplier")}</FormLabel>
+            <FlexBox gap={2}>
+              <SearchButton
+                onSearch={() => setIsSearchingSupplier((prev) => !prev)}
+              />
+              <AddButton onAdd={onOpen} />
+            </FlexBox>
+          </FlexBox>
+          <FlexColumn alignItems="start" gap={2}>
             <Controller
               name="supplierId"
               control={control}
               defaultValue=""
               rules={{ required: true }}
               render={({ field }) => (
-                <Select {...field}>
-                  <option value="">{t("Select the supplier")}</option>
-                  {getSuppliersData?.suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.company}
-                    </option>
-                  ))}
-                  {/* Add supplier options here */}
-                </Select>
+                <>
+                  {isSearchingSupplier && (
+                    <Search<ISupplier>
+                      placeholderText={t("Search for a supplier name")}
+                      searchFunction={searchSupplier}
+                      setResults={setSuppliers}
+                      notFoundText={t("No suppliers found for this term")}
+                      setIsLoading={setIsLoading}
+                    />
+                  )}
+                  {searchResults?.length === 0 &&
+                  isSearchingSupplier &&
+                  watch("supplierId") === undefined ? null : (
+                    <Select
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e); // Update the form state
+                        setIsSearchingSupplier(false); // Close the search
+                      }}
+                    >
+                      {suppliers?.map((supp) => (
+                        <option key={supp.id} value={supp.id}>
+                          {supp.company}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </>
               )}
             />
-            <AddButton onAdd={onOpen} />
-          </Box>
+          </FlexColumn>
           {errors.supplierId && (
             <Box color="red">{t("This field is required")}</Box>
           )}
@@ -169,53 +276,76 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => <Input {...field} mt={4} />}
           />
           {errors.docNumber && (
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
         <FormControl mb={4}>
-          <FormLabel>{t("Transporter")}</FormLabel>
-          <Box display="flex" alignItems="center" gap={2}>
+          <FlexBox mb={2}>
+            <FormLabel>{t("Transporter")}</FormLabel>
+            <FlexBox gap={2}>
+              <SearchButton
+                onSearch={() => setIsSearchingTransporter((prev) => !prev)}
+              />
+              <AddButton onAdd={onOpenCreateTransporter} />
+            </FlexBox>
+          </FlexBox>
+          <FlexColumn gap={2} alignItems={"start"}>
             <Controller
-              name="transporter"
+              name="transporterId"
               control={control}
               defaultValue=""
               rules={{ required: true }}
               render={({ field }) => (
-                <Select {...field}>
-                  <option value="">{t("Select the transporter")}</option>
-                  {/* TODO: MAP OVER THE TRANSPORTERS CREATED */}
-                  {/* {getTransportersData?.transporters.map((transporter) => (
-                    <option key={transporter.id} value={transporter.id}>
-                      {transporter.company}
-                    </option>
-                  ))} */}
-                </Select>
+                <>
+                  {isSearchingTransporter && (
+                    <Search<ITransporter>
+                      placeholderText={t("Search for a transporter name")}
+                      searchFunction={searchTransporter}
+                      setResults={setTransporters}
+                      notFoundText={t("No transporters found for this term")}
+                      setIsLoading={setIsLoading}
+                    />
+                  )}
+                  {searchResults?.length === 0 &&
+                  isSearchingTransporter &&
+                  watch("transporterId") === undefined ? null : (
+                    <Select
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e); // Update the form state
+                        setIsSearchingTransporter(false); // Close the search
+                      }}
+                    >
+                      {transporters?.map((trans) => (
+                        <option key={trans.id} value={trans.id}>
+                          {trans.name}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                  {errors.transporterId && (
+                    <Box color="red">{t("This field is required")}</Box>
+                  )}
+                </>
               )}
             />
-            {errors.transporter && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-            <AddButton
-              onAdd={() => {
-                // TODO: implement transporter creation
-              }}
-            />
-          </Box>
+          </FlexColumn>
         </FormControl>
       </Box>
       <Box display="flex" justifyContent="space-around" gap={16}>
         <FormControl mb={4}>
-          <Box
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-          >
-            <FormLabel>{t("Product ID")}</FormLabel>
-            <Search onSearch={() => setIsSearchingProduct((prev) => !prev)} />
-          </Box>
+          <FlexBox alignItems={"center"} mb={2}>
+            <FormLabel>{t("Product")}</FormLabel>
+            <FlexBox gap={2}>
+              <SearchButton
+                onSearch={() => setIsSearchingProduct((prev) => !prev)}
+              />
+              <AddButton onAdd={onOpenCreateProduct} />
+            </FlexBox>
+          </FlexBox>
           <Controller
             name="productId"
             control={control}
@@ -224,24 +354,28 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             render={({ field }) => (
               <>
                 {isSearchingProduct && (
-                  <SearchProduct setResults={setProductsSearched} />
+                  <Search<IProduct>
+                    placeholderText={t("Search for a product name")}
+                    searchFunction={searchProduct}
+                    setResults={setProducts}
+                    notFoundText="No products found"
+                    setIsLoading={setIsLoading}
+                  />
                 )}
-                {productsSearched?.length === 0 && isSearchingProduct ? null : (
-                  <Select
-                    {...field}
-                    placeholder={
-                      productsSearched?.length
-                        ? ""
-                        : t("Start by searching for a product name")
-                    }
-                  >
-                    {productsSearched?.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </Select>
-                )}
+                {isSearchingProduct && isLoading && <Loading size="xs" />}
+                <Select
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e); // Update the form state
+                    setIsSearchingProduct(false); // Close the search
+                  }}
+                >
+                  {products?.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
+                </Select>
               </>
             )}
           />
@@ -250,7 +384,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           )}
         </FormControl>
         <FormControl mb={4}>
-          <FormLabel>{t("Lot ID")}</FormLabel>
+          <FormLabel>{t("Lot ")}</FormLabel>
           <Controller
             name="lotId"
             control={control}
@@ -277,7 +411,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => <Input {...field} type="date" />}
           />
           {errors.expirityDate && (
             <Box color="red">{t("This field is required")}</Box>
@@ -395,8 +529,32 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           <ModalHeader>{t("Add Supplier")}</ModalHeader>
           <ModalCloseButton />
           <ModalBody width={"100%"}>
-            {/* Add form fields for creating a new supplier here */}
-            <CreateSupplierForm />
+            <CreateSupplierForm onSuccess={handleNewSupplier} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isOpenCreateTransporter}
+        onClose={onCloseCreateTransporter}
+      >
+        <ModalOverlay />
+        <ModalContent width={"100%"} maxW={"80vw"}>
+          <ModalHeader>{t("Add Transporter")}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody width={"100%"}>
+            <CreateTransporterForm onSuccess={handleNewTransporter} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isOpenCreateProduct} onClose={onCloseCreateProduct}>
+        <ModalOverlay />
+        <ModalContent width={"100%"} maxW={"80vw"}>
+          <ModalHeader>{t("Add Product")}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody width={"100%"}>
+            <CreateProductForm onSuccess={handleNewProduct} />
           </ModalBody>
         </ModalContent>
       </Modal>

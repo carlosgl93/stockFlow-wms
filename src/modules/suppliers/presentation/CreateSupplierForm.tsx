@@ -14,11 +14,14 @@ import { useToast } from "shared/Toast";
 import { ISupplier } from "../types/ISupplier";
 import { useTranslate } from "utils";
 import { Loading } from "shared/Layout";
+import { SupplierFixture } from "utils/fixtures";
 
 export const CreateSupplierForm = ({
   supplierToEdit,
+  onSuccess,
 }: {
   supplierToEdit?: ISupplier;
+  onSuccess?: (supplier: ISupplier) => void;
 }) => {
   const {
     addSupplierMutation,
@@ -56,7 +59,11 @@ export const CreateSupplierForm = ({
         values: data,
       });
     } else {
-      addSupplierMutation(data);
+      addSupplierMutation(data, {
+        onSuccess: (newSupplier) => {
+          if (onSuccess) onSuccess(newSupplier);
+        },
+      });
     }
   };
 
@@ -67,6 +74,12 @@ export const CreateSupplierForm = ({
           key as keyof ISupplier,
           supplierToEdit[key as keyof ISupplier]
         );
+      });
+      trigger();
+    } else if (import.meta.env.MODE === "development") {
+      const entry = SupplierFixture.toStructure();
+      Object.keys(entry).forEach((key) => {
+        setValue(key as keyof ISupplier, entry[key as keyof ISupplier]);
       });
       trigger();
     }
@@ -86,7 +99,7 @@ export const CreateSupplierForm = ({
     >
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
         <FormControl mb={4}>
-          <FormLabel>{t("Company")}</FormLabel>
+          <FormLabel>{t("Company name")}</FormLabel>
           <Controller
             name="company"
             control={control}
@@ -156,7 +169,6 @@ export const CreateSupplierForm = ({
             name="fax"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
             render={({ field }) => <Input {...field} />}
           />
           {errors.fax && <Box color="red">{t("This field is required")}</Box>}
@@ -178,7 +190,6 @@ export const CreateSupplierForm = ({
             name="website"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
             render={({ field }) => <Input {...field} />}
           />
           {errors.website && (
@@ -228,7 +239,6 @@ export const CreateSupplierForm = ({
             name="contact.email"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
             render={({ field }) => <Input {...field} />}
           />
           {errors.contact?.email && (
@@ -241,7 +251,6 @@ export const CreateSupplierForm = ({
             name="contact.phone"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
             render={({ field }) => <Input {...field} />}
           />
           {errors.contact?.phone && (

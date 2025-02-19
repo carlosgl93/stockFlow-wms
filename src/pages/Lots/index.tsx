@@ -1,5 +1,6 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
+import { withRequireAuth } from "modules/auth/application";
 import { useLots } from "modules/lots/infraestructure";
 import { LotsList } from "modules/lots/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -46,6 +47,6 @@ const LotsPage = () => {
   );
 };
 
-export const Component = LotsPage;
+export const Component = withRequireAuth(LotsPage, { to: "/sign-in" });
 
 export const ErrorBoundary = ErrorPageStrategy;

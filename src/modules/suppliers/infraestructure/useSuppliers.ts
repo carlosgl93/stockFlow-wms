@@ -5,7 +5,7 @@ import { addSupplier, updateSupplier, removeSupplier, getSuppliers } from "./";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { APIError } from "shared/Error";
 
-export const useSuppliers = () => {
+export const useSuppliers = (limit?: number | undefined) => {
   const [pageSize, setPageSize] = useState(50);
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
@@ -81,7 +81,8 @@ export const useSuppliers = () => {
     isError: isErrorGetSuppliers,
   } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => getSuppliers(pageSize, lastVisible ? lastVisible : null),
+    queryFn: () =>
+      getSuppliers(limit || pageSize, lastVisible ? lastVisible : null),
     onSuccess: (data) => {
       setLastVisible(data?.lastVisible || null);
     },
