@@ -22,4 +22,5 @@ export const lots = {
   "Create, edit, remove lots.": "Crea, edita, elimina lotes.",
   "Create Lot": "Crear lote",
   "Create your lot.": "Crea tu lote.",
+  "There are no lots created!": "¡No hay lotes creados!",
 };

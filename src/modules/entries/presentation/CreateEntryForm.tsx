@@ -53,6 +53,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData } = useProducts(5);
+  const { getLotsData } = useLots();
 
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
@@ -64,8 +65,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     isLoadingAddEntry,
     isLoadingUpdateEntry,
   } = useEntries();
-
-  const { getLotsData } = useLots();
 
   const {
     handleSubmit,
@@ -392,7 +391,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             rules={{ required: true }}
             render={({ field }) => (
               <Select {...field}>
-                <option value="">{t("Select the lot")}</option>
+                {getLotsData.lots.length === 0 ? (
+                  <option value="" style={{ color: "red" }}>
+                    {t("There are no lots created!")}
+                  </option>
+                ) : (
+                  <option value="">{t("Select the lot")}</option>
+                )}
                 {/* TODO: MAP OVER THE lots CREATED */}
                 {getLotsData?.lots.map((lots) => (
                   <option key={lots.id} value={lots.id}>
