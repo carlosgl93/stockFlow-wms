@@ -3,11 +3,8 @@ import { createBrowserRouter, ScrollRestoration } from "react-router-dom";
 
 import { Layout } from "shared/Layout";
 
-import { homePageLoader } from "./Home/loader";
 import { productPageLoader } from "./Product/loader";
-import { productsPageLoader } from "./Products/loader";
 import { entriesPageLoader } from "./Entries/loader";
-import { stockPageLoader } from "./Stock/loader";
 import { dispatchesPageLoader } from "./Dispatches/loader";
 import { lotPageLoader } from "./Lot/loader";
 
@@ -22,7 +19,6 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        loader: homePageLoader,
         lazy: () => import("./Home"),
       },
       {
@@ -53,9 +49,33 @@ export const router = createBrowserRouter([
         lazy: () => import("./Product/Edit"),
       },
       {
+        path: "/places",
+        lazy: () => import("./Places"),
+      },
+      {
+        path: "/places/create",
+        lazy: () => import("./Places/Create"),
+      },
+      {
+        path: "/places/edit/:placeId",
+        lazy: () => import("./Places/Edit"),
+      },
+      {
+        path: "/lots/:lotProductId",
+        lazy: () => import("./LotProduct/Lot"),
+      },
+      {
         path: "/entries",
         loader: dispatchesPageLoader,
         lazy: () => import("./Entries"),
+      },
+      {
+        path: "/entries/create",
+        lazy: () => import("./Entries/Create"),
+      },
+      {
+        path: "/entries/edit/:entryId",
+        lazy: () => import("./Entries/Edit"),
       },
       {
         path: "/dispatches",
@@ -65,9 +85,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/stock",
-        loader: stockPageLoader,
-
         lazy: () => import("./Stock"),
+      },
+      {
+        path: "/stock/edit/:stockId",
+        lazy: () => import("./Stock/Edit"),
       },
       {
         path: "/lot",

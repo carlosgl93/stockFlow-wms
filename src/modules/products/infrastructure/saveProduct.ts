@@ -4,19 +4,25 @@ import { IProduct } from "../types";
 import { db, storage } from "shared/firebase";
 import { ValidationError } from "shared/Error";
 import { Logger } from "utils/logger";
+import { lowerAndTrim } from "utils";
 
 export const saveProduct = async (product: IProduct) => {
+  // Lowercase and trim the values
+
+  const [name, internalCode, extCode] = lowerAndTrim([
+    product.name,
+    product.internalCode,
+    product.extCode,
+  ]);
+
   // Check if a product with the same name, internalCode, or extCode already exists
   const productsRef = collection(db, "products");
-  const nameQuery = query(productsRef, where("name", "==", product.name));
+  const nameQuery = query(productsRef, where("name", "==", name));
   const internalCodeQuery = query(
     productsRef,
-    where("internalCode", "==", product.internalCode)
+    where("internalCode", "==", internalCode)
   );
-  const extCodeQuery = query(
-    productsRef,
-    where("extCode", "==", product.extCode)
-  );
+  const extCodeQuery = query(productsRef, where("extCode", "==", extCode));
 
   const [nameSnapshot, internalCodeSnapshot, extCodeSnapshot] =
     await Promise.all([
@@ -47,9 +53,13 @@ export const saveProduct = async (product: IProduct) => {
   // Add product to Firestore
   const productData = {
     ...product,
+    name,
+    internalCode,
+    extCode,
     safetyDocumentUrl: safetyDocumentUrl ? safetyDocumentUrl : null,
     safetyDocument: null, // Remove the FileList from the product data
   };
   const docRef = await addDoc(collection(db, "products"), productData);
-  return { ...productData, id: docRef.id };
+  productData.id = docRef.id;
+  return productData;
 };

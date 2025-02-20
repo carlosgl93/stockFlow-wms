@@ -1,34 +1,27 @@
-import { useState } from "react";
 import { SearchIcon, AddIcon } from "@chakra-ui/icons";
-import { Box, Button, CircularProgress, Text } from "@chakra-ui/react";
-import { IQueryParams } from "types";
+import { Box, Button, Text } from "@chakra-ui/react";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
-
 import { ProductsList } from "modules/products/presentation";
 import { withRequireAuth } from "modules/auth/application";
-import { useQuery, useRedirect, useTranslate } from "utils";
-import { getProductsQuery } from "modules/products/infrastructure";
-
-const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
+import { useRedirect, useTranslate } from "utils";
+import { useProducts } from "modules/products/infrastructure";
 
 const ProductsPage = () => {
   const notImplemented = useNotImplementedYetToast();
   const redirect = useRedirect();
   const { t } = useTranslate();
 
-  const [params, setParams] = useState<IQueryParams>(defaultParams);
-  const { data, isFetching, isLoading } = useQuery(getProductsQuery(params));
+  const { products: data, meta, params, isFetching } = useProducts();
 
   if (!data) return null;
-  const { products, meta } = data || {};
   const pages = Math.ceil(meta.total / params.limit);
   const total = meta.total;
 
   const handleCreate = () => redirect("/products/create");
 
-  if (isLoading || isFetching) {
+  if (isFetching) {
     return <Loading />;
   }
   return (
@@ -50,22 +43,7 @@ const ProductsPage = () => {
           </Button>
         </Box>
       </PageHeader>
-      <ProductsList products={products} />
-      {/* {data.products.length > 0 && (
-        <Button
-          w="100%"
-          onClick={() =>
-            setParams((params) => ({
-              ...params,
-              limit: (params?.limit ?? 10) + 10,
-            }))
-          }
-          isLoading={isFetching}
-          isDisabled={noMoreProducts}
-        >
-          {noMoreProducts ? t("No more products") : t("Show more products")}
-        </Button>
-      )} */}
+      <ProductsList products={data} />
     </Page>
   );
 };

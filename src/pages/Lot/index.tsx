@@ -1,3 +1,4 @@
+import { withRequireAuth } from "modules/auth/application";
 import { ErrorPageStrategy } from "shared/Result";
 
 const LotPage = () => {
@@ -9,6 +10,6 @@ const LotPage = () => {
   );
 };
 
-export const Component = LotPage;
+export const Component = withRequireAuth(LotPage, { to: "/sign-in" });
 
 export const ErrorBoundary = ErrorPageStrategy;

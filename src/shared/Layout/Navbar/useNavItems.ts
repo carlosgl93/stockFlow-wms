@@ -10,6 +10,31 @@ export const useNavItems = () => {
 
 export const NAV_ITEMS: Array<INavItem> = [
   {
+    label: "Stock",
+    children: [
+      {
+        label: "Places",
+        subLabel: "Manage places of the warehouse",
+        href: "/places",
+      },
+      {
+        label: "Products per lot",
+        subLabel: "Check products location per lot",
+        href: "/lots-products",
+      },
+      {
+        label: "Products inventory",
+        subLabel: "Check products stock / inventory",
+        href: "/stock",
+      },
+      {
+        label: "Move products",
+        subLabel: "Rearrange products location",
+        href: "/stock/move",
+      },
+    ],
+  },
+  {
     label: "Products",
     children: [
       {
@@ -29,26 +54,7 @@ export const NAV_ITEMS: Array<INavItem> = [
       },
     ],
   },
-  {
-    label: "Stock",
-    children: [
-      {
-        label: "Products inventory",
-        subLabel: "Check products stock / inventory",
-        href: "/stock",
-      },
-      {
-        label: "Products per lot",
-        subLabel: "Check products location per lot",
-        href: "/lot",
-      },
-      {
-        label: "Move products",
-        subLabel: "Rearrange products location",
-        href: "/stock/move",
-      },
-    ],
-  },
+
   {
     label: "Labeling",
     href: "/labeling",

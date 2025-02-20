@@ -1,4 +1,12 @@
 export const products = {
+  "Add Product": "Agregar Producto",
+  "Select the supplier": "Selecciona el proveedor",
+  Supplier: "Proveedor",
+  "Product Name": "Nombre del Producto",
+  Product: "Producto",
+  "Search for a supplier name": "Buscar por nombre de proveedor",
+  "No suppliers found for this term":
+    "No se encontraron proveedores para este término",
   "Pages:": "Páginas",
   "Total registers: ": "Registros totales: ",
   "Product created": "Producto creado",
@@ -43,6 +51,7 @@ export const products = {
   "Safety Document": "Documento De Seguridad",
   "Unit Type": "Tipo De Unidad",
   Box: "Caja",
+  "N of Units": "N de Unidades",
   Unit: "Unidad",
   "N Of Units": "Número De Unidades",
   Quantity: "Cantidad",
@@ -94,4 +103,11 @@ export const products = {
   "Products list": "Lista de productos",
   "Create, edit, remove products.": "Crea, edita, elimina productos.",
   "Edit your product.": "Edita tu producto.",
+  "No matches for that search term":
+    "No hay coincidencias para ese término de búsqueda",
+  "Search for a product": "Buscar un producto",
+  "Start by searching for a product name":
+    "Empieza buscando un nombre de producto",
+  "Search for a product name": "Buscar por nombre de producto",
+  "Company name": "Nombre de la empresa",
 };

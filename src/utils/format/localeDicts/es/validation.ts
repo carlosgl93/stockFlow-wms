@@ -15,4 +15,22 @@ export const validation = {
   "Passwords do not match": "Las contraseñas no coinciden",
   "Firebase: Error (auth/user-not-found).": "Usuario no encontrado",
   "Email is required": "El correo electrónico es requerido",
+  "No results found": "No se encontraron resultados",
+  "Unfortunately, there is nothing for you here yet!":
+    "¡Desafortunadamente, aún no hay nada para ti aquí!",
+  "Reset filters": "Restablecer filtros",
+  "Validation Error: Entry with this docNumber already exists":
+    "Error de validación: La entrada con este número de documento ya existe",
+  "Validation Error: Invalid productId":
+    "Error de validación: productId no válido",
+  "Validation Error: Invalid lotId": "Error de validación: lotId no válido",
+  "Failed to add entry": "Error al agregar la entrada",
+  "Failed to update entry": "Error al actualizar la entrada",
+  "Entry added successfully": "Entrada agregada exitosamente",
+  "Entry updated successfully": "Entrada actualizada exitosamente",
+  "Please fill all the fields fields to fill":
+    "Por favor, rellena todos los campos",
+  "Failed to add supplier": "Error al agregar el proveedor",
+  "Failed to update supplier": "Error al actualizar el proveedor",
+  "Supplier added successfully": "Proveedor agregado exitosamente",
 };
