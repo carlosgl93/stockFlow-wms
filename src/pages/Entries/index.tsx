@@ -7,6 +7,7 @@ import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 import { useRedirect, useTranslate } from "utils";
+import { Logger } from "utils/logger";
 
 const EntriesPage = () => {
   const notImplemented = useNotImplementedYetToast();
@@ -17,6 +18,8 @@ const EntriesPage = () => {
   };
 
   const { entriesData, isLoadingGetEntries } = useEntries();
+
+  Logger.info("EntriesPage", { entriesData });
 
   return (
     <Page>

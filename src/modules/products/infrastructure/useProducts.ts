@@ -23,21 +23,30 @@ import { ValidationError } from "shared/Error";
 import { useToast } from "shared/Toast";
 const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
-export const useProducts = (limit?: number | undefined) => {
+export const useProducts = (pageSize: number = 10, page: number = 1) => {
   const [params, setParams] = useState<IQueryParams>(defaultParams);
   const redirect = useRedirect();
   const toast = useToast();
   const { t } = useTranslate();
 
   const { data, isFetching } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", page, pageSize],
     queryFn: async (): Promise<IProductsCollection> => {
       const productsRef = collection(db, "products");
-      let productsQuery = query(productsRef, queryLimit(limit || params.limit));
+      let productsQuery = query(productsRef, queryLimit(pageSize));
 
-      if (params.startAfter) {
-        productsQuery = query(productsRef, startAfter(params.startAfter));
+      if (page > 1) {
+        const lastVisibleDoc = await getDocs(
+          query(productsRef, queryLimit((page - 1) * pageSize))
+        );
+        const lastVisible = lastVisibleDoc.docs[lastVisibleDoc.docs.length - 1];
+        productsQuery = query(
+          productsRef,
+          startAfter(lastVisible),
+          queryLimit(pageSize)
+        );
       }
+
       const querySnapshot = await getDocs(productsQuery);
       const products: IProduct[] = [];
       querySnapshot.forEach((doc) => {

@@ -1,11 +1,12 @@
 export interface IEntry {
-  id: string;
+  id?: string;
   supplierId: string;
   docNumber: string;
   transporterId: string; // name of the driver
   productId: string;
   lotId: string;
-  stockId: string;
+  placeId?: string;
+  stockId?: string;
   expirityDate: string;
   palletNumber: string;
   unitsNumber: number;

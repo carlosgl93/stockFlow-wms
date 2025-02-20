@@ -28,7 +28,7 @@ import {
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { useLots } from "modules/lots/infraestructure";
+import { useLots, usePlaces } from "modules/lots/infraestructure";
 import { EntryFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
 import { searchProduct, useProducts } from "modules/products/infrastructure";
@@ -40,6 +40,7 @@ import {
 } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
+import { ValidationError } from "shared/Error";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,11 +50,12 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const [searchResults, setSearchedResults] = useState<
     null | (IProduct | ITransporter | ISupplier)[]
   >(null);
+  const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
 
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
-  const { products: getProductsData } = useProducts(5);
-  const { getLotsData } = useLots();
+  const { products: getProductsData, isFetching } = useProducts(5);
+  const { getPlacesData, isLoadingGetPlaces } = usePlaces();
 
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
@@ -133,6 +135,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
 
     try {
       if (entryToEdit) {
+        if (!entryToEdit.id) {
+          throw new ValidationError("Entry to edit has no id");
+        }
         await updateEntryMutation({ entryId: entryToEdit.id, values: data });
       } else {
         await addEntryMutation(data);
@@ -174,6 +179,8 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         index === self.findIndex((s) => s.id === supplier.id)
     );
     setSuppliers(uniqueSuppliers);
+    setValue("supplierId", uniqueSuppliers[0]?.id || "");
+    trigger();
   }, [searchResults, getSuppliersData?.suppliers, isOpen]);
 
   useEffect(() => {
@@ -185,6 +192,8 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         index === self.findIndex((s) => s.id === transporter.id)
     );
     setTransporters(uniqueTransporters);
+    setValue("transporterId", uniqueTransporters[0]?.id || "");
+    trigger();
   }, [
     searchResults,
     getTransporters,
@@ -201,333 +210,381 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         index === self.findIndex((s) => s.id === product.id)
     );
     setProducts(uniqueProducts);
+    setValue("productId", uniqueProducts[0]?.id || "");
+    trigger();
   }, [searchResults, getProductsData, isOpenCreateProduct]);
+
+  useEffect(() => {
+    setValue("placeId", getPlacesData?.places[0]?.id || "");
+    trigger();
+  }, [getPlacesData]);
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
   }
 
   return (
-    <Box
-      as="form"
-      onSubmit={handleSubmit(onSubmit)}
-      p={5}
-      display={"flex"}
-      flexDirection={"column"}
-    >
-      <Box display="flex" justifyContent="space-around" gap={16}>
-        <FormControl mb={4}>
-          <FlexBox mb={2}>
-            <FormLabel>{t("Supplier")}</FormLabel>
-            <FlexBox gap={2}>
-              <SearchButton
-                onSearch={() => setIsSearchingSupplier((prev) => !prev)}
-              />
-              <AddButton onAdd={onOpen} />
+    <>
+      <Box
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+        p={5}
+        display={"flex"}
+        flexDirection={"column"}
+      >
+        <Box display="flex" justifyContent="space-around" gap={16}>
+          <FormControl mb={4}>
+            <FlexBox mb={2}>
+              <FormLabel>{t("Supplier")}</FormLabel>
+              <FlexBox gap={2}>
+                <SearchButton
+                  onSearch={() => setIsSearchingSupplier((prev) => !prev)}
+                />
+                <AddButton onAdd={onOpen} />
+              </FlexBox>
             </FlexBox>
-          </FlexBox>
-          <FlexColumn alignItems="start" gap={2}>
-            <Controller
-              name="supplierId"
-              control={control}
-              defaultValue=""
-              rules={{ required: true }}
-              render={({ field }) => (
-                <>
-                  {isSearchingSupplier && (
-                    <Search<ISupplier>
-                      placeholderText={t("Search for a supplier name")}
-                      searchFunction={searchSupplier}
-                      setResults={setSuppliers}
-                      notFoundText={t("No suppliers found for this term")}
-                      setIsLoading={setIsLoading}
-                    />
-                  )}
-                  {searchResults?.length === 0 &&
-                  isSearchingSupplier &&
-                  watch("supplierId") === undefined ? null : (
-                    <Select
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e); // Update the form state
-                        setIsSearchingSupplier(false); // Close the search
-                      }}
-                    >
-                      {suppliers?.map((supp) => (
-                        <option key={supp.id} value={supp.id}>
-                          {supp.company}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                </>
-              )}
-            />
-          </FlexColumn>
-          {errors.supplierId && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Document Number")}</FormLabel>
-          <Controller
-            name="docNumber"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => <Input {...field} mt={4} />}
-          />
-          {errors.docNumber && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FlexBox mb={2}>
-            <FormLabel>{t("Transporter")}</FormLabel>
-            <FlexBox gap={2}>
-              <SearchButton
-                onSearch={() => setIsSearchingTransporter((prev) => !prev)}
-              />
-              <AddButton onAdd={onOpenCreateTransporter} />
-            </FlexBox>
-          </FlexBox>
-          <FlexColumn gap={2} alignItems={"start"}>
-            <Controller
-              name="transporterId"
-              control={control}
-              defaultValue=""
-              rules={{ required: true }}
-              render={({ field }) => (
-                <>
-                  {isSearchingTransporter && (
-                    <Search<ITransporter>
-                      placeholderText={t("Search for a transporter name")}
-                      searchFunction={searchTransporter}
-                      setResults={setTransporters}
-                      notFoundText={t("No transporters found for this term")}
-                      setIsLoading={setIsLoading}
-                    />
-                  )}
-                  {searchResults?.length === 0 &&
-                  isSearchingTransporter &&
-                  watch("transporterId") === undefined ? null : (
-                    <Select
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e); // Update the form state
-                        setIsSearchingTransporter(false); // Close the search
-                      }}
-                    >
-                      {transporters?.map((trans) => (
-                        <option key={trans.id} value={trans.id}>
-                          {trans.name}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                  {errors.transporterId && (
-                    <Box color="red">{t("This field is required")}</Box>
-                  )}
-                </>
-              )}
-            />
-          </FlexColumn>
-        </FormControl>
-      </Box>
-      <Box display="flex" justifyContent="space-around" gap={16}>
-        <FormControl mb={4}>
-          <FlexBox alignItems={"center"} mb={2}>
-            <FormLabel>{t("Product")}</FormLabel>
-            <FlexBox gap={2}>
-              <SearchButton
-                onSearch={() => setIsSearchingProduct((prev) => !prev)}
-              />
-              <AddButton onAdd={onOpenCreateProduct} />
-            </FlexBox>
-          </FlexBox>
-          <Controller
-            name="productId"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => (
-              <>
-                {isSearchingProduct && (
-                  <Search<IProduct>
-                    placeholderText={t("Search for a product name")}
-                    searchFunction={searchProduct}
-                    setResults={setProducts}
-                    notFoundText="No products found"
-                    setIsLoading={setIsLoading}
-                  />
+            <FlexColumn alignItems="start" gap={2}>
+              <Controller
+                name="supplierId"
+                control={control}
+                defaultValue=""
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <>
+                    {isSearchingSupplier && (
+                      <Search<ISupplier>
+                        placeholderText={t("Search for a supplier name")}
+                        searchFunction={searchSupplier}
+                        setResults={setSuppliers}
+                        notFoundText={t("No suppliers found for this term")}
+                        setIsLoading={setIsLoading}
+                      />
+                    )}
+                    {isLoadingGetSuppliers ? (
+                      <FlexBox justifyContent="center" w={"100%"}>
+                        <Loading size="xs" />
+                      </FlexBox>
+                    ) : searchResults?.length === 0 &&
+                      isSearchingSupplier &&
+                      watch("supplierId") === undefined ? null : (
+                      <Select
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e); // Update the form state
+                          setIsSearchingSupplier(false); // Close the search
+                        }}
+                      >
+                        {suppliers?.map((supp) => (
+                          <option key={supp.id} value={supp.id}>
+                            {supp.company}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
+                  </>
                 )}
-                {isSearchingProduct && isLoading && <Loading size="xs" />}
-                <Select
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e); // Update the form state
-                    setIsSearchingProduct(false); // Close the search
-                  }}
-                >
-                  {products?.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name}
-                    </option>
-                  ))}
-                </Select>
-              </>
+              />
+            </FlexColumn>
+            {errors.supplierId && (
+              <Box color="red">{t("This field is required")}</Box>
             )}
-          />
-          {errors.productId && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Lot ")}</FormLabel>
-          <Controller
-            name="lotId"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Select {...field}>
-                {getLotsData.lots.length === 0 ? (
-                  <option value="" style={{ color: "red" }}>
-                    {t("There are no lots created!")}
-                  </option>
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>{t("Document Number")}</FormLabel>
+            <Controller
+              name="docNumber"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} mt={4} />}
+            />
+            {errors.docNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FlexBox mb={2}>
+              <FormLabel>{t("Transporter")}</FormLabel>
+              <FlexBox gap={2}>
+                <SearchButton
+                  onSearch={() => setIsSearchingTransporter((prev) => !prev)}
+                />
+                <AddButton onAdd={onOpenCreateTransporter} />
+              </FlexBox>
+            </FlexBox>
+            <FlexColumn gap={2} alignItems={"start"}>
+              <Controller
+                name="transporterId"
+                control={control}
+                defaultValue=""
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <>
+                    {isSearchingTransporter && (
+                      <Search<ITransporter>
+                        placeholderText={t("Search for a transporter name")}
+                        searchFunction={searchTransporter}
+                        setResults={setTransporters}
+                        notFoundText={t("No transporters found for this term")}
+                        setIsLoading={setIsLoading}
+                      />
+                    )}
+
+                    {isLoadingGetTransporters ? (
+                      <FlexBox justifyContent="center" w={"100%"}>
+                        <Loading size="xs" />
+                      </FlexBox>
+                    ) : searchResults?.length === 0 &&
+                      isSearchingTransporter &&
+                      watch("transporterId") === undefined ? null : (
+                      <Select
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e); // Update the form state
+                          setIsSearchingTransporter(false); // Close the search
+                        }}
+                      >
+                        {transporters?.map((trans) => (
+                          <option key={trans.id} value={trans.id}>
+                            {trans.name}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
+                  </>
+                )}
+              />
+            </FlexColumn>
+            {errors.transporterId && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+        </Box>
+        <Box display="flex" justifyContent="space-around" gap={16}>
+          <FormControl mb={4}>
+            <FlexBox alignItems={"center"} mb={2}>
+              <FormLabel>{t("Product")}</FormLabel>
+              <FlexBox gap={2}>
+                <SearchButton
+                  onSearch={() => setIsSearchingProduct((prev) => !prev)}
+                />
+                <AddButton onAdd={onOpenCreateProduct} />
+              </FlexBox>
+            </FlexBox>
+            <Controller
+              name="productId"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => (
+                <>
+                  {isSearchingProduct && (
+                    <Search<IProduct>
+                      placeholderText={t("Search for a product name")}
+                      searchFunction={searchProduct}
+                      setResults={setProducts}
+                      notFoundText="No products found"
+                      setIsLoading={setIsLoading}
+                    />
+                  )}
+                  {isFetching ? (
+                    <FlexBox justifyContent="center" w={"100%"}>
+                      <Loading size="xs" />
+                    </FlexBox>
+                  ) : (
+                    isSearchingProduct && isLoading && <Loading size="xs" />
+                  )}
+                  <Select
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e); // Update the form state
+                      setIsSearchingProduct(false); // Close the search
+                    }}
+                  >
+                    {products?.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </Select>
+                </>
+              )}
+            />
+            {errors.productId && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel my={3}>{t("Lot")}</FormLabel>
+            <Controller
+              name="lotId"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} />}
+            />
+            {errors.lotId && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel my={3}>{t("Place")}</FormLabel>
+
+            <Controller
+              name="placeId"
+              control={control}
+              defaultValue=""
+              render={({ field }) =>
+                isLoadingGetPlaces ? (
+                  <FlexBox justifyContent="center" w={"100%"}>
+                    <Loading size="xs" />
+                  </FlexBox>
                 ) : (
-                  <option value="">{t("Select the lot")}</option>
-                )}
-                {/* TODO: MAP OVER THE lots CREATED */}
-                {getLotsData?.lots.map((lots) => (
-                  <option key={lots.id} value={lots.id}>
-                    {lots.name}
-                  </option>
-                ))}
-              </Select>
+                  <Select {...field}>
+                    {getPlacesData?.places.length === 0 ? (
+                      <option value="" style={{ color: "red" }}>
+                        {t("There are no places created!")}
+                      </option>
+                    ) : (
+                      <option value="">{t("Select the place")}</option>
+                    )}
+                    <option value={undefined}>
+                      {t("I will not specify a place")}
+                    </option>
+
+                    {getPlacesData?.places.map((places) => (
+                      <option key={places.id} value={places.id}>
+                        {places.name}
+                      </option>
+                    ))}
+                  </Select>
+                )
+              }
+            />
+            {errors.lotId && (
+              <Box color="red">{t("This field is required")}</Box>
             )}
-          />
-          {errors.lotId && <Box color="red">{t("This field is required")}</Box>}
-        </FormControl>
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel my={3}>{t("Expiry Date")}</FormLabel>
+            <Controller
+              name="expirityDate"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} type="date" />}
+            />
+            {errors.expirityDate && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+        </Box>
+        <Box display="flex" justifyContent="space-around" gap={16}>
+          <FormControl mb={4}>
+            <FormLabel>{t("Pallet Number")}</FormLabel>
+            <Controller
+              name="palletNumber"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} />}
+            />
+            {errors.palletNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>{t("Units Number")}</FormLabel>
+            <Controller
+              name="unitsNumber"
+              control={control}
+              defaultValue={0}
+              rules={{ required: true }}
+              render={({ field }) => <Input type="number" {...field} />}
+            />
+            {errors.unitsNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>{t("Loose Units Number")}</FormLabel>
+            <Controller
+              name="looseUnitsNumber"
+              control={control}
+              defaultValue={0}
+              rules={{ required: true }}
+              render={({ field }) => <Input type="number" {...field} />}
+            />
+            {errors.looseUnitsNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+        </Box>
+        <Box display="flex" justifyContent="space-around" gap={16}>
+          <FormControl mb={4}>
+            <FormLabel>{t("Total Units Number")}</FormLabel>
+            <Controller
+              name="totalUnitsNumber"
+              control={control}
+              defaultValue={0}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <Input type="number" {...field} isReadOnly />
+              )}
+            />
+            {errors.totalUnitsNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>{t("Height (CMs)")}</FormLabel>
+            <Controller
+              name="heightCMs"
+              control={control}
+              defaultValue={0}
+              rules={{ required: true }}
+              render={({ field }) => <Input type="number" {...field} />}
+            />
+            {errors.heightCMs && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel>{t("Width (CMs)")}</FormLabel>
+            <Controller
+              name="widthCMs"
+              control={control}
+              defaultValue={0}
+              rules={{ required: true }}
+              render={({ field }) => <Input type="number" {...field} />}
+            />
+            {errors.widthCMs && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+        </Box>
         <FormControl mb={4}>
-          <FormLabel>{t("Expiry Date")}</FormLabel>
+          <FormLabel>{t("Description")}</FormLabel>
           <Controller
-            name="expirityDate"
-            control={control}
-            defaultValue=""
-            rules={{ required: true }}
-            render={({ field }) => <Input {...field} type="date" />}
-          />
-          {errors.expirityDate && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-      </Box>
-      <Box display="flex" justifyContent="space-around" gap={16}>
-        <FormControl mb={4}>
-          <FormLabel>{t("Pallet Number")}</FormLabel>
-          <Controller
-            name="palletNumber"
+            name="description"
             control={control}
             defaultValue=""
             rules={{ required: true }}
             render={({ field }) => <Input {...field} />}
           />
-          {errors.palletNumber && (
+          {errors.description && (
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Units Number")}</FormLabel>
-          <Controller
-            name="unitsNumber"
-            control={control}
-            defaultValue={0}
-            rules={{ required: true }}
-            render={({ field }) => <Input type="number" {...field} />}
-          />
-          {errors.unitsNumber && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Loose Units Number")}</FormLabel>
-          <Controller
-            name="looseUnitsNumber"
-            control={control}
-            defaultValue={0}
-            rules={{ required: true }}
-            render={({ field }) => <Input type="number" {...field} />}
-          />
-          {errors.looseUnitsNumber && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
+        {/* TODO: Implement boxes per pallet calculator */}
+        <Button
+          type="submit"
+          colorScheme="teal"
+          disabled={isLoadingAddEntry || isLoadingUpdateEntry}
+        >
+          {entryToEdit ? t("Edit Entry") : t("Create Entry")}
+        </Button>
       </Box>
-      <Box display="flex" justifyContent="space-around" gap={16}>
-        <FormControl mb={4}>
-          <FormLabel>{t("Total Units Number")}</FormLabel>
-          <Controller
-            name="totalUnitsNumber"
-            control={control}
-            defaultValue={0}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Input type="number" {...field} isReadOnly />
-            )}
-          />
-          {errors.totalUnitsNumber && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Height (CMs)")}</FormLabel>
-          <Controller
-            name="heightCMs"
-            control={control}
-            defaultValue={0}
-            rules={{ required: true }}
-            render={({ field }) => <Input type="number" {...field} />}
-          />
-          {errors.heightCMs && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Width (CMs)")}</FormLabel>
-          <Controller
-            name="widthCMs"
-            control={control}
-            defaultValue={0}
-            rules={{ required: true }}
-            render={({ field }) => <Input type="number" {...field} />}
-          />
-          {errors.widthCMs && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl>
-      </Box>
-      <FormControl mb={4}>
-        <FormLabel>{t("Description")}</FormLabel>
-        <Controller
-          name="description"
-          control={control}
-          defaultValue=""
-          rules={{ required: true }}
-          render={({ field }) => <Input {...field} />}
-        />
-        {errors.description && (
-          <Box color="red">{t("This field is required")}</Box>
-        )}
-      </FormControl>
-      <Button
-        type="submit"
-        colorScheme="teal"
-        disabled={isLoadingAddEntry || isLoadingUpdateEntry}
-      >
-        {entryToEdit ? t("Edit Entry") : t("Create Entry")}
-      </Button>
-
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent width={"100%"} maxW={"80vw"}>
@@ -563,6 +620,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           </ModalBody>
         </ModalContent>
       </Modal>
-    </Box>
+    </>
   );
 };

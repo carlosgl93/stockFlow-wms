@@ -1,10 +1,17 @@
-import { fetchEntries, addEntry, updateEntry, removeEntry } from "./entriesApi";
+import {
+  fetchEntries,
+  addEntry,
+  updateEntry,
+  removeEntry,
+  getEntryById,
+} from "./entriesApi";
 import { APIError } from "shared/Error";
 import { queryClient, useQuery, useTranslate } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { FirestoreError } from "firebase/firestore";
+import { useParams } from "shared/Router";
 
 export const useEntries = () => {
   const [page, setPage] = useState(0);
@@ -12,6 +19,8 @@ export const useEntries = () => {
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
+
+  const { entryId } = useParams<{ entryId: string }>();
 
   const { data: entriesData, isLoading: isLoadingGetEntries } = useQuery({
     queryKey: ["entries", page, pageSize, lastVisible],
@@ -31,12 +40,11 @@ export const useEntries = () => {
     onError: (error: FirestoreError) => {
       toast({
         title: t("Failed to add entry"),
-        description: error?.message,
+        description: t(error?.message),
         status: "error",
         duration: 5000,
         isClosable: true,
       });
-      throw new APIError(t("Failed to add entry"), error);
     },
   });
 
@@ -53,7 +61,7 @@ export const useEntries = () => {
     onError: (error: FirestoreError) => {
       toast({
         title: t("Failed to update entry"),
-        description: error?.message,
+        description: t(error?.message),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -84,6 +92,16 @@ export const useEntries = () => {
     },
   });
 
+  const {
+    data: getEntryByIdData,
+    isFetching: isFetchingGetEntryById,
+    isError: isErrorgetEntryById,
+  } = useQuery({
+    queryKey: ["entry", entryId],
+    queryFn: () => getEntryById(entryId as string),
+    enabled: !!entryId,
+  });
+
   return {
     entriesData,
     isLoadingGetEntries,
@@ -93,5 +111,8 @@ export const useEntries = () => {
     isLoadingUpdateEntry: updateEntryMutation.isLoading,
     removeEntryMutation: removeEntryMutation.mutateAsync,
     isLoadingRemoveEntry: removeEntryMutation.isLoading,
+    getEntryByIdData,
+    isFetchingGetEntryById,
+    isErrorgetEntryById,
   };
 };

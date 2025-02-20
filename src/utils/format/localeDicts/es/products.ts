@@ -1,4 +1,6 @@
 export const products = {
+  "Add Product": "Agregar Producto",
+  "Select the supplier": "Selecciona el proveedor",
   Supplier: "Proveedor",
   "Product Name": "Nombre del Producto",
   Product: "Producto",

@@ -56,4 +56,13 @@ export const entries = {
   "Entry removed successfully": "Ingreso eliminado exitosamente.",
   "Failed to remove entry": "Error al eliminar ingreso.",
   "Failed to fetch entries": "Error al obtener ingresos.",
+  "Create Transporter": "Crear transportista",
+  Place: "Lugar",
+  "Place ID": "ID del lugar",
+  "Place Name": "Nombre del lugar",
+  "There are no places created!": "¡No hay lugares creados!",
+  "Select the place": "Selecciona el lugar",
+  Lot: "Lote",
+  "I will not specify a place": "No especificaré un lugar",
+  "StockId is required.": "Se requiere el ID de stock.",
 };

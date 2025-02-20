@@ -10,19 +10,19 @@ import {
 import { EmptyStateResult } from "shared/Result";
 import { AppThemeProvider } from "theme/materialTheme";
 import { useRedirect, useTranslate } from "utils";
-import { useLots, ILot } from "../infraestructure";
+import { usePlaces, IPlace } from "../infraestructure";
 
 interface IProps {
-  lots: ILot[];
+  places: IPlace[];
   pageSize?: number;
 }
 
-const LotsList = ({ lots }: IProps) => {
+const PlacesList = ({ places }: IProps) => {
   const redirect = useRedirect();
-  const { removeLotMutation, isLoadingRemoveLot } = useLots();
+  const { removePlaceMutation, isLoadingRemovePlace } = usePlaces();
   const { t } = useTranslate();
 
-  if (lots.length === 0) {
+  if (places.length === 0) {
     return <EmptyStateResult />;
   }
 
@@ -31,7 +31,7 @@ const LotsList = ({ lots }: IProps) => {
       field: "actions",
       headerName: t("Actions"),
       width: 100,
-      renderCell: (params: GridRenderCellParams<ILot>) => (
+      renderCell: (params: GridRenderCellParams<IPlace>) => (
         <Box
           display="flex"
           gap={2}
@@ -42,24 +42,24 @@ const LotsList = ({ lots }: IProps) => {
           <IconButton
             aria-label="View Details"
             icon={<SearchIcon />}
-            onClick={() => redirect(`/lots/${params.row.id}`)}
+            onClick={() => redirect(`/places/${params.row.id}`)}
           />
           <IconButton
-            aria-label="Edit Lot"
+            aria-label="Edit Place"
             icon={<EditIcon />}
-            onClick={() => redirect(`/lots/edit/${params.row.id}`)}
+            onClick={() => redirect(`/places/edit/${params.row.id}`)}
           />
-          {!isLoadingRemoveLot ? (
+          {!isLoadingRemovePlace ? (
             <IconButton
-              aria-label="Remove Lot"
+              aria-label="Remove Place"
               icon={<DeleteIcon />}
-              onClick={() => removeLotMutation(params.row.id || "")}
+              onClick={() => removePlaceMutation(params.row.id || "")}
             />
           ) : (
             <IconButton
-              aria-label="Remove Lot"
+              aria-label="Remove Place"
               icon={<TimeIcon />}
-              onClick={() => removeLotMutation(params.row.id || "")}
+              onClick={() => removePlaceMutation(params.row.id || "")}
             />
           )}
         </Box>
@@ -71,25 +71,25 @@ const LotsList = ({ lots }: IProps) => {
     { field: "movementHistory", headerName: "Movement History", width: 200 },
   ];
 
-  const rows = lots.map((lot) => ({
-    id: lot.id,
-    name: lot.name,
-    entryDate: lot.entryDate,
-    departureDate: lot.departureDate,
-    movementHistory: lot.movementHistory,
+  const rows = places.map((place) => ({
+    id: place.id,
+    name: place.name,
+    entryDate: place.entryDate,
+    departureDate: place.departureDate,
+    movementHistory: place.movementHistory,
   }));
 
-  if (lots.length === 0) {
+  if (places.length === 0) {
     return <EmptyStateResult />;
   }
 
   return (
     <Box height={400} width="100%">
       <AppThemeProvider>
-        <DataGrid rows={rows} columns={columns} rowCount={lots?.length} />
+        <DataGrid rows={rows} columns={columns} rowCount={places?.length} />
       </AppThemeProvider>
     </Box>
   );
 };
 
-export { LotsList };
+export { PlacesList };

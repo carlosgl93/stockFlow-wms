@@ -85,7 +85,7 @@ When writing code, Copilot should:
 
 ERD:
 
-| Product                   | Stock                      | Lot                   |
+| Product                   | Stock                      | Place                 |
 | ------------------------- | -------------------------- | --------------------- |
 | - id: string              | - id: string               | - id: string          |
 | - extCode: string         | - productId: string        | - name: string        |
@@ -93,9 +93,9 @@ ERD:
 |                           | - looseUnitsNumber: number | - entryDate: date     |
 | - name: string            | - lotId: string            | - departureDate: date |
 | - price: number           | - updatedAt: date          | - movementHistory     |
-| - riskCategory: enum      |                            |                       |
-| - category: enum          |                            |                       |
-| - safetyDoc: string       |                            |                       |
+| - riskCategory: enum      | - places: IPlace[]         |                       |
+| - category: enum          | - productName: string      |                       |
+| - safetyDoc: string       | - lotName: string          |                       |
 | - boxOrUnit: enum         |                            |                       |
 | - boxDetails:             |                            |                       |
 | - units: number           |                            |                       |
@@ -110,13 +110,13 @@ ERD:
 | - unitsPerSurface: number |                            |                       |
 | - palletType: enum        |                            |                       |
 
-| LotProduct          | Movement            | Tag/Label              |
-| ------------------- | ------------------- | ---------------------- |
-| - id: string        | - id: string        | - id: string           |
-| - lotId: string     | - productId: string | - productId: string    |
-| - productId: string | - fromLotId: string | - lotId: string        |
-| - quantity: number  | - toLotId: string   | - expirationDate: date |
-|                     | - date: date        | - location: string     |
+| LotProduct                 | Movement            | Tag/Label              |
+| -------------------------- | ------------------- | ---------------------- |
+| - id: string               | - id: string        | - id: string           |
+| - lotId: string            | - productId: string | - productId: string    |
+| - productId: string        | - fromLotId: string | - lotId: string        |
+| - unitsNumber: number      | - toLotId: string   | - expirationDate: date |
+| - looseUnitsNumber: number | - date: date        | - location: string     |
 
 | ProductHistory        | Suppliers                  | Contact         |
 | --------------------- | -------------------------- | --------------- |
@@ -144,8 +144,8 @@ Entity Descriptions:
   - Attributes: id, extCode, intCode, name, price, riskCategory, category, safetyDoc, boxOrUnit, boxDetails, palletType.
 - **Stock:** Represents the stock levels of a product.
   - Attributes: id, productId, quantity, lotId, updatedAt.
-- **Lot:** Represents a lot of products, tracking entry, departure, and movement history.
-  - Attributes: id, entryDate, departureDate, movementHistory.
+- **Place:** Represents a warehouse location.
+  - Attributes: id, name, entryDate, departureDate, movementHistory.
 - **LotProduct:** Represents the many-to-many relationship between Lot and Product.
   - Attributes: id, lotId, productId, quantity.
 - **Movement:** Represents the movement of products between warehouse locations.
@@ -168,6 +168,8 @@ Relationships:
 - **Product to Tag/Label:** One-to-Many (A product can have multiple tags/labels).
 - **Product to ProductHistory:** One-to-Many (A product can have multiple history entries).
 - **Lot to Tag/Label:** One-to-Many (A lot can have multiple tags/labels).
+- **Supplier to Contact:** One-to-One (A supplier has one contact information).
+- **Product to Place:** One-to-Many (A product can be stored in multiple places).
 
 This document serves as a guide to ensure AI-assisted code generation aligns with project standards and goals.
 

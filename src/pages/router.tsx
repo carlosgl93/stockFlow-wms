@@ -5,7 +5,6 @@ import { Layout } from "shared/Layout";
 
 import { productPageLoader } from "./Product/loader";
 import { entriesPageLoader } from "./Entries/loader";
-import { stockPageLoader } from "./Stock/loader";
 import { dispatchesPageLoader } from "./Dispatches/loader";
 import { lotPageLoader } from "./Lot/loader";
 
@@ -50,12 +49,16 @@ export const router = createBrowserRouter([
         lazy: () => import("./Product/Edit"),
       },
       {
-        path: "/lots",
-        lazy: () => import("./Lots"),
+        path: "/places",
+        lazy: () => import("./Places"),
       },
       {
-        path: "/lots/create",
-        lazy: () => import("./Lots/Create"),
+        path: "/places/create",
+        lazy: () => import("./Places/Create"),
+      },
+      {
+        path: "/places/edit/:placeId",
+        lazy: () => import("./Places/Edit"),
       },
       {
         path: "/lots/:lotProductId",
@@ -71,6 +74,10 @@ export const router = createBrowserRouter([
         lazy: () => import("./Entries/Create"),
       },
       {
+        path: "/entries/edit/:entryId",
+        lazy: () => import("./Entries/Edit"),
+      },
+      {
         path: "/dispatches",
         loader: entriesPageLoader,
 
@@ -78,9 +85,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/stock",
-        loader: stockPageLoader,
-
         lazy: () => import("./Stock"),
+      },
+      {
+        path: "/stock/edit/:stockId",
+        lazy: () => import("./Stock/Edit"),
       },
       {
         path: "/lot",

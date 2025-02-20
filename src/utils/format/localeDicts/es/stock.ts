@@ -3,6 +3,8 @@ export const stock = {
   Entries: "Ingresos",
   entries: "ingresos",
   entry: "ingreso",
-  "Create, edit, remove entries.": "Crea, edita, elimina ingresos.",
-  "Entries list": "Lista de ingresos",
+  "Create, edit, remove stock items.": "Crea, edita, elimina stock.",
+  "Stock list": "Lista de stock",
+  "Create Stock": "Crear stock",
+  "Create your stock item.": "Crea tu item de stock.",
 };

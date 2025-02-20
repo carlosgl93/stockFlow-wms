@@ -7,12 +7,14 @@ import { lots } from "./lots";
 import { stock } from "./stock";
 import { entries } from "./entries";
 import { transporters } from "./transporters";
+import { places } from "./places";
 
 export const es = {
   ...auth,
   ...navItems,
   ...home,
   ...lots,
+  ...places,
   ...products,
   ...stock,
   ...entries,

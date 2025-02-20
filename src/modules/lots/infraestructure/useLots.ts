@@ -6,8 +6,7 @@ import { useParams } from "shared/Router";
 import { getLots } from "./queries/getLots";
 import { useState } from "react";
 
-export const useLots = () => {
-  const [pageSize, setPageSize] = useState(50);
+export const useLots = (pageSize: number = 10, page: number = 1) => {
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
@@ -84,8 +83,8 @@ export const useLots = () => {
     isLoading: isLoadingGetLots,
     isError: isErrorGetLots,
   } = useQuery({
-    queryKey: ["lots"],
-    queryFn: () => getLots(pageSize, lastVisible ? lastVisible : null),
+    queryKey: ["lots", page, pageSize],
+    queryFn: () => getLots(pageSize, page),
     onSuccess: (data) => {
       setLastVisible(data.lastVisible);
     },

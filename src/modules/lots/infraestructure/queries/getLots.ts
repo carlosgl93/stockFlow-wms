@@ -15,18 +15,16 @@ import { Logger } from "utils/logger";
  * Retrieves paginated LotProducts from Firestore.
  *
  * @param {number} pageSize - The number of documents to retrieve per page.
- * @param {string} [lastVisible] - The ID of the last visible document from the previous page.
+ * @param {number} [page=1] - The page number to retrieve.
  * @returns {Promise<{ lots: ILot[], lastVisible: string }>} - A promise that resolves to an array of LotProducts and the last visible document ID.
  * @throws {ValidationError} - If the pageSize is invalid.
  * @throws {APIError} - If there is an error retrieving the documents.
  */
 export const getLots = async (
   pageSize: number,
-  lastVisible?: string | null
+  page: number = 1
 ): Promise<{ lots: ILot[]; lastVisible: string }> => {
-  Logger.info(
-    `getLots called with pageSize: ${pageSize}, lastVisible: ${lastVisible}`
-  );
+  Logger.info(`getLots called with pageSize: ${pageSize}, page: ${page}`);
 
   if (!pageSize || pageSize <= 0) {
     Logger.error("Invalid pageSize");
@@ -36,21 +34,13 @@ export const getLots = async (
   const lotProductRef = collection(db, "lots");
   let q = query(lotProductRef, limit(pageSize));
 
-  if (lastVisible) {
-    Logger.info(`Fetching last visible document with ID: ${lastVisible}`);
+  if (page > 1) {
+    Logger.info(`Fetching documents for page: ${page}`);
     const lastVisibleDoc = await getDocs(
-      query(lotProductRef, where("id", "==", lastVisible))
+      query(lotProductRef, limit((page - 1) * pageSize))
     );
-    if (!lastVisibleDoc.empty) {
-      Logger.info(`Last visible document found: ${lastVisibleDoc.docs[0].id}`);
-      q = query(
-        lotProductRef,
-        startAfter(lastVisibleDoc.docs[0]),
-        limit(pageSize)
-      );
-    } else {
-      Logger.warn(`No document found with ID: ${lastVisible}`);
-    }
+    const lastVisible = lastVisibleDoc.docs[lastVisibleDoc.docs.length - 1];
+    q = query(lotProductRef, startAfter(lastVisible), limit(pageSize));
   }
 
   try {
