@@ -117,6 +117,7 @@ ERD:
 | - productId: string        | - fromLotId: string | - lotId: string        |
 | - unitsNumber: number      | - toLotId: string   | - expirationDate: date |
 | - looseUnitsNumber: number | - date: date        | - location: string     |
+| - totalUnitsNumber: number |                     |                        |
 
 | ProductHistory        | Suppliers                  | Contact         |
 | --------------------- | -------------------------- | --------------- |
@@ -132,11 +133,26 @@ ERD:
 |                       | - address: string          |                 |
 |                       | - contact: IContact        |                 |
 
-| Transporter    |
-| -------------- |
-| - id: string   |
-| - name: string |
-|                |
+| Transporter    | Entry                      |
+| -------------- | -------------------------- |
+| - id: string   | - id: string               |
+| - name: string | - supplierId: string       |
+|                | - docNumber: string        |
+|                | - transporterId: string    |
+|                | - productId: string        |
+|                | - lotId: string            |
+|                | - placeId?: string         |
+|                | - stockId?: string         |
+|                | - expirityDate: string     |
+|                | - palletNumber: string     |
+|                | - unitsNumber: number      |
+|                | - looseUnitsNumber: number |
+|                | - totalUnitsNumber: number |
+|                | - heightCMs: number        |
+|                | - widthCMs: number         |
+|                | - description: string      |
+|                | - createdAt?: string       |
+|                | - updatedAt?: string       |
 
 Entity Descriptions:
 
@@ -158,6 +174,8 @@ Entity Descriptions:
   - Attributes: company, idNumber, businessCategory, county, region, fax, phone, website, email, address, contact.
 - **IContact:** Represents the contact information for a supplier.
   - Attributes: name, email, phone.
+- **Entry:** Represents an entry of products into the warehouse.
+  - Attributes: id, supplierId, docNumber, transporterId, productId, lotId, placeId, stockId, expirityDate, palletNumber, unitsNumber, looseUnitsNumber, totalUnitsNumber, heightCMs, widthCMs, description, createdAt, updatedAt.
 
 Relationships:
 
@@ -170,6 +188,12 @@ Relationships:
 - **Lot to Tag/Label:** One-to-Many (A lot can have multiple tags/labels).
 - **Supplier to Contact:** One-to-One (A supplier has one contact information).
 - **Product to Place:** One-to-Many (A product can be stored in multiple places).
+- **Entry to Supplier:** Many-to-One (An entry is associated with one supplier).
+- **Entry to Transporter:** Many-to-One (An entry is associated with one transporter).
+- **Entry to Product:** Many-to-One (An entry is associated with one product).
+- **Entry to Lot:** Many-to-One (An entry is associated with one lot).
+- **Entry to Place:** Many-to-One (An entry is associated with one place).
+- **Entry to Stock:** Many-to-One (An entry is associated with one stock).
 
 This document serves as a guide to ensure AI-assisted code generation aligns with project standards and goals.
 

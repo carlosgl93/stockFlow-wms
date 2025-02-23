@@ -2,7 +2,7 @@ export const entries = {
   "Please fill all the fields": "Por favor, complete todos los campos",
   "This field is required": "Este campo es obligatorio",
   "Supplier ID": "ID del proveedor",
-  "Document Number": "Número de documento",
+  "Document Number": "Número de guía",
   Transporter: "Transportista",
   "Product ID": "ID del producto",
   "Lot ID": "ID del lote",
@@ -65,4 +65,8 @@ export const entries = {
   Lot: "Lote",
   "I will not specify a place": "No especificaré un lugar",
   "StockId is required.": "Se requiere el ID de stock.",
+  "Add product to entry": "Agregar producto al ingreso",
+  "Add lot to entry": "Agregar lote al ingreso",
+  "All fields are required": "Todos los campos son obligatorios",
+  "Check the fields, some are missing": "Revisa los campos, faltan algunos",
 };

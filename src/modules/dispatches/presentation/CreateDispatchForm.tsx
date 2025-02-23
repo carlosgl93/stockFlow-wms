@@ -12,12 +12,12 @@ import {
   ModalCloseButton,
   ModalBody,
   useDisclosure,
+  RadioGroup,
+  Radio,
 } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useState, useCallback } from "react";
-import { useEntries } from "../infraestructure/useEntries";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useToast } from "shared/Toast";
-import { IEntry } from "../types";
 import { useTranslate } from "utils";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
@@ -28,8 +28,8 @@ import {
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { usePlaces } from "modules/lots/infraestructure";
-import { EntryFixture } from "utils/fixtures";
+import { useLots, usePlaces } from "modules/lots/infraestructure";
+import { DispatchFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
 import { searchProduct, useProducts } from "modules/products/infrastructure";
 import { Search } from "shared/Form";
@@ -40,73 +40,199 @@ import {
 } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
-import { DataGrid } from "@mui/x-data-grid";
-import { EntriesController } from "../infraestructure";
-import { AppThemeProvider } from "theme/materialTheme";
+import { ValidationError } from "shared/Error";
+import { useDispatches } from "../infraestructure";
+import { DocumentType, IDispatch } from "../types";
 
-export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
+export const CreateDispatchForm = ({
+  dispatchToEdit,
+}: {
+  dispatchToEdit?: IDispatch;
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
+  const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
+  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [searchResults, setSearchedResults] = useState<
+    null | (IProduct | ITransporter | ISupplier)[]
+  >(null);
+  const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
+
+  const toast = useToast();
+  const { t } = useTranslate();
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
+  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
+  const { products: getProductsData, isFetching } = useProducts(5);
+  const { getPlacesData, isLoadingGetPlaces } = usePlaces();
+
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [transporters, setTransporters] = useState<ITransporter[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
+
   const {
-    isLoading,
-    setIsLoading,
-    isSearchingSupplier,
-    setIsSearchingSupplier,
-    isSearchingTransporter,
-    setIsSearchingTransporter,
-    isSearchingProduct,
-    setIsSearchingProduct,
-    searchResults,
-    setSearchedResults,
-    addedProducts,
-    setAddedProducts,
-    willSpecifyPlace,
-    setWillSpecifyPlace,
-    getSuppliersData,
-    isLoadingGetSuppliers,
-    getTransporters,
-    isLoadingGetTransporters,
-    getProductsData,
-    isFetching,
-    getPlacesData,
-    isLoadingGetPlaces,
-    suppliers,
-    setSuppliers,
-    transporters,
-    setTransporters,
-    products,
-    setProducts,
-    addEntryMutation,
-    updateEntryMutation,
-    isLoadingAddEntry,
-    isLoadingUpdateEntry,
+    addDispatchMutation,
+    updateDispatchMutation,
+    isLoadingAddDispatch,
+    isLoadingUpdateDispatch,
+  } = useDispatches();
+
+  const {
     handleSubmit,
     control,
     setValue,
-    errors,
+    formState: { errors },
     trigger,
     watch,
-    toast,
-    t,
-    isOpen,
-    onOpen,
-    onClose,
-    isOpenCreateTransporter,
-    onOpenCreateTransporter,
-    onCloseCreateTransporter,
-    handleNewTransporter,
-    isOpenCreateProduct,
-    onOpenCreateProduct,
-    onCloseCreateProduct,
-    handleNewProduct,
-    handleNewSupplier,
-    onSubmit,
-    columns,
-    rows,
-    addedToEntry,
-    setAddedToEntry,
-    getValues,
-  } = EntriesController({ entryToEdit: entryToEdit || null });
+  } = useForm<IDispatch>();
 
-  if (isLoadingAddEntry || isLoadingUpdateEntry) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenCreateTransporter,
+    onOpen: onOpenCreateTransporter,
+    onClose: onCloseCreateTransporter,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenCreateProduct,
+    onOpen: onOpenCreateProduct,
+    onClose: onCloseCreateProduct,
+  } = useDisclosure();
+
+  const handleNewSupplier = useCallback(
+    (newSupplier: ISupplier) => {
+      setSuppliers((prev) => [...prev, newSupplier]);
+      Logger.info("new supplier", [newSupplier]);
+      setValue("supplierId", newSupplier.id || "");
+      onClose();
+    },
+    [setValue, onClose]
+  );
+
+  const handleNewTransporter = useCallback(
+    (newTransporter: ITransporter) => {
+      setTransporters((prev) => [...prev, newTransporter]);
+      setValue("transporterId", newTransporter.id || "");
+      onCloseCreateTransporter();
+    },
+    [setValue, onCloseCreateTransporter]
+  );
+
+  const handleNewProduct = useCallback(
+    (newProduct: IProduct) => {
+      setProducts((prev) => [...prev, newProduct]);
+      setValue("productId", newProduct.id || "");
+      onCloseCreateProduct();
+    },
+    [setValue, onCloseCreateProduct]
+  );
+
+  const onSubmit = async (data: IDispatch) => {
+    const validation = await trigger();
+
+    if (!validation) {
+      toast({
+        title: "Error",
+        description: `${t(
+          "Please fill all the fields"
+        )} fields to fill: ${Object.keys(errors).join(", ")}`,
+        status: "error",
+      });
+      return;
+    }
+
+    try {
+      if (dispatchToEdit) {
+        if (!dispatchToEdit.id) {
+          throw new ValidationError("Entry to edit has no id");
+        }
+        await updateDispatchMutation({
+          dispatchId: dispatchToEdit.id,
+          values: data,
+        });
+      } else {
+        await addDispatchMutation(data);
+      }
+    } catch (error) {
+      let errorMessage = "An unknown error occurred";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast({
+        title: "Error",
+        description: errorMessage,
+        status: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (dispatchToEdit) {
+      Object.keys(dispatchToEdit).forEach((key) => {
+        setValue(
+          key as keyof IDispatch,
+          dispatchToEdit[key as keyof IDispatch]
+        );
+      });
+      trigger();
+    } else if (import.meta.env.MODE === "development") {
+      const entry = DispatchFixture.toStructure();
+      Object.keys(entry).forEach((key) => {
+        setValue(key as keyof IDispatch, entry[key as keyof IDispatch]);
+      });
+      trigger();
+    }
+  }, [setValue, dispatchToEdit, trigger]);
+
+  useEffect(() => {
+    const uniqueSuppliers = [
+      ...((searchResults as ISupplier[]) || []),
+      ...(getSuppliersData?.suppliers || []),
+    ].filter(
+      (supplier, index, self) =>
+        index === self.findIndex((s) => s.id === supplier.id)
+    );
+    setSuppliers(uniqueSuppliers);
+    setValue("supplierId", uniqueSuppliers[0]?.id || "");
+    trigger();
+  }, [searchResults, getSuppliersData?.suppliers, isOpen]);
+
+  useEffect(() => {
+    const uniqueTransporters = [
+      ...((searchResults as ITransporter[]) || []),
+      ...(getTransporters || []),
+    ].filter(
+      (transporter, index, self) =>
+        index === self.findIndex((s) => s.id === transporter.id)
+    );
+    setTransporters(uniqueTransporters);
+    setValue("transporterId", uniqueTransporters[0]?.id || "");
+    trigger();
+  }, [
+    searchResults,
+    getTransporters,
+    isOpenCreateProduct,
+    isOpenCreateTransporter,
+  ]);
+
+  useEffect(() => {
+    const uniqueProducts = [
+      ...((searchResults as IProduct[]) || []),
+      ...(getProductsData || []),
+    ].filter(
+      (product, index, self) =>
+        index === self.findIndex((s) => s.id === product.id)
+    );
+    setProducts(uniqueProducts);
+    setValue("productId", uniqueProducts[0]?.id || "");
+    trigger();
+  }, [searchResults, getProductsData, isOpenCreateProduct]);
+
+  useEffect(() => {
+    setValue("placeId", getPlacesData?.places[0]?.id || "");
+    trigger();
+  }, [getPlacesData]);
+
+  if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
     return <Loading />;
   }
 
@@ -119,10 +245,46 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         display={"flex"}
         flexDirection={"column"}
       >
+        <FlexBox justifyContent="space-around" gap={16}>
+          <FormControl mb={4}>
+            <FormLabel>{t("Document Type")}</FormLabel>
+            <Controller
+              name="docType"
+              control={control}
+              defaultValue={dispatchToEdit?.docType || DocumentType.Dispatch}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <RadioGroup {...field} display={"flex"} gap={4} mt={4}>
+                  {Object.values(DocumentType).map((type) => (
+                    <Radio key={type} value={type}>
+                      {t(type)}
+                    </Radio>
+                  ))}
+                </RadioGroup>
+              )}
+            />
+            {errors.docType && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+        </FlexBox>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
+            <FormLabel>{t("Document Number")}</FormLabel>
+            <Controller
+              name="docNumber"
+              control={control}
+              defaultValue=""
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} mt={4} />}
+            />
+            {errors.docNumber && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
             <FlexBox mb={2}>
-              <FormLabel>{t("Supplier")}</FormLabel>
+              <FormLabel>{t("Customer")}</FormLabel>
               <FlexBox gap={2}>
                 <SearchButton
                   onSearch={() => setIsSearchingSupplier((prev) => !prev)}
@@ -147,6 +309,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                         setIsLoading={setIsLoading}
                       />
                     )}
+                    {/* IN DISPATCHES THE SUPPLIERS ARE THE SAME AS THE CUSTOMERS */}
                     {isLoadingGetSuppliers ? (
                       <FlexBox justifyContent="center" w={"100%"}>
                         <Loading size="xs" />
@@ -173,19 +336,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               />
             </FlexColumn>
             {errors.supplierId && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
-          <FormControl mb={4}>
-            <FormLabel>{t("Document Number")}</FormLabel>
-            <Controller
-              name="docNumber"
-              control={control}
-              defaultValue=""
-              rules={{ required: true }}
-              render={({ field }) => <Input {...field} mt={4} />}
-            />
-            {errors.docNumber && (
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
@@ -301,6 +451,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
+          {/* TODO:  */}
           <FormControl mb={4}>
             <FormLabel my={3}>{t("Lot")}</FormLabel>
             <Controller
@@ -349,19 +500,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               }
             />
             {errors.lotId && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
-          <FormControl mb={4}>
-            <FormLabel my={3}>{t("Expiry Date")}</FormLabel>
-            <Controller
-              name="expirityDate"
-              control={control}
-              defaultValue=""
-              rules={{ required: true }}
-              render={({ field }) => <Input {...field} type="date" />}
-            />
-            {errors.expirityDate && (
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
@@ -465,68 +603,28 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         </FormControl>
         {/* TODO: Implement boxes per pallet calculator */}
         <Button
-          onClick={() => {
-            const newDataToEntry = getValues();
-            const {
-              totalUnitsNumber,
-              lotId,
-              placeId,
-              expirityDate,
-              palletNumber,
-              heightCMs,
-              widthCMs,
-            } = newDataToEntry;
-            if (
-              totalUnitsNumber === 0 ||
-              totalUnitsNumber === undefined ||
-              lotId === "" ||
-              placeId === "" ||
-              expirityDate === "" ||
-              palletNumber === "" ||
-              heightCMs === 0 ||
-              widthCMs === 0
-            ) {
-              toast({
-                title: "Error",
-                description: t("Check the fields, some are missing"),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-              });
-              return;
-            } else {
-              setAddedToEntry((prev) => [...prev, newDataToEntry]);
-              setValue("lotId", "");
-              setValue("placeId", "");
-              setValue("expirityDate", "");
-              setValue("palletNumber", "");
-              setValue("heightCMs", 0);
-              setValue("widthCMs", 0);
-              setValue("unitsNumber", 0);
-              setValue("looseUnitsNumber", 0);
-              setValue("totalUnitsNumber", 0);
-              trigger();
-            }
-          }}
-        >
-          {t("Add product to entry")}
-        </Button>
-        <AppThemeProvider>
-          <DataGrid rows={rows} columns={columns} />
-        </AppThemeProvider>
-
-        <Button
           type="submit"
           colorScheme="teal"
-          disabled={isLoadingAddEntry || isLoadingUpdateEntry}
+          disabled={isLoadingAddDispatch || isLoadingUpdateDispatch}
         >
-          {entryToEdit ? t("Edit Entry") : t("Create Entry")}
+          {dispatchToEdit ? t("Edit Entry") : t("Create Entry")}
         </Button>
       </Box>
+      {/* TODO: IMPLEMENT GRID TO DISPLAY THE SELECTED PRODUCTS THAT HAVE BEEN SELECTED TO DISPATCH WITH THE FOLLOWING COLUMNS:
+        1. Row number
+        2. extCode
+        3. internalCode
+        4. product name
+        5. Safety Document boolean
+        6. Units number
+        7. Loose Units number
+        8. Total Units number
+        9. Status
+      */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent width={"100%"} maxW={"80vw"}>
-          <ModalHeader>{t("Add Supplier")}</ModalHeader>
+          <ModalHeader>{t("Add Customer")}</ModalHeader>
           <ModalCloseButton />
           <ModalBody width={"100%"}>
             <CreateSupplierForm onSuccess={handleNewSupplier} />

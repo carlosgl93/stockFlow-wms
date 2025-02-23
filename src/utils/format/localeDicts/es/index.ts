@@ -1,26 +1,26 @@
-import { auth } from "./auth";
-import { navItems } from "./navItems";
 import { home } from "./home";
-import { products } from "./products";
-import { validation } from "./validation";
+import { auth } from "./auth";
 import { lots } from "./lots";
 import { stock } from "./stock";
-import { entries } from "./entries";
-import { transporters } from "./transporters";
 import { places } from "./places";
+import { entries } from "./entries";
+import { navItems } from "./navItems";
+import { products } from "./products";
+import { dispatches } from "./dispatches";
+import { validation } from "./validation";
+import { transporters } from "./transporters";
 
 export const es = {
-  ...auth,
-  ...navItems,
   ...home,
+  ...auth,
   ...lots,
-  ...places,
-  ...products,
   ...stock,
+  ...places,
   ...entries,
-  ...transporters,
+  ...navItems,
+  ...products,
+  ...dispatches,
   ...validation,
-
+  ...transporters,
   "Field is required.": "Este campo es requirido.",
-  // Add more translations as needed
 };

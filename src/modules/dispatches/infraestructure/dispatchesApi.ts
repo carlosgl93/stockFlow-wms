@@ -1,5 +1,5 @@
 import { db } from "shared/firebase";
-import { IEntry } from "../types";
+import { IDispatch } from "../types";
 import { APIError, ValidationError } from "shared/Error";
 import { dateVO } from "utils/format";
 import {
@@ -19,19 +19,19 @@ import {
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
 
-export const fetchEntries = async (
+export const fetchDispatches = async (
   page: number,
   pageSize: number,
   lastVisible: string | null
-): Promise<IEntry[]> => {
-  Logger.info("fetchEntries", { page, pageSize, lastVisible });
+): Promise<IDispatch[]> => {
+  Logger.info("fetchDispatches", { page, pageSize, lastVisible });
   try {
-    const entriesRef = collection(db, "entries");
-    let q = query(entriesRef, orderBy("createdAt"), limit(pageSize));
+    const dispatchesRef = collection(db, "dispatches");
+    let q = query(dispatchesRef, orderBy("createdAt"), limit(pageSize));
     if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "entries", lastVisible));
+      const lastVisibleDoc = await getDoc(doc(db, "dispatches", lastVisible));
       q = query(
-        entriesRef,
+        dispatchesRef,
         orderBy("createdAt"),
         startAfter(lastVisibleDoc),
         limit(pageSize)
@@ -39,36 +39,41 @@ export const fetchEntries = async (
     }
     const snapshot = await getDocs(q);
     return snapshot.docs.map(
-      (doc) => ({ ...doc.data(), id: doc.id } as IEntry)
+      (doc) => ({ ...doc.data(), id: doc.id } as IDispatch)
     );
   } catch (error) {
-    throw new APIError("Failed to fetch entries", error);
+    throw new APIError("Failed to fetch dispatches", error);
   }
 };
 
-export const addEntry = async (entry: IEntry): Promise<IEntry> => {
+export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
   try {
     const now = dateVO.now();
     return await runTransaction(db, async (transaction) => {
-      const entriesRef = collection(db, "entries");
+      const dispatchesRef = collection(db, "dispatches");
 
       // Check if docNumber already exists
-      const q = query(entriesRef, where("docNumber", "==", entry.docNumber));
+      const q = query(
+        dispatchesRef,
+        where("docNumber", "==", dispatch.docNumber)
+      );
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        throw new ValidationError("Entry with this docNumber already exists.");
+        throw new ValidationError(
+          "Dispatch with this docNumber already exists."
+        );
       }
 
       // Validate product
-      const productRef = doc(db, "products", entry.productId);
+      const productRef = doc(db, "products", dispatch.productId);
       const productDoc = await transaction.get(productRef);
       if (!productDoc.exists()) {
         throw new ValidationError("Invalid productId.");
       }
 
       // Validate place
-      if (entry.placeId) {
-        const placeRef = doc(db, "places", entry.placeId);
+      if (dispatch.placeId) {
+        const placeRef = doc(db, "places", dispatch.placeId);
         const placeDoc = await transaction.get(placeRef);
         if (!placeDoc.exists()) {
           throw new ValidationError("Invalid placeId.");
@@ -76,7 +81,7 @@ export const addEntry = async (entry: IEntry): Promise<IEntry> => {
       }
 
       // Validate or generate lotId
-      let lotId = entry.lotId || doc(collection(db, "lots")).id;
+      let lotId = dispatch.lotId || doc(collection(db, "lots")).id;
       if (!lotId) {
         lotId = doc(collection(db, "lots")).id; // Create a new lot if not provided
       }
@@ -84,7 +89,7 @@ export const addEntry = async (entry: IEntry): Promise<IEntry> => {
       // Query stock using productId and lotId
       const stockQuery = query(
         collection(db, "stock"),
-        where("productId", "==", entry.productId),
+        where("productId", "==", dispatch.productId),
         where("lotId", "==", lotId)
       );
       const stockSnapshot = await getDocs(stockQuery);
@@ -97,36 +102,29 @@ export const addEntry = async (entry: IEntry): Promise<IEntry> => {
         stockRef = stockSnapshot.docs[0].ref;
         stockData = stockSnapshot.docs[0].data() as IStock;
         transaction.update(stockRef, {
-          unitsNumber: stockData.unitsNumber + entry.unitsNumber,
-          looseUnitsNumber: stockData.looseUnitsNumber + entry.looseUnitsNumber,
+          unitsNumber: stockData.unitsNumber - dispatch.unitsNumber,
+          looseUnitsNumber:
+            stockData.looseUnitsNumber - dispatch.looseUnitsNumber,
           updatedAt: now,
         });
       } else {
-        // Create new stock entry
-        stockRef = doc(collection(db, "stock"));
-        transaction.set(stockRef, {
-          id: stockRef.id,
-          productId: entry.productId,
-          lotId: lotId,
-          unitsNumber: entry.unitsNumber,
-          looseUnitsNumber: entry.looseUnitsNumber,
-          createdAt: now,
-          updatedAt: now,
-        });
+        throw new ValidationError(
+          "Stock entry not found for the given product and lot."
+        );
       }
 
-      // Store the entry
-      entry.stockId = stockRef.id;
-      entry.lotId = lotId;
-      entry.createdAt = now;
-      delete entry.id;
-      const entryRef = await addDoc(entriesRef, entry);
-      entry.id = entryRef.id;
+      // Store the dispatch
+      dispatch.stockId = stockRef.id;
+      dispatch.lotId = lotId;
+      dispatch.createdAt = now;
+      delete dispatch.id;
+      const dispatchRef = await addDoc(dispatchesRef, dispatch);
+      dispatch.id = dispatchRef.id;
 
       // Add or update LotProduct entry
       const lotProductQuery = query(
         collection(db, "lotProducts"),
-        where("productId", "==", entry.productId),
+        where("productId", "==", dispatch.productId),
         where("lotId", "==", lotId)
       );
       const lotProductSnapshot = await getDocs(lotProductQuery);
@@ -139,41 +137,36 @@ export const addEntry = async (entry: IEntry): Promise<IEntry> => {
         );
         const lotProductData = lotProductSnapshot.docs[0].data();
         transaction.update(lotProductRef, {
-          unitsNumber: (lotProductData.unitsNumber || 0) + entry.unitsNumber,
+          unitsNumber: (lotProductData.unitsNumber || 0) - dispatch.unitsNumber,
           looseUnitsNumber:
-            (lotProductData.looseUnitsNumber || 0) + entry.looseUnitsNumber,
+            (lotProductData.looseUnitsNumber || 0) - dispatch.looseUnitsNumber,
         });
       } else {
-        const lotProductRef = doc(collection(db, "lotProducts"));
-        transaction.set(lotProductRef, {
-          id: lotProductRef.id,
-          lotId: lotId,
-          productId: entry.productId,
-          unitsNumber: entry.unitsNumber,
-          looseUnitsNumber: entry.looseUnitsNumber,
-        });
+        throw new ValidationError(
+          "LotProduct entry not found for the given product and lot."
+        );
       }
 
-      return entry;
+      return dispatch;
     });
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error;
     }
-    throw new APIError("Failed to add entry", error);
+    throw new APIError("Failed to add dispatch", error);
   }
 };
 
-export const updateEntry = async ({
-  entryId,
+export const updateDispatch = async ({
+  dispatchId,
   values,
 }: {
-  entryId: string;
-  values: IEntry;
-}): Promise<IEntry> => {
+  dispatchId: string;
+  values: IDispatch;
+}): Promise<IDispatch> => {
   try {
     return await runTransaction(db, async (transaction) => {
-      const entryDocRef = doc(db, "entries", entryId);
+      const dispatchDocRef = doc(db, "dispatches", dispatchId);
       if (!values.stockId) {
         throw new ValidationError("StockId is required.");
       }
@@ -185,35 +178,35 @@ export const updateEntry = async ({
       );
 
       // Fetch documents
-      const [entryDoc, stockDoc, lotProductSnapshot] = await Promise.all([
-        transaction.get(entryDocRef),
+      const [dispatchDoc, stockDoc, lotProductSnapshot] = await Promise.all([
+        transaction.get(dispatchDocRef),
         transaction.get(stockRef),
         getDocs(lotProductQuery),
       ]);
 
-      if (!entryDoc.exists()) {
-        throw new ValidationError("Entry does not exist.");
+      if (!dispatchDoc.exists()) {
+        throw new ValidationError("Dispatch does not exist.");
       }
       if (!stockDoc.exists()) {
         throw new ValidationError("Stock does not exist.");
       }
 
-      const entryData = entryDoc.data() as IEntry;
+      const dispatchData = dispatchDoc.data() as IDispatch;
       const stockData = stockDoc.data();
 
       // Stock adjustments
-      const unitDifference = values.unitsNumber - entryData.unitsNumber;
+      const unitDifference = values.unitsNumber - dispatchData.unitsNumber;
       const looseUnitDifference =
-        values.looseUnitsNumber - entryData.looseUnitsNumber;
+        values.looseUnitsNumber - dispatchData.looseUnitsNumber;
 
       transaction.update(stockRef, {
-        unitsNumber: stockData.unitsNumber + unitDifference,
-        looseUnitsNumber: stockData.looseUnitsNumber + looseUnitDifference,
+        unitsNumber: stockData.unitsNumber - unitDifference,
+        looseUnitsNumber: stockData.looseUnitsNumber - looseUnitDifference,
         updatedAt: dateVO.now(),
       });
 
-      // Update entry
-      transaction.update(entryDocRef, {
+      // Update dispatch
+      transaction.update(dispatchDocRef, {
         ...values,
         updatedAt: dateVO.now(),
       });
@@ -224,60 +217,46 @@ export const updateEntry = async ({
         const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
         const lotProductData = lotProductDoc.data();
         transaction.update(lotProductRef, {
-          unitsNumber: lotProductData.unitsNumber + unitDifference,
+          unitsNumber: lotProductData.unitsNumber - unitDifference,
           looseUnitsNumber:
-            lotProductData.looseUnitsNumber + looseUnitDifference,
+            lotProductData.looseUnitsNumber - looseUnitDifference,
         });
       } else {
-        // If no existing LotProduct entry, create one
-        const lotProductRef = collection(db, "lotProducts");
-        const newLotProductRef = doc(lotProductRef);
-        transaction.set(newLotProductRef, {
-          id: newLotProductRef.id,
-          lotId: values.lotId,
-          productId: values.productId,
-          unitsNumber: values.unitsNumber,
-          looseUnitsNumber: values.looseUnitsNumber,
-        });
-        transaction.set(doc(lotProductRef), {
-          id: doc(lotProductRef).id,
-          lotId: values.lotId,
-          productId: values.productId,
-          unitsNumber: values.unitsNumber,
-          looseUnitsNumber: values.looseUnitsNumber,
-        });
+        throw new ValidationError(
+          "LotProduct entry not found for the given product and lot."
+        );
       }
 
-      return { ...values, id: entryDoc.id };
+      return { ...values, id: dispatchDoc.id };
     });
   } catch (error) {
-    throw new APIError("Failed to update entry", error);
+    throw new APIError("Failed to update dispatch", error);
   }
 };
 
-export const removeEntry = async (entryId: string): Promise<void> => {
+export const removeDispatch = async (dispatchId: string): Promise<void> => {
   try {
     return await runTransaction(db, async (transaction) => {
-      const entryDocRef = doc(db, "entries", entryId);
-      const entryDoc = await transaction.get(entryDocRef);
+      const dispatchDocRef = doc(db, "dispatches", dispatchId);
+      const dispatchDoc = await transaction.get(dispatchDocRef);
 
-      if (!entryDoc.exists()) {
-        throw new ValidationError("Entry does not exist.");
+      if (!dispatchDoc.exists()) {
+        throw new ValidationError("Dispatch does not exist.");
       }
 
-      const entryData = entryDoc.data() as IEntry;
+      const dispatchData = dispatchDoc.data() as IDispatch;
 
-      // Update stock before deleting the entry
-      if (entryData.stockId) {
-        const stockRef = doc(db, "stock", entryData.stockId);
+      // Update stock before deleting the dispatch
+      if (dispatchData.stockId) {
+        const stockRef = doc(db, "stock", dispatchData.stockId);
         const stockDoc = await transaction.get(stockRef);
 
         if (stockDoc.exists()) {
           const stockData = stockDoc.data();
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber - entryData.unitsNumber,
+            unitsNumber: stockData.unitsNumber + dispatchData.unitsNumber,
             looseUnitsNumber:
-              stockData.looseUnitsNumber - entryData.looseUnitsNumber,
+              stockData.looseUnitsNumber + dispatchData.looseUnitsNumber,
             updatedAt: dateVO.now(),
           });
         }
@@ -286,8 +265,8 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       // Remove corresponding LotProduct entry
       const lotProductQuery = query(
         collection(db, "lotProducts"),
-        where("productId", "==", entryData.productId),
-        where("lotId", "==", entryData.lotId)
+        where("productId", "==", dispatchData.productId),
+        where("lotId", "==", dispatchData.lotId)
       );
       const lotProductSnapshot = await getDocs(lotProductQuery);
 
@@ -297,9 +276,9 @@ export const removeEntry = async (entryId: string): Promise<void> => {
         const lotProductData = lotProductDoc.data();
 
         const newUnitsNumber =
-          lotProductData.unitsNumber - entryData.unitsNumber;
+          lotProductData.unitsNumber - dispatchData.unitsNumber;
         const newLooseUnitsNumber =
-          lotProductData.looseUnitsNumber - entryData.looseUnitsNumber;
+          lotProductData.looseUnitsNumber - dispatchData.looseUnitsNumber;
 
         if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
           // If more units exist, update the quantity
@@ -313,22 +292,24 @@ export const removeEntry = async (entryId: string): Promise<void> => {
         }
       }
 
-      // Delete the entry
-      transaction.delete(entryDocRef);
+      // Delete the dispatch
+      transaction.delete(dispatchDocRef);
     });
   } catch (error) {
-    throw new APIError("Failed to remove entry", error);
+    throw new APIError("Failed to remove dispatch", error);
   }
 };
 
-export const getEntryById = async (entryId: string): Promise<IEntry> => {
+export const getDispatchById = async (
+  dispatchId: string
+): Promise<IDispatch> => {
   try {
-    const entryDoc = await getDoc(doc(db, "entries", entryId));
-    if (!entryDoc.exists()) {
-      throw new ValidationError("Entry not found.");
+    const dispatchDoc = await getDoc(doc(db, "dispatches", dispatchId));
+    if (!dispatchDoc.exists()) {
+      throw new ValidationError("Dispatch not found.");
     }
-    return { id: entryDoc.id, ...entryDoc.data() } as IEntry;
+    return { id: dispatchDoc.id, ...dispatchDoc.data() } as IDispatch;
   } catch (error) {
-    throw new APIError("Failed to get entry", error);
+    throw new APIError("Failed to get dispatch", error);
   }
 };
