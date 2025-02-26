@@ -6,7 +6,7 @@ export interface IStock {
   lotId: string;
   unitsNumber: number;
   looseUnitsNumber: number;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: string;
+  updatedAt: string;
   places?: IPlace[];
 }

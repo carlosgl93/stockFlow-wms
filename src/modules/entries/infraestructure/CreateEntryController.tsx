@@ -3,7 +3,13 @@ import { useForm } from "react-hook-form";
 import { useEffect, useState, useCallback } from "react";
 import { useEntries } from "./useEntries";
 import { useNotImplementedYetToast, useToast } from "shared/Toast";
-import { IEntry, IEntryRow } from "../types";
+import {
+  EntryDTO,
+  IEntry,
+  IEntryForm,
+  IEntryRow,
+  IProductEntry,
+} from "../types";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { useSuppliers, ISupplier } from "modules/suppliers";
@@ -16,8 +22,9 @@ import { useTransporters } from "modules/transporters/infrastructure";
 import { ValidationError } from "shared/Error";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { SearchIcon, EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
+import { getProductCompositeId } from "./getProductCompositeId";
 
-export const EntriesController = ({
+export const CreateEntryController = ({
   entryToEdit,
 }: {
   entryToEdit?: IEntry | null;
@@ -29,10 +36,12 @@ export const EntriesController = ({
   const [searchResults, setSearchedResults] = useState<
     null | (IProduct | ITransporter | ISupplier)[]
   >(null);
-  const [addedToEntry, setAddedToEntry] = useState<IEntry[]>([]);
+  const [addedToEntry, setAddedToEntry] = useState<IProductEntry[]>([]);
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
 
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
+    limit: 5,
+  });
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData, isFetching } = useProducts(5);
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
@@ -57,7 +66,8 @@ export const EntriesController = ({
     trigger,
     watch,
     getValues,
-  } = useForm<IEntry>();
+    register,
+  } = useForm<IEntryForm>();
   const toast = useToast();
   const { t } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -76,7 +86,6 @@ export const EntriesController = ({
   const handleNewSupplier = useCallback(
     (newSupplier: ISupplier) => {
       setSuppliers((prev) => [...prev, newSupplier]);
-      Logger.info("new supplier", [newSupplier]);
       setValue("supplierId", newSupplier.id || "");
       onClose();
     },
@@ -101,28 +110,45 @@ export const EntriesController = ({
     [setValue, onCloseCreateProduct]
   );
 
+  const makeEntryFromForm = (data: IEntry) => {
+    const { id, supplierId, docNumber, transporterId, description } = data;
+    Logger.info("making entry from form", addedToEntry);
+    return {
+      id,
+      supplierId,
+      docNumber,
+      transporterId,
+      description,
+      productsToEnter: addedToEntry,
+    };
+  };
+
   const onSubmit = async (data: IEntry) => {
     const validation = await trigger();
-
-    if (!validation) {
+    if (!validation && addedToEntry.length === 0) {
       toast({
         title: "Error",
         description: `${t(
-          "Please fill all the fields"
+          "Please add products to the entry"
         )} fields to fill: ${Object.keys(errors).join(", ")}`,
         status: "error",
       });
       return;
     }
 
+    const dataToSave: EntryDTO = makeEntryFromForm(data);
+
     try {
       if (entryToEdit) {
         if (!entryToEdit.id) {
           throw new ValidationError("Entry to edit has no id");
         }
-        await updateEntryMutation({ entryId: entryToEdit.id, values: data });
+        await updateEntryMutation({
+          entryId: entryToEdit.id,
+          values: dataToSave,
+        });
       } else {
-        await addEntryMutation(data);
+        await addEntryMutation(dataToSave);
       }
     } catch (error) {
       let errorMessage = "An unknown error occurred";
@@ -139,14 +165,18 @@ export const EntriesController = ({
 
   useEffect(() => {
     if (entryToEdit) {
-      Object.keys(entryToEdit).forEach((key) => {
-        setValue(key as keyof IEntry, entryToEdit[key as keyof IEntry]);
+      (Object.keys(entryToEdit) as (keyof IEntry)[]).forEach((key) => {
+        if (key !== "productsToEnter") {
+          setValue(key, entryToEdit[key]);
+        }
       });
       trigger();
     } else if (import.meta.env?.MODE === "development") {
       const entry = EntryFixture.toStructure();
-      Object.keys(entry).forEach((key) => {
-        setValue(key as keyof IEntry, entry[key as keyof IEntry]);
+      (Object.keys(entry) as (keyof IEntry)[]).forEach((key) => {
+        if (key !== "productsToEnter") {
+          setValue(key, entry[key]);
+        }
       });
       trigger();
     }
@@ -201,19 +231,41 @@ export const EntriesController = ({
     trigger();
   }, [getPlacesData]);
 
-  Logger.info("adde dproducts ", addedToEntry);
+  useEffect(() => {
+    if (entryToEdit?.productsToEnter) {
+      entryToEdit.productsToEnter.forEach((p) => {
+        setAddedToEntry((prev) => {
+          const existingEntry = prev.find(
+            (entry) =>
+              entry.id === p.id &&
+              entry.lotId === p.lotId &&
+              entry.palletNumber === p.palletNumber
+          );
+          if (!existingEntry) {
+            return [...prev, p];
+          }
+          return prev;
+        });
+      });
+    }
+  }, [entryToEdit]);
 
-  let rows: IEntryRow[] = addedToEntry.map((p, index) => ({
-    id: index + 1,
-    productName: products.find((pr) => pr.id === p.productId)?.name || "",
-    lot: p.lotId,
-    palletNumber: p.palletNumber,
-    expirityDate: p.expirityDate,
-    unitsNumber: p.unitsNumber,
-    looseUnitsNumber: p.looseUnitsNumber,
-    totalUnitsNumber: p.totalUnitsNumber,
-  }));
-  Logger.info("ROWS", rows);
+  let rows: IEntryRow[] = addedToEntry.reduce((acc, p) => {
+    const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+    if (!acc.find((row) => row.id === uniqueId)) {
+      acc.push({
+        id: uniqueId,
+        productName: products.find((pr) => pr.id === p.id)?.name || "",
+        lot: p.lotId,
+        palletNumber: p.palletNumber,
+        expirityDate: p.expirityDate,
+        unitsNumber: p.unitsNumber,
+        looseUnitsNumber: p.looseUnitsNumber,
+        totalUnitsNumber: p.totalUnitsNumber,
+      });
+    }
+    return acc;
+  }, [] as IEntryRow[]);
 
   const columns: GridColDef[] = [
     {
@@ -228,7 +280,7 @@ export const EntriesController = ({
           alignContent={"center"}
           h={"100%"}
         >
-          <IconButton
+          {/* <IconButton
             aria-label="View Details"
             icon={<SearchIcon />}
             onClick={notImplemented}
@@ -237,20 +289,21 @@ export const EntriesController = ({
             aria-label="Edit Entry"
             icon={<EditIcon />}
             onClick={notImplemented}
-          />
-          {/* {!isLoadingRemoveEntry ? (
-             <IconButton
-               aria-label="Remove Entry"
-               icon={<DeleteIcon />}
-               onClick={() => removeEntryMutation(params.row.id || "")}
-             />
-           ) : (
-             <IconButton
-               aria-label="Remove Entry"
-               icon={<TimeIcon />}
-               onClick={() => removeEntryMutation(params.row.id || "")}
-             />
-           )} */}
+          /> */}
+          {
+            <IconButton
+              aria-label="Remove Entry"
+              icon={<DeleteIcon />}
+              onClick={() =>
+                setAddedToEntry((prev) => {
+                  return prev.filter((p) => {
+                    const uniqueId = getProductCompositeId(p);
+                    return uniqueId !== params.id;
+                  });
+                })
+              }
+            />
+          }
         </Box>
       ),
     },
@@ -270,6 +323,71 @@ export const EntriesController = ({
       width: 150,
     },
   ];
+
+  const handleAddProductToEntry = () => {
+    const newDataToEntry = getValues(); // making the new product entry to add
+    const {
+      totalUnitsNumber,
+      lotId,
+      placeId,
+      expirityDate,
+      palletNumber,
+      heightCMs,
+      widthCMs,
+    } = newDataToEntry;
+    if (
+      totalUnitsNumber === 0 ||
+      totalUnitsNumber === undefined ||
+      lotId === "" ||
+      placeId === "" ||
+      expirityDate === "" ||
+      palletNumber === "" ||
+      heightCMs === 0 ||
+      widthCMs === 0
+    ) {
+      toast({
+        title: "Error",
+        description: t("Check the fields, some are missing"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    } else {
+      const newProductToAdd: IProductEntry = {
+        id: getValues("productId"),
+        unitsNumber: getValues("unitsNumber"),
+        looseUnitsNumber: getValues("looseUnitsNumber"),
+        totalUnitsNumber: getValues("totalUnitsNumber"),
+        lotId: getValues("lotId"),
+        placeId: getValues("placeId"),
+        expirityDate: getValues("expirityDate"),
+        palletNumber: getValues("palletNumber"),
+        heightCMs: getValues("heightCMs"),
+        widthCMs: getValues("widthCMs"),
+        description: "",
+      };
+      const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
+      if (
+        !addedToEntry.find(
+          (entry) =>
+            `${entry.id}-${entry.lotId}-${entry.palletNumber}` === uniqueId
+        )
+      ) {
+        setAddedToEntry((prev) => [...prev, newProductToAdd]);
+      }
+      setValue("lotId", "");
+      setValue("placeId", "");
+      setValue("expirityDate", "");
+      setValue("palletNumber", "");
+      setValue("heightCMs", 0);
+      setValue("widthCMs", 0);
+      setValue("unitsNumber", 0);
+      setValue("looseUnitsNumber", 0);
+      setValue("totalUnitsNumber", 0);
+      trigger();
+    }
+  };
 
   return {
     isLoading,
@@ -330,5 +448,7 @@ export const EntriesController = ({
     addedToEntry,
     setAddedToEntry,
     getValues,
+    handleAddProductToEntry,
+    register,
   };
 };

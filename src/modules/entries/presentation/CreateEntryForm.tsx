@@ -17,7 +17,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect, useState, useCallback } from "react";
 import { useEntries } from "../infraestructure/useEntries";
 import { useToast } from "shared/Toast";
-import { IEntry } from "../types";
+import { IEntry, IEntryForm } from "../types";
 import { useTranslate } from "utils";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
@@ -41,7 +41,7 @@ import {
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
-import { EntriesController } from "../infraestructure";
+import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
@@ -57,7 +57,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     searchResults,
     setSearchedResults,
     addedProducts,
-    setAddedProducts,
     willSpecifyPlace,
     setWillSpecifyPlace,
     getSuppliersData,
@@ -101,10 +100,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     onSubmit,
     columns,
     rows,
-    addedToEntry,
-    setAddedToEntry,
-    getValues,
-  } = EntriesController({ entryToEdit: entryToEdit || null });
+    register,
+    handleAddProductToEntry,
+  } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -114,7 +112,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     <>
       <Box
         as="form"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(
+          onSubmit as unknown as (data: IEntryForm) => void // TODO: improve this. im using this because i need to extract the product data from the form
+        )}
         p={5}
         display={"flex"}
         flexDirection={"column"}
@@ -262,7 +262,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="productId"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
               render={({ field }) => (
                 <>
                   {isSearchingProduct && (
@@ -307,7 +306,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="lotId"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} />}
             />
             {errors.lotId && (
@@ -358,7 +357,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="expirityDate"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} type="date" />}
             />
             {errors.expirityDate && (
@@ -373,7 +372,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="palletNumber"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} />}
             />
             {errors.palletNumber && (
@@ -386,8 +385,16 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="unitsNumber"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
+              rules={{}}
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("unitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
+              )}
             />
             {errors.unitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
@@ -399,8 +406,16 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="looseUnitsNumber"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
+              rules={{}}
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("looseUnitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
+              )}
             />
             {errors.looseUnitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
@@ -413,10 +428,15 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             <Controller
               name="totalUnitsNumber"
               control={control}
-              defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => (
-                <Input type="number" {...field} isReadOnly />
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("totalUnitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
               )}
             />
             {errors.totalUnitsNumber && (
@@ -429,7 +449,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="heightCMs"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input type="number" {...field} />}
             />
             {errors.heightCMs && (
@@ -442,7 +462,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="widthCMs"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input type="number" {...field} />}
             />
             {errors.widthCMs && (
@@ -456,7 +476,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             name="description"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
+            rules={{}}
             render={({ field }) => <Input {...field} />}
           />
           {errors.description && (
@@ -464,61 +484,23 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           )}
         </FormControl>
         {/* TODO: Implement boxes per pallet calculator */}
-        <Button
-          onClick={() => {
-            const newDataToEntry = getValues();
-            const {
-              totalUnitsNumber,
-              lotId,
-              placeId,
-              expirityDate,
-              palletNumber,
-              heightCMs,
-              widthCMs,
-            } = newDataToEntry;
-            if (
-              totalUnitsNumber === 0 ||
-              totalUnitsNumber === undefined ||
-              lotId === "" ||
-              placeId === "" ||
-              expirityDate === "" ||
-              palletNumber === "" ||
-              heightCMs === 0 ||
-              widthCMs === 0
-            ) {
-              toast({
-                title: "Error",
-                description: t("Check the fields, some are missing"),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-              });
-              return;
-            } else {
-              setAddedToEntry((prev) => [...prev, newDataToEntry]);
-              setValue("lotId", "");
-              setValue("placeId", "");
-              setValue("expirityDate", "");
-              setValue("palletNumber", "");
-              setValue("heightCMs", 0);
-              setValue("widthCMs", 0);
-              setValue("unitsNumber", 0);
-              setValue("looseUnitsNumber", 0);
-              setValue("totalUnitsNumber", 0);
-              trigger();
-            }
-          }}
-        >
-          {t("Add product to entry")}
+        <Button onClick={handleAddProductToEntry} colorScheme="green">
+          {t("Add product to the list")}
         </Button>
         <AppThemeProvider>
-          <DataGrid rows={rows} columns={columns} />
+          <DataGrid
+            rows={rows || []}
+            columns={columns}
+            rowCount={rows?.length || 100}
+          />
         </AppThemeProvider>
 
         <Button
           type="submit"
           colorScheme="teal"
-          disabled={isLoadingAddEntry || isLoadingUpdateEntry}
+          disabled={
+            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts.length
+          }
         >
           {entryToEdit ? t("Edit Entry") : t("Create Entry")}
         </Button>

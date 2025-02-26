@@ -69,4 +69,8 @@ export const entries = {
   "Add lot to entry": "Agregar lote al ingreso",
   "All fields are required": "Todos los campos son obligatorios",
   "Check the fields, some are missing": "Revisa los campos, faltan algunos",
+  "Add product to the list": "Agregar producto a la lista",
+  "Please add products to the entry": "Por favor, agrega productos al ingreso:",
+  "Entry with this docNumber already exists.":
+    "Ya existe un ingreso con este número de guía.",
 };

@@ -1,5 +1,5 @@
 import { db } from "shared/firebase";
-import { IEntry } from "../types";
+import { EntryDTO, IEntry, IProductEntry } from "../types";
 import { APIError, ValidationError } from "shared/Error";
 import { dateVO } from "utils/format";
 import {
@@ -18,13 +18,13 @@ import {
 } from "firebase/firestore";
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
+import { getProductCompositeId } from "./getProductCompositeId";
 
 export const fetchEntries = async (
   page: number,
   pageSize: number,
   lastVisible: string | null
 ): Promise<IEntry[]> => {
-  Logger.info("fetchEntries", { page, pageSize, lastVisible });
   try {
     const entriesRef = collection(db, "entries");
     let q = query(entriesRef, orderBy("createdAt"), limit(pageSize));
@@ -38,20 +38,37 @@ export const fetchEntries = async (
       );
     }
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(
+    const entries = snapshot.docs.map(
       (doc) => ({ ...doc.data(), id: doc.id } as IEntry)
     );
+
+    // Fetch all products sub-collections in a single batch
+    const nestedProductsPromises = entries.map((entry) =>
+      getDocs(collection(db, "entries", entry.id!, "products"))
+    );
+    const nestedProductsSnapshots = await Promise.all(nestedProductsPromises);
+
+    // Map the products to their respective entries
+    const entriesWithProducts = entries.map((entry, index) => {
+      const products = nestedProductsSnapshots[index].docs.map(
+        (doc) => ({ ...doc.data(), id: doc.id } as IProductEntry)
+      );
+      return { ...entry, productsToEnter: products };
+    });
+
+    return entriesWithProducts;
   } catch (error) {
     throw new APIError("Failed to fetch entries", error);
   }
 };
 
-export const addEntry = async (entry: IEntry): Promise<IEntry> => {
+export const addEntry = async (entry: EntryDTO): Promise<void> => {
+  delete entry.id;
+  Logger.info("creating entry from data:", entry);
   try {
     const now = dateVO.now();
     return await runTransaction(db, async (transaction) => {
       const entriesRef = collection(db, "entries");
-
       // Check if docNumber already exists
       const q = query(entriesRef, where("docNumber", "==", entry.docNumber));
       const snapshot = await getDocs(q);
@@ -59,106 +76,151 @@ export const addEntry = async (entry: IEntry): Promise<IEntry> => {
         throw new ValidationError("Entry with this docNumber already exists.");
       }
 
-      // Validate product
-      const productRef = doc(db, "products", entry.productId);
-      const productDoc = await transaction.get(productRef);
-      if (!productDoc.exists()) {
-        throw new ValidationError("Invalid productId.");
-      }
+      // Prepare reads for products and places
+      const productRefs = entry.productsToEnter.map((product) =>
+        doc(db, "products", product.id)
+      );
+      const productDocs = await Promise.all(
+        productRefs.map((ref) => transaction.get(ref))
+      );
 
-      // Validate place
-      if (entry.placeId) {
-        const placeRef = doc(db, "places", entry.placeId);
-        const placeDoc = await transaction.get(placeRef);
+      const placeRefs = entry.productsToEnter
+        .filter(
+          (product) =>
+            product.placeId !== "" &&
+            product.placeId !== "No especificaré un lugar"
+        )
+        .map((product) => doc(db, "places", product.placeId || ""));
+      const placeDocs = await Promise.all(
+        placeRefs.map((ref) => transaction.get(ref))
+      );
+
+      // Validate products and places
+      productDocs.forEach((productDoc, index) => {
+        if (!productDoc.exists()) {
+          Logger.info("Product not found", {
+            productId: entry.productsToEnter[index].id,
+          });
+          throw new ValidationError("Invalid productId.");
+        }
+      });
+
+      placeDocs.forEach((placeDoc, index) => {
         if (!placeDoc.exists()) {
+          Logger.info("PlaceId not found", {
+            placeId: entry.productsToEnter[index].placeId,
+          });
           throw new ValidationError("Invalid placeId.");
         }
-      }
-
-      // Validate or generate lotId
-      let lotId = entry.lotId || doc(collection(db, "lots")).id;
-      if (!lotId) {
-        lotId = doc(collection(db, "lots")).id; // Create a new lot if not provided
-      }
-
-      // Query stock using productId and lotId
-      const stockQuery = query(
-        collection(db, "stock"),
-        where("productId", "==", entry.productId),
-        where("lotId", "==", lotId)
-      );
-      const stockSnapshot = await getDocs(stockQuery);
-
-      let stockRef: DocumentReference;
-      let stockData: IStock | null = null;
-
-      if (!stockSnapshot.empty) {
-        // Use existing stock entry
-        stockRef = stockSnapshot.docs[0].ref;
-        stockData = stockSnapshot.docs[0].data() as IStock;
-        transaction.update(stockRef, {
-          unitsNumber: stockData.unitsNumber + entry.unitsNumber,
-          looseUnitsNumber: stockData.looseUnitsNumber + entry.looseUnitsNumber,
-          updatedAt: now,
-        });
-      } else {
-        // Create new stock entry
-        stockRef = doc(collection(db, "stock"));
-        transaction.set(stockRef, {
-          id: stockRef.id,
-          productId: entry.productId,
-          lotId: lotId,
-          unitsNumber: entry.unitsNumber,
-          looseUnitsNumber: entry.looseUnitsNumber,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
+      });
 
       // Store the entry
-      entry.stockId = stockRef.id;
-      entry.lotId = lotId;
-      entry.createdAt = now;
-      delete entry.id;
-      const entryRef = await addDoc(entriesRef, entry);
-      entry.id = entryRef.id;
+      const entryRef = await addDoc(entriesRef, {
+        supplierId: entry.supplierId,
+        docNumber: entry.docNumber,
+        transporterId: entry.transporterId,
+        description: entry.description,
+        createdAt: now,
+      });
 
-      // Add or update LotProduct entry
-      const lotProductQuery = query(
-        collection(db, "lotProducts"),
-        where("productId", "==", entry.productId),
-        where("lotId", "==", lotId)
-      );
-      const lotProductSnapshot = await getDocs(lotProductQuery);
+      // Process each product in productsToEnter
+      for (const product of entry.productsToEnter) {
+        // Validate or generate lotId
+        let lotId = product.lotId || doc(collection(db, "lots")).id;
+        if (!lotId) {
+          lotId = doc(collection(db, "lots")).id; // Create a new lot if not provided
+        }
 
-      if (!lotProductSnapshot.empty) {
-        const lotProductRef = doc(
-          db,
-          "lotProducts",
-          lotProductSnapshot.docs[0].id
+        // Query stock using productId and lotId
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
         );
-        const lotProductData = lotProductSnapshot.docs[0].data();
-        transaction.update(lotProductRef, {
-          unitsNumber: (lotProductData.unitsNumber || 0) + entry.unitsNumber,
-          looseUnitsNumber:
-            (lotProductData.looseUnitsNumber || 0) + entry.looseUnitsNumber,
-        });
-      } else {
-        const lotProductRef = doc(collection(db, "lotProducts"));
-        transaction.set(lotProductRef, {
-          id: lotProductRef.id,
-          lotId: lotId,
-          productId: entry.productId,
-          unitsNumber: entry.unitsNumber,
-          looseUnitsNumber: entry.looseUnitsNumber,
-        });
-      }
+        const stockSnapshot = await getDocs(stockQuery);
 
-      return entry;
+        let stockRef: DocumentReference;
+        let stockData: IStock | null = null;
+
+        if (!stockSnapshot.empty) {
+          // Use existing stock entry
+          stockRef = stockSnapshot.docs[0].ref;
+          stockData = stockSnapshot.docs[0].data() as IStock;
+          transaction.update(stockRef, {
+            unitsNumber: stockData.unitsNumber + product.unitsNumber,
+            looseUnitsNumber:
+              stockData.looseUnitsNumber + product.looseUnitsNumber,
+            updatedAt: now,
+          });
+        } else {
+          // Create new stock entry
+          stockRef = doc(collection(db, "stock"));
+          transaction.set(stockRef, {
+            id: stockRef.id,
+            productId: product.id,
+            lotId: lotId,
+            unitsNumber: product.unitsNumber,
+            looseUnitsNumber: product.looseUnitsNumber,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+
+        // Store the product entry
+        const productEntryRef = doc(
+          db,
+          "entries",
+          entryRef.id,
+          "products",
+          getProductCompositeId(product)
+        );
+        transaction.set(productEntryRef, {
+          ...product,
+          stockId: stockRef.id,
+          lotId: lotId,
+          createdAt: now,
+        });
+
+        // Add or update LotProduct entry
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
+
+        if (!lotProductSnapshot.empty) {
+          const lotProductRef = doc(
+            db,
+            "lotProducts",
+            lotProductSnapshot.docs[0].id
+          );
+          const lotProductData = lotProductSnapshot.docs[0].data();
+          transaction.update(lotProductRef, {
+            unitsNumber:
+              (lotProductData.unitsNumber || 0) + product.unitsNumber,
+            looseUnitsNumber:
+              (lotProductData.looseUnitsNumber || 0) + product.looseUnitsNumber,
+          });
+        } else {
+          const lotProductRef = doc(collection(db, "lotProducts"));
+          transaction.set(lotProductRef, {
+            id: lotProductRef.id,
+            lotId: lotId,
+            productId: product.id,
+            unitsNumber: product.unitsNumber,
+            looseUnitsNumber: product.looseUnitsNumber,
+          });
+        }
+      }
     });
   } catch (error) {
+    Logger.error("Failed to add entry", { error, entry });
     if (error instanceof ValidationError) {
-      throw error;
+      throw {
+        message: error.message,
+        code: "400",
+      };
     }
     throw new APIError("Failed to add entry", error);
   }
@@ -169,83 +231,338 @@ export const updateEntry = async ({
   values,
 }: {
   entryId: string;
-  values: IEntry;
+  values: EntryDTO;
 }): Promise<IEntry> => {
+  Logger.info("values", values);
   try {
     return await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
-      if (!values.stockId) {
-        throw new ValidationError("StockId is required.");
-      }
-      const stockRef = doc(db, "stock", values.stockId);
-      const lotProductQuery = query(
-        collection(db, "lotProducts"),
-        where("productId", "==", values.productId),
-        where("lotId", "==", values.lotId)
-      );
-
-      // Fetch documents
-      const [entryDoc, stockDoc, lotProductSnapshot] = await Promise.all([
-        transaction.get(entryDocRef),
-        transaction.get(stockRef),
-        getDocs(lotProductQuery),
-      ]);
+      const entryDoc = await transaction.get(entryDocRef);
 
       if (!entryDoc.exists()) {
         throw new ValidationError("Entry does not exist.");
       }
-      if (!stockDoc.exists()) {
-        throw new ValidationError("Stock does not exist.");
-      }
 
       const entryData = entryDoc.data() as IEntry;
-      const stockData = stockDoc.data();
 
-      // Stock adjustments
-      const unitDifference = values.unitsNumber - entryData.unitsNumber;
-      const looseUnitDifference =
-        values.looseUnitsNumber - entryData.looseUnitsNumber;
+      // Prepare reads for products and places
+      const productRefs = values.productsToEnter.map((product) =>
+        doc(db, "products", product.id)
+      );
+      const productDocs = await Promise.all(
+        productRefs.map((ref) => transaction.get(ref))
+      );
 
-      transaction.update(stockRef, {
-        unitsNumber: stockData.unitsNumber + unitDifference,
-        looseUnitsNumber: stockData.looseUnitsNumber + looseUnitDifference,
-        updatedAt: dateVO.now(),
+      const placeRefs = values.productsToEnter
+        .filter(
+          (product) =>
+            product.placeId !== "" &&
+            product.placeId !== "No especificaré un lugar"
+        )
+        .map((product) => doc(db, "places", product.placeId || ""));
+      const placeDocs = await Promise.all(
+        placeRefs.map((ref) => transaction.get(ref))
+      );
+
+      // Validate products and places
+      productDocs.forEach((productDoc, index) => {
+        if (!productDoc.exists()) {
+          Logger.info("Product not found", {
+            productId: values.productsToEnter[index].id,
+          });
+          throw new ValidationError("Invalid productId.");
+        }
+      });
+
+      placeDocs.forEach((placeDoc, index) => {
+        if (!placeDoc.exists()) {
+          Logger.info("PlaceId not found", {
+            placeId: values.productsToEnter[index].placeId,
+          });
+          throw new ValidationError("Invalid placeId.");
+        }
       });
 
       // Update entry
       transaction.update(entryDocRef, {
-        ...values,
+        supplierId: values.supplierId,
+        docNumber: values.docNumber,
+        transporterId: values.transporterId,
+        description: values.description,
         updatedAt: dateVO.now(),
       });
 
-      // Update LotProduct entry
-      if (!lotProductSnapshot.empty) {
-        const lotProductDoc = lotProductSnapshot.docs[0];
-        const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-        const lotProductData = lotProductDoc.data();
-        transaction.update(lotProductRef, {
-          unitsNumber: lotProductData.unitsNumber + unitDifference,
-          looseUnitsNumber:
-            lotProductData.looseUnitsNumber + looseUnitDifference,
-        });
-      } else {
-        // If no existing LotProduct entry, create one
-        const lotProductRef = collection(db, "lotProducts");
-        const newLotProductRef = doc(lotProductRef);
-        transaction.set(newLotProductRef, {
-          id: newLotProductRef.id,
-          lotId: values.lotId,
-          productId: values.productId,
-          unitsNumber: values.unitsNumber,
-          looseUnitsNumber: values.looseUnitsNumber,
-        });
-        transaction.set(doc(lotProductRef), {
-          id: doc(lotProductRef).id,
-          lotId: values.lotId,
-          productId: values.productId,
-          unitsNumber: values.unitsNumber,
-          looseUnitsNumber: values.looseUnitsNumber,
-        });
+      // Get existing products in the subcollection
+      const productsCollectionRef = collection(entryDocRef, "products");
+      const existingProductsSnapshot = await getDocs(productsCollectionRef);
+      const existingProducts = existingProductsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as IProductEntry[];
+
+      // Identify products to remove
+      const productsToRemove = existingProducts.filter(
+        (existingProduct) =>
+          !values.productsToEnter.some(
+            (product) =>
+              getProductCompositeId(product) ===
+              getProductCompositeId(existingProduct)
+          )
+      );
+
+      // Remove products that are no longer in the updated entry
+      for (const existingProduct of productsToRemove) {
+        const productEntryRef = doc(
+          collection(db, "entries", entryDocRef.id, "products"),
+          getProductCompositeId(existingProduct)
+        );
+        transaction.delete(productEntryRef);
+
+        // Update stock for deleted product
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
+        );
+        const stockSnapshot = await getDocs(stockQuery);
+
+        if (!stockSnapshot.empty) {
+          const stockRef = stockSnapshot.docs[0].ref;
+          const stockData = stockSnapshot.docs[0].data() as IStock;
+          transaction.update(stockRef, {
+            unitsNumber: stockData.unitsNumber - existingProduct.unitsNumber,
+            looseUnitsNumber:
+              stockData.looseUnitsNumber - existingProduct.looseUnitsNumber,
+            updatedAt: dateVO.now(),
+          });
+        }
+
+        // Update LotProduct entry for deleted product
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
+
+        if (!lotProductSnapshot.empty) {
+          const lotProductDoc = lotProductSnapshot.docs[0];
+          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
+          const lotProductData = lotProductDoc.data();
+
+          const newUnitsNumber =
+            lotProductData.unitsNumber - existingProduct.unitsNumber;
+          const newLooseUnitsNumber =
+            lotProductData.looseUnitsNumber - existingProduct.looseUnitsNumber;
+
+          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
+            // If more units exist, update the quantity
+            transaction.update(lotProductRef, {
+              unitsNumber: Math.max(0, newUnitsNumber),
+              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+            });
+          } else {
+            // If all units are removed, delete the lotProduct entry
+            transaction.delete(lotProductRef);
+          }
+        }
+      }
+
+      // Process each product in productsToEnter
+      for (const product of values.productsToEnter) {
+        // Validate or generate lotId
+        let lotId = product.lotId || doc(collection(db, "lots")).id;
+        if (!lotId) {
+          lotId = doc(collection(db, "lots")).id; // Create a new lot if not provided
+        }
+
+        // Query stock using productId and lotId
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
+        );
+        const stockSnapshot = await getDocs(stockQuery);
+
+        let stockRef: DocumentReference;
+        let stockData: IStock | null = null;
+
+        if (!stockSnapshot.empty) {
+          // Use existing stock entry
+          stockRef = stockSnapshot.docs[0].ref;
+          stockData = stockSnapshot.docs[0].data() as IStock;
+        } else {
+          // Create new stock entry
+          stockRef = doc(collection(db, "stock"));
+          stockData = {
+            id: stockRef.id,
+            productId: product.id,
+            lotId: lotId,
+            unitsNumber: 0,
+            looseUnitsNumber: 0,
+            createdAt: dateVO.now(),
+            updatedAt: dateVO.now(),
+          };
+          transaction.set(stockRef, stockData);
+        }
+
+        // Find existing product entry
+        const existingProduct = existingProducts.find(
+          (p) => getProductCompositeId(p) === getProductCompositeId(product)
+        );
+
+        let unitsDifference;
+        let looseUnitsDifference;
+        if (existingProduct) {
+          // Calculate the difference
+          unitsDifference = product.unitsNumber - existingProduct.unitsNumber;
+          looseUnitsDifference =
+            product.looseUnitsNumber - existingProduct.looseUnitsNumber;
+
+          Logger.info("unitsDifference", { unitsDifference });
+          Logger.info("looseUnitsDifference", { looseUnitsDifference });
+
+          // Update stock quantities based on the difference
+          transaction.update(stockRef, {
+            unitsNumber: stockData.unitsNumber + unitsDifference,
+            looseUnitsNumber: stockData.looseUnitsNumber + looseUnitsDifference,
+            updatedAt: dateVO.now(),
+          });
+
+          // Update existing product entry
+          const productEntryRef = doc(
+            collection(db, "entries", entryDocRef.id, "products"),
+            getProductCompositeId(product)
+          );
+          transaction.update(productEntryRef, {
+            ...product,
+            stockId: stockRef.id,
+            lotId: lotId,
+            updatedAt: dateVO.now(),
+          });
+        } else {
+          // Create new product entry
+          const productEntryRef = doc(
+            db,
+            "entries",
+            entryDocRef.id,
+            "products",
+            getProductCompositeId(product)
+          );
+
+          // Update stock quantities
+          transaction.update(stockRef, {
+            unitsNumber: stockData.unitsNumber + product.unitsNumber,
+            looseUnitsNumber:
+              stockData.looseUnitsNumber + product.looseUnitsNumber,
+            updatedAt: dateVO.now(),
+          });
+
+          transaction.set(productEntryRef, {
+            ...product,
+            stockId: stockRef.id,
+            lotId: lotId,
+            createdAt: dateVO.now(),
+          });
+        }
+
+        // Update LotProduct entry
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
+
+        if (!lotProductSnapshot.empty) {
+          const lotProductDoc = lotProductSnapshot.docs[0];
+          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
+          const lotProductData = lotProductDoc.data();
+
+          const newUnitsNumber =
+            (lotProductData.unitsNumber || 0) + unitsDifference;
+          const newLooseUnitsNumber =
+            (lotProductData.looseUnitsNumber || 0) + looseUnitsDifference;
+
+          transaction.update(lotProductRef, {
+            unitsNumber: Math.max(0, newUnitsNumber),
+            looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+          });
+        } else {
+          const lotProductRef = doc(collection(db, "lotProducts"));
+          transaction.set(lotProductRef, {
+            id: lotProductRef.id,
+            lotId: lotId,
+            productId: product.id,
+            unitsNumber: product.unitsNumber,
+            looseUnitsNumber: product.looseUnitsNumber,
+          });
+        }
+      }
+
+      // Delete products that are no longer in the updated entry
+      for (const existingProduct of existingProducts) {
+        if (
+          !values.productsToEnter.some(
+            (product) => product.id === existingProduct.id
+          )
+        ) {
+          const productEntryRef = doc(
+            collection(db, "entries", entryDocRef.id, "products"),
+            getProductCompositeId(existingProduct)
+          );
+          transaction.delete(productEntryRef);
+
+          // Update stock for deleted product
+          const stockQuery = query(
+            collection(db, "stock"),
+            where("productId", "==", existingProduct.id),
+            where("lotId", "==", existingProduct.lotId)
+          );
+          const stockSnapshot = await getDocs(stockQuery);
+
+          if (!stockSnapshot.empty) {
+            const stockRef = stockSnapshot.docs[0].ref;
+            const stockData = stockSnapshot.docs[0].data() as IStock;
+            transaction.update(stockRef, {
+              unitsNumber: stockData.unitsNumber - existingProduct.unitsNumber,
+              looseUnitsNumber:
+                stockData.looseUnitsNumber - existingProduct.looseUnitsNumber,
+              updatedAt: dateVO.now(),
+            });
+          }
+
+          // Update LotProduct entry for deleted product
+          const lotProductQuery = query(
+            collection(db, "lotProducts"),
+            where("productId", "==", existingProduct.id),
+            where("lotId", "==", existingProduct.lotId)
+          );
+          const lotProductSnapshot = await getDocs(lotProductQuery);
+
+          if (!lotProductSnapshot.empty) {
+            const lotProductDoc = lotProductSnapshot.docs[0];
+            const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
+            const lotProductData = lotProductDoc.data();
+
+            const newUnitsNumber =
+              lotProductData.unitsNumber - existingProduct.unitsNumber;
+            const newLooseUnitsNumber =
+              lotProductData.looseUnitsNumber -
+              existingProduct.looseUnitsNumber;
+
+            if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
+              // If more units exist, update the quantity
+              transaction.update(lotProductRef, {
+                unitsNumber: Math.max(0, newUnitsNumber),
+                looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+              });
+            } else {
+              // If all units are removed, delete the lotProduct entry
+              transaction.delete(lotProductRef);
+            }
+          }
+        }
       }
 
       return { ...values, id: entryDoc.id };
@@ -267,50 +584,71 @@ export const removeEntry = async (entryId: string): Promise<void> => {
 
       const entryData = entryDoc.data() as IEntry;
 
-      // Update stock before deleting the entry
-      if (entryData.stockId) {
-        const stockRef = doc(db, "stock", entryData.stockId);
-        const stockDoc = await transaction.get(stockRef);
+      // Get existing products in the subcollection
+      const productsCollectionRef = collection(entryDocRef, "products");
+      const existingProductsSnapshot = await getDocs(productsCollectionRef);
+      const existingProducts = existingProductsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as IProductEntry[];
 
-        if (stockDoc.exists()) {
-          const stockData = stockDoc.data();
+      // Update stock and LotProduct entries before deleting the entry
+      for (const existingProduct of existingProducts) {
+        // Update stock for each product
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
+        );
+        const stockSnapshot = await getDocs(stockQuery);
+
+        if (!stockSnapshot.empty) {
+          const stockRef = stockSnapshot.docs[0].ref;
+          const stockData = stockSnapshot.docs[0].data() as IStock;
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber - entryData.unitsNumber,
+            unitsNumber: stockData.unitsNumber - existingProduct.unitsNumber,
             looseUnitsNumber:
-              stockData.looseUnitsNumber - entryData.looseUnitsNumber,
+              stockData.looseUnitsNumber - existingProduct.looseUnitsNumber,
             updatedAt: dateVO.now(),
           });
         }
-      }
 
-      // Remove corresponding LotProduct entry
-      const lotProductQuery = query(
-        collection(db, "lotProducts"),
-        where("productId", "==", entryData.productId),
-        where("lotId", "==", entryData.lotId)
-      );
-      const lotProductSnapshot = await getDocs(lotProductQuery);
+        // Update LotProduct entry for each product
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
 
-      if (!lotProductSnapshot.empty) {
-        const lotProductDoc = lotProductSnapshot.docs[0];
-        const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-        const lotProductData = lotProductDoc.data();
+        if (!lotProductSnapshot.empty) {
+          const lotProductDoc = lotProductSnapshot.docs[0];
+          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
+          const lotProductData = lotProductDoc.data();
 
-        const newUnitsNumber =
-          lotProductData.unitsNumber - entryData.unitsNumber;
-        const newLooseUnitsNumber =
-          lotProductData.looseUnitsNumber - entryData.looseUnitsNumber;
+          const newUnitsNumber =
+            lotProductData.unitsNumber - existingProduct.unitsNumber;
+          const newLooseUnitsNumber =
+            lotProductData.looseUnitsNumber - existingProduct.looseUnitsNumber;
 
-        if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-          // If more units exist, update the quantity
-          transaction.update(lotProductRef, {
-            unitsNumber: Math.max(0, newUnitsNumber),
-            looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-          });
-        } else {
-          // If all units are removed, delete the lotProduct entry
-          transaction.delete(lotProductRef);
+          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
+            // If more units exist, update the quantity
+            transaction.update(lotProductRef, {
+              unitsNumber: Math.max(0, newUnitsNumber),
+              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+            });
+          } else {
+            // If all units are removed, delete the lotProduct entry
+            transaction.delete(lotProductRef);
+          }
         }
+
+        // Delete the product entry
+        const productEntryRef = doc(
+          collection(db, "entries", entryDocRef.id, "products"),
+          getProductCompositeId(existingProduct)
+        );
+        transaction.delete(productEntryRef);
       }
 
       // Delete the entry
@@ -323,11 +661,23 @@ export const removeEntry = async (entryId: string): Promise<void> => {
 
 export const getEntryById = async (entryId: string): Promise<IEntry> => {
   try {
-    const entryDoc = await getDoc(doc(db, "entries", entryId));
+    const entryDocRef = doc(db, "entries", entryId);
+    const entryDoc = await getDoc(entryDocRef);
     if (!entryDoc.exists()) {
       throw new ValidationError("Entry not found.");
     }
-    return { id: entryDoc.id, ...entryDoc.data() } as IEntry;
+
+    const productsCollectionRef = collection(entryDocRef, "products");
+    const productsSnapshot = await getDocs(productsCollectionRef);
+
+    const productsToEnter: IProductEntry[] = productsSnapshot.docs.map(
+      (doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })
+    ) as IProductEntry[];
+
+    return { id: entryDoc.id, ...(entryDoc.data() as IEntry), productsToEnter };
   } catch (error) {
     throw new APIError("Failed to get entry", error);
   }

@@ -60,7 +60,9 @@ export const CreateDispatchForm = ({
 
   const toast = useToast();
   const { t } = useTranslate();
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
+    limit: 5,
+  });
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData, isFetching } = useProducts(5);
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();

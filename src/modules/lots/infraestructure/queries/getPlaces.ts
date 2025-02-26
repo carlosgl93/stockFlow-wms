@@ -24,10 +24,6 @@ export const getPlaces = async (
   pageSize: number,
   lastVisible?: string | null
 ): Promise<{ places: IPlace[]; lastVisible: string }> => {
-  Logger.info(
-    `getPlaces called with pageSize: ${pageSize}, lastVisible: ${lastVisible}`
-  );
-
   if (!pageSize || pageSize <= 0) {
     Logger.error("Invalid pageSize");
     throw new ValidationError("Invalid pageSize");
@@ -54,7 +50,6 @@ export const getPlaces = async (
   }
 
   try {
-    Logger.info("Executing query to fetch places");
     const querySnapshot = await getDocs(q);
     const places: IPlace[] = [];
     querySnapshot.forEach((doc) => {
@@ -62,9 +57,7 @@ export const getPlaces = async (
     });
 
     const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    Logger.info(
-      `Query successful, fetched ${places.length} places, lastVisible: ${lastVisibleDoc?.id}`
-    );
+
     return { places, lastVisible: lastVisibleDoc?.id };
   } catch (error) {
     Logger.error("Failed to retrieve PlaceProducts", [error]);

@@ -1,3 +1,4 @@
 export * from "./useEntries";
 export * from "./entriesApi";
-export * from "./EntriesController";
+export * from "./CreateEntryController";
+export * from "./EntriesListController";

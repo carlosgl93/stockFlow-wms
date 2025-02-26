@@ -105,8 +105,8 @@ export const StockList = ({ stock }: IProps) => {
     lotName: lotNames[item.lotId] || "",
     unitsNumber: item.unitsNumber,
     looseUnitsNumber: item.looseUnitsNumber,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
+    created_at: item.createdAt,
+    updated_at: item.updatedAt,
   }));
 
   return (

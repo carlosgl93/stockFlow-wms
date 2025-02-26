@@ -1,5 +1,5 @@
 export type IEntryRow = {
-  id: number;
+  id: string;
   productName: string;
   lot: string;
   palletNumber: string;

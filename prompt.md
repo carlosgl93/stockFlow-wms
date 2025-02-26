@@ -133,26 +133,30 @@ ERD:
 |                       | - address: string          |                 |
 |                       | - contact: IContact        |                 |
 
-| Transporter    | Entry                      |
-| -------------- | -------------------------- |
-| - id: string   | - id: string               |
-| - name: string | - supplierId: string       |
-|                | - docNumber: string        |
-|                | - transporterId: string    |
-|                | - productId: string        |
-|                | - lotId: string            |
-|                | - placeId?: string         |
-|                | - stockId?: string         |
-|                | - expirityDate: string     |
-|                | - palletNumber: string     |
-|                | - unitsNumber: number      |
-|                | - looseUnitsNumber: number |
-|                | - totalUnitsNumber: number |
-|                | - heightCMs: number        |
-|                | - widthCMs: number         |
-|                | - description: string      |
-|                | - createdAt?: string       |
-|                | - updatedAt?: string       |
+| Transporter    | Entry                              |
+| -------------- | ---------------------------------- |
+| - id: string   | - id: string                       |
+| - name: string | - supplierId: string               |
+|                | - docNumber: string                |
+|                | - transporterId: string            |
+|                | - productsToEnter: IProductEntry[] |
+|                | - description: string              |
+|                | - createdAt?: string               |
+|                | - updatedAt?: string               |
+
+| IProductEntry              |
+| -------------------------- |
+| - id: string               |
+| - unitsNumber: number      |
+| - looseUnitsNumber: number |
+| - totalUnitsNumber: number |
+| - lotId: string            |
+| - stockId?: string         |
+| - expiryDate: string       |
+| - palletNumber: string     |
+| - heightCMs: number        |
+| - widthCMs: number         |
+| - description: string      |
 
 Entity Descriptions:
 
@@ -175,7 +179,9 @@ Entity Descriptions:
 - **IContact:** Represents the contact information for a supplier.
   - Attributes: name, email, phone.
 - **Entry:** Represents an entry of products into the warehouse.
-  - Attributes: id, supplierId, docNumber, transporterId, productId, lotId, placeId, stockId, expirityDate, palletNumber, unitsNumber, looseUnitsNumber, totalUnitsNumber, heightCMs, widthCMs, description, createdAt, updatedAt.
+  - Attributes: id, supplierId, docNumber, transporterId, productsToEnter, description, createdAt, updatedAt.
+- **IProductEntry:** Represents the details of products to be entered into the warehouse.
+  - Attributes: id, unitsNumber, looseUnitsNumber, totalUnitsNumber, lotId, stockId, expiryDate, palletNumber, heightCMs, widthCMs, description.
 
 Relationships:
 
@@ -190,7 +196,7 @@ Relationships:
 - **Product to Place:** One-to-Many (A product can be stored in multiple places).
 - **Entry to Supplier:** Many-to-One (An entry is associated with one supplier).
 - **Entry to Transporter:** Many-to-One (An entry is associated with one transporter).
-- **Entry to Product:** Many-to-One (An entry is associated with one product).
+- **Entry to Product:** Many-to-Many (An entry is associated with multiple products).
 - **Entry to Lot:** Many-to-One (An entry is associated with one lot).
 - **Entry to Place:** Many-to-One (An entry is associated with one place).
 - **Entry to Stock:** Many-to-One (An entry is associated with one stock).
