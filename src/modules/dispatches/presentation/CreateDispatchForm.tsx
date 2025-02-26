@@ -28,7 +28,6 @@ import {
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { useLots, usePlaces } from "modules/lots/infraestructure";
 import { DispatchFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
 import { searchProduct, useProducts } from "modules/products/infrastructure";
@@ -43,6 +42,7 @@ import { CreateTransporterForm } from "modules/transporters/presentation";
 import { ValidationError } from "shared/Error";
 import { useDispatches } from "../infraestructure";
 import { DocumentType, IDispatch } from "../types";
+import { usePlaces } from "modules/places/infra";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,

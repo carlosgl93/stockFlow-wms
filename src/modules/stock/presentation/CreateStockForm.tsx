@@ -22,11 +22,11 @@ import { useTranslate } from "utils";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
 import { Logger } from "utils/logger";
-import { useLots, usePlaces } from "modules/lots/infraestructure";
 import { IProduct } from "modules/products/types";
 import { searchProduct, useProducts } from "modules/products/infrastructure";
 import { Search } from "shared/Form";
 import { CreateProductForm } from "modules/products/presentation";
+import { usePlaces } from "modules/places/infra";
 
 export const CreateStockForm = ({ stockToEdit }: { stockToEdit?: IStock }) => {
   const [isLoading, setIsLoading] = useState(false);

@@ -13,7 +13,7 @@ import {
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { useSuppliers, ISupplier } from "modules/suppliers";
-import { getLots, usePlaces } from "modules/lots/infraestructure";
+import { getLots } from "modules/lots/infraestructure";
 import { EntryFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
 import { useProducts } from "modules/products/infrastructure";
@@ -21,8 +21,9 @@ import { ITransporter } from "modules/transporters/types";
 import { useTransporters } from "modules/transporters/infrastructure";
 import { ValidationError } from "shared/Error";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { SearchIcon, EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
+import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
+import { usePlaces } from "modules/places/infra";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -57,6 +58,8 @@ export const CreateEntryController = ({
     isLoadingAddEntry,
     isLoadingUpdateEntry,
   } = useEntries();
+
+  const {} = usePlaces();
 
   const {
     handleSubmit,

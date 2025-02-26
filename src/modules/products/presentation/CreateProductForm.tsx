@@ -23,12 +23,12 @@ import {
 import { useToast } from "shared/Toast";
 import { ProductFixture } from "utils/fixtures";
 import { useRedirect, useTranslate } from "utils";
-import { saveProduct } from "../infrastructure/saveProduct";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ValidationError } from "shared/Error";
 import { useLocation } from "shared/Router";
 import { editProduct, useProducts } from "../infrastructure";
 import { Loading } from "shared/Layout";
+import { calculateUnitsPerSurface } from "../utils";
 
 export const CreateProductForm = ({
   productToEdit,
@@ -51,6 +51,7 @@ export const CreateProductForm = ({
     formState: { errors },
     reset,
     trigger,
+    watch,
   } = useForm<IProduct>();
   const [safetyDocument, setSafetyDocument] = useState<FileList | null>(null);
   const toast = useToast();
@@ -105,6 +106,16 @@ export const CreateProductForm = ({
       return;
     }
     // Handle form submission logic here
+    if (data.boxDetails) {
+      data.boxDetails.unitsPerSurface = calculateUnitsPerSurface(
+        data.boxDetails.palletType,
+        {
+          width: data.boxDetails.width,
+          height: data.boxDetails.height,
+          depth: data.boxDetails.depth,
+        }
+      );
+    }
     if (location.pathname.includes("edit")) {
       editProductMutation({ values: data, id: productToEdit?.id || "" });
     } else {
@@ -142,6 +153,8 @@ export const CreateProductForm = ({
       return;
     }
   }, [setValue, productToEdit, trigger]);
+
+  useEffect(() => {}, []);
 
   if (saveProductIsLoading) {
     return <Loading size="md" />;
@@ -384,7 +397,23 @@ export const CreateProductForm = ({
             name="boxDetails.height"
             control={control}
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : 0;
+                  field.onChange(value);
+                  setValue(
+                    "boxDetails.unitsPerSurface",
+                    calculateUnitsPerSurface(watch("boxDetails.palletType"), {
+                      width: watch("boxDetails.width"),
+                      height: value,
+                      depth: watch("boxDetails.depth"),
+                    })
+                  );
+                }}
+              />
+            )}
           />
         </FormControl>
         <FormControl mb={4}>
@@ -393,7 +422,23 @@ export const CreateProductForm = ({
             name="boxDetails.width"
             control={control}
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : 0;
+                  field.onChange(value);
+                  setValue(
+                    "boxDetails.unitsPerSurface",
+                    calculateUnitsPerSurface(watch("boxDetails.palletType"), {
+                      width: value,
+                      height: watch("boxDetails.height"),
+                      depth: watch("boxDetails.depth"),
+                    })
+                  );
+                }}
+              />
+            )}
           />
         </FormControl>
         <FormControl mb={4}>
@@ -402,29 +447,50 @@ export const CreateProductForm = ({
             name="boxDetails.depth"
             control={control}
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : 0;
+                  field.onChange(value);
+                  setValue(
+                    "boxDetails.unitsPerSurface",
+                    calculateUnitsPerSurface(watch("boxDetails.palletType"), {
+                      width: watch("boxDetails.width"),
+                      height: watch("boxDetails.height"),
+                      depth: value,
+                    })
+                  );
+                }}
+              />
+            )}
           />
         </FormControl>
       </Box>
       <Box display="flex" gap={16} justifyContent="space-around">
         <FormControl mb={4}>
-          <FormLabel>{t("Units per Surface")}</FormLabel>
-          <Controller
-            name="boxDetails.unitsPerSurface"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
-          />
-        </FormControl>
-        <FormControl mb={4}>
           <FormLabel>{t("Pallet Type")}</FormLabel>
           <Controller
             name="boxDetails.palletType"
             control={control}
-            defaultValue={IPallet.European}
+            defaultValue={IPallet.Standard}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                onChange={(e) => {
+                  const value = e.target.value as IPallet;
+                  field.onChange(value);
+                  setValue(
+                    "boxDetails.unitsPerSurface",
+                    calculateUnitsPerSurface(value, {
+                      width: watch("boxDetails.width"),
+                      height: watch("boxDetails.height"),
+                      depth: watch("boxDetails.depth"),
+                    })
+                  );
+                }}
+              >
                 <option value="">{t("Select Pallet Type")}</option>
                 {Object.values(IPallet).map((pallet) => (
                   <option key={pallet} value={pallet}>
@@ -433,6 +499,15 @@ export const CreateProductForm = ({
                 ))}
               </Select>
             )}
+          />
+        </FormControl>
+        <FormControl mb={4}>
+          <FormLabel>{t("Units per Surface")}</FormLabel>
+          <Controller
+            name="boxDetails.unitsPerSurface"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => <Input {...field} readOnly disabled />}
           />
         </FormControl>
       </Box>

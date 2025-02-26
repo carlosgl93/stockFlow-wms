@@ -7,4 +7,7 @@ export const stock = {
   "Stock list": "Lista de stock",
   "Create Stock": "Crear stock",
   "Create your stock item.": "Crea tu item de stock.",
+  Product: "Producto",
+  Lot: "Lote",
+  "Updated At": "Fecha de actualización",
 };

@@ -11,33 +11,21 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect, useState, useCallback } from "react";
-import { useEntries } from "../infraestructure/useEntries";
-import { useToast } from "shared/Toast";
+import { Controller } from "react-hook-form";
 import { IEntry, IEntryForm } from "../types";
-import { useTranslate } from "utils";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
-import { Logger } from "utils/logger";
 import {
-  useSuppliers,
   CreateSupplierForm,
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { usePlaces } from "modules/lots/infraestructure";
-import { EntryFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
-import { searchProduct, useProducts } from "modules/products/infrastructure";
+import { searchProduct } from "modules/products/infrastructure";
 import { Search } from "shared/Form";
 import { ITransporter } from "modules/transporters/types";
-import {
-  searchTransporter,
-  useTransporters,
-} from "modules/transporters/infrastructure";
+import { searchTransporter } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
@@ -55,15 +43,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     isSearchingProduct,
     setIsSearchingProduct,
     searchResults,
-    setSearchedResults,
     addedProducts,
-    willSpecifyPlace,
-    setWillSpecifyPlace,
-    getSuppliersData,
     isLoadingGetSuppliers,
-    getTransporters,
     isLoadingGetTransporters,
-    getProductsData,
     isFetching,
     getPlacesData,
     isLoadingGetPlaces,
@@ -73,17 +55,12 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     setTransporters,
     products,
     setProducts,
-    addEntryMutation,
-    updateEntryMutation,
     isLoadingAddEntry,
     isLoadingUpdateEntry,
     handleSubmit,
     control,
-    setValue,
     errors,
-    trigger,
     watch,
-    toast,
     t,
     isOpen,
     onOpen,

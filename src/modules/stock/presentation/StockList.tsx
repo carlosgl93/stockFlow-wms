@@ -2,21 +2,21 @@ import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Box, IconButton } from "@chakra-ui/react";
 import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
-import { IStock } from "../types";
+import { IRenderStock, IStock } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useRedirect, useTranslate } from "utils";
+import { dateVO, useRedirect, useTranslate } from "utils";
 import { useStock } from "../infraestructure";
 import { useEffect, useState } from "react";
 import { useProducts } from "modules/products/infrastructure";
 import { useLots } from "modules/lots/infraestructure";
 
 interface IProps {
-  stock: IStock[];
+  stock: IRenderStock[];
 }
 
 export const StockList = ({ stock }: IProps) => {
   const [paginationModel, setPaginationModel] = useState({
-    pageSize: 25,
+    pageSize: 10,
     page: 0,
   });
 
@@ -87,26 +87,26 @@ export const StockList = ({ stock }: IProps) => {
         </Box>
       ),
     },
-    { field: "productId", headerName: "Product ID", width: 150 },
-    { field: "lotId", headerName: "Lot ID", width: 150 },
-    { field: "productName", headerName: "Product Name", width: 150 },
-    { field: "lotName", headerName: "Lot Name", width: 150 },
-    { field: "unitsNumber", headerName: "Units Number", width: 150 },
-    { field: "looseUnitsNumber", headerName: "Loose Units Number", width: 150 },
-    { field: "created_at", headerName: "Created At", width: 150 },
-    { field: "updated_at", headerName: "Updated At", width: 150 },
+    { field: "productName", headerName: t("Product"), width: 150 },
+    { field: "lotId", headerName: t("Lot"), width: 150 },
+    { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
+    {
+      field: "looseUnitsNumber",
+      headerName: t("Loose Units Number"),
+      width: 150,
+    },
+    { field: "updated_at", headerName: t("Updated At"), width: 150 },
   ];
 
   const rows = stock.map((item) => ({
     id: item.id,
-    productId: item.productId,
+    productName: item.product.name || "",
     lotId: item.lotId,
-    productName: productNames[item.productId] || "",
     lotName: lotNames[item.lotId] || "",
     unitsNumber: item.unitsNumber,
     looseUnitsNumber: item.looseUnitsNumber,
     created_at: item.createdAt,
-    updated_at: item.updatedAt,
+    updated_at: dateVO.formatDate(item.updatedAt),
   }));
 
   return (
