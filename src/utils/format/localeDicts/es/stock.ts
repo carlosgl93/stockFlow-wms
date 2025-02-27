@@ -10,4 +10,12 @@ export const stock = {
   Product: "Producto",
   Lot: "Lote",
   "Updated At": "Fecha de actualización",
+  "Doc Number": "N de guía",
+  "Expiry Date": "Fecha de vencimiento",
+  "Pallet N": "N de pallet",
+  "Total Units": "Total de unidades",
+  "Loose Units Number": "Unidades sueltas",
+  Place: "Ubicación",
+  "No products found": "No se encontraron productos",
+  Balance: "Saldo",
 };

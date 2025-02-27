@@ -19,7 +19,10 @@ export async function getSupplierById(id: string) {
   try {
     const supplierSnap = await getDoc(supplierRef);
     const data = supplierSnap.data();
-    return data as ISupplier;
+    return {
+      ...data,
+      id: supplierSnap.id,
+    } as ISupplier;
   } catch (error) {
     throw new APIError("Error fetching supplier by id", error);
   }

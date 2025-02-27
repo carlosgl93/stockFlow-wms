@@ -1,5 +1,7 @@
 import { IPlace } from "modules/lots/infraestructure";
 import { IProduct } from "modules/products/types";
+import { ISupplier } from "modules/suppliers";
+import { ITransporter } from "modules/transporters/types";
 
 export interface IStock {
   id: string;
@@ -15,3 +17,9 @@ export interface IStock {
 export interface IRenderStock extends IStock {
   product: IProduct;
 }
+
+export type ISuppsAndTrans = {
+  entryId: string;
+  supplier: ISupplier;
+  transporter: ITransporter;
+}[];

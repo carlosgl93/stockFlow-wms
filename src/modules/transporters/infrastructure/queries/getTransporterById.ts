@@ -19,7 +19,10 @@ export async function getTransporterById(id: string) {
   try {
     const transporterSnap = await getDoc(transporterRef);
     const data = transporterSnap.data();
-    return data as ITransporter;
+    return {
+      ...data,
+      id: transporterSnap.id,
+    } as ITransporter;
   } catch (error) {
     throw new APIError("Error fetching transporters by id", error);
   }

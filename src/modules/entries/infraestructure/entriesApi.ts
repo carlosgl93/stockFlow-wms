@@ -151,6 +151,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             looseUnitsNumber:
               stockData.looseUnitsNumber + product.looseUnitsNumber,
             updatedAt: now,
+            placeId: product?.placeId,
           });
         } else {
           // Create new stock entry
@@ -163,6 +164,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             looseUnitsNumber: product.looseUnitsNumber,
             createdAt: now,
             updatedAt: now,
+            placeId: product?.placeId,
           });
         }
 
@@ -201,6 +203,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
               (lotProductData.unitsNumber || 0) + product.unitsNumber,
             looseUnitsNumber:
               (lotProductData.looseUnitsNumber || 0) + product.looseUnitsNumber,
+            placeId: product?.placeId,
           });
         } else {
           const lotProductRef = doc(collection(db, "lotProducts"));
@@ -210,6 +213,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             productId: product.id,
             unitsNumber: product.unitsNumber,
             looseUnitsNumber: product.looseUnitsNumber,
+            placeId: product?.placeId,
           });
         }
       }
@@ -680,5 +684,37 @@ export const getEntryById = async (entryId: string): Promise<IEntry> => {
     return { id: entryDoc.id, ...(entryDoc.data() as IEntry), productsToEnter };
   } catch (error) {
     throw new APIError("Failed to get entry", error);
+  }
+};
+
+export const fetchEntriesByProductId = async (
+  productId: string
+): Promise<IEntry[]> => {
+  Logger.info("fetchEntriesByProductId", { productId });
+  try {
+    const entriesRef = collection(db, "entries");
+    const entriesSnapshot = await getDocs(entriesRef);
+    const entries = entriesSnapshot.docs.map(
+      (doc) => ({ ...doc.data(), id: doc.id } as IEntry)
+    );
+
+    const entriesWithProduct = [];
+
+    for (const entry of entries) {
+      const productsRef = collection(db, "entries", entry.id!, "products");
+      const q = query(productsRef, where("id", "==", productId));
+      const productsSnapshot = await getDocs(q);
+
+      if (!productsSnapshot.empty) {
+        const products = productsSnapshot.docs.map(
+          (doc) => ({ ...doc.data() } as IProductEntry)
+        );
+        entriesWithProduct.push({ ...entry, productsToEnter: products });
+      }
+    }
+
+    return entriesWithProduct;
+  } catch (error) {
+    throw new APIError("Failed to fetch entries by product ID", error);
   }
 };
