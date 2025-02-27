@@ -110,4 +110,8 @@ export const products = {
     "Empieza buscando un nombre de producto",
   "Search for a product name": "Buscar por nombre de producto",
   "Company name": "Nombre de la empresa",
+  Units: "Unidades",
+  "Unit of Measure": "Unidad de Medida",
+  Litre: "Litro",
+  Kilogram: "Kilogramo",
 };

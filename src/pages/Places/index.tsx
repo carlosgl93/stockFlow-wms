@@ -1,8 +1,8 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { withRequireAuth } from "modules/auth/application";
-import { usePlaces } from "modules/lots/infraestructure";
-import { PlacesList } from "modules/lots/presentation";
+import { usePlaces } from "modules/places/infra";
+import { PlacesList } from "modules/places/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";

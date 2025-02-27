@@ -18,6 +18,8 @@ interface IStore {
   isError: boolean;
   state: "idle" | "loading" | "finished";
   user: IUser;
+  redirectPath: string;
+  setRedirectPath: (path: string) => void;
   login: (credentials: ICredentials) => Promise<void>;
   logout: () => Promise<void>;
   signup: (credentials: ICredentials) => Promise<void>;
@@ -59,6 +61,8 @@ export const initializeAuthStore = (preloadedState: Partial<IStore> = {}) => {
       isError: false,
       state: isLoggedIn() ? "idle" : "finished",
       user: undefined as unknown as IUser,
+      redirectPath: "/",
+      setRedirectPath: (path: string) => set({ redirectPath: path }),
       ...preloadedState,
       login: async (credentials: ICredentials) => {
         set({ state: "loading" });

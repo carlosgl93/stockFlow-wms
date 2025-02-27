@@ -1,13 +1,12 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { withRequireAuth } from "modules/auth/application";
-import { useEntries } from "modules/entries/infraestructure";
+import { EntriesListController } from "modules/entries/infraestructure";
 import { EntriesList } from "modules/entries/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 import { useRedirect, useTranslate } from "utils";
-import { Logger } from "utils/logger";
 
 const EntriesPage = () => {
   const notImplemented = useNotImplementedYetToast();
@@ -16,10 +15,7 @@ const EntriesPage = () => {
   const handleCreate = () => {
     redirect("/entries/create");
   };
-
-  const { entriesData, isLoadingGetEntries } = useEntries();
-
-  Logger.info("EntriesPage", { entriesData });
+  const { isLoadingGetEntries } = EntriesListController();
 
   return (
     <Page>
@@ -40,11 +36,7 @@ const EntriesPage = () => {
           </Button>
         </Box>
       </PageHeader>
-      {isLoadingGetEntries ? (
-        <Loading size="md" />
-      ) : (
-        <EntriesList entries={entriesData} />
-      )}
+      {isLoadingGetEntries ? <Loading size="md" /> : <EntriesList />}
     </Page>
   );
 };

@@ -28,6 +28,6 @@ export const ProductFixture = createFixture<IProduct>({
     width: 20,
     depth: 10,
     unitsPerSurface: 50,
-    palletType: IPallet.European,
+    palletType: IPallet.Standard,
   },
 });

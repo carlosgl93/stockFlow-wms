@@ -79,9 +79,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/dispatches",
-        loader: entriesPageLoader,
-
         lazy: () => import("./Dispatches"),
+      },
+      {
+        path: "/dispatches/create",
+        lazy: () => import("./Dispatches/Create"),
       },
       {
         path: "/stock",

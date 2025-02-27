@@ -2,6 +2,7 @@ import { Category } from "./Category";
 import { IContainer } from "./IContainer";
 import { IUnitOfMeasure } from "./IUnitOfMeasure";
 import { RiskCategory } from "./RiskCategory";
+import { PalletType } from "../utils";
 
 export interface IProduct {
   id?: string;
@@ -24,11 +25,8 @@ export interface IProduct {
     width: number;
     depth: number;
     unitsPerSurface: number;
-    palletType: IPallet;
+    palletType: PalletType;
   };
 }
 
-export enum IPallet {
-  Chinese = "Chinese",
-  European = "European",
-}
+export { PalletType as IPallet };

@@ -4,8 +4,14 @@ import { useToast } from "@chakra-ui/react";
 import { addSupplier, updateSupplier, removeSupplier, getSuppliers } from "./";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { APIError } from "shared/Error";
+import { getSupplierById } from "./queries/getSupplierById";
 
-export const useSuppliers = (limit?: number | undefined) => {
+type UseSuppliersProps = {
+  limit?: number;
+  suppId?: string;
+};
+
+export const useSuppliers = ({ limit, suppId }: UseSuppliersProps) => {
   const [pageSize, setPageSize] = useState(50);
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
@@ -88,6 +94,16 @@ export const useSuppliers = (limit?: number | undefined) => {
     },
   });
 
+  const {
+    data: getSuppByIdData,
+    isFetching: getSuppByIdIsLoading,
+    isError: getSuppByIdIsError,
+  } = useQuery({
+    enabled: !!suppId,
+    queryKey: ["getSuppById", suppId],
+    queryFn: () => getSupplierById(suppId || ""),
+  });
+
   return {
     addSupplierMutation,
     isLoadingAddSupplier,
@@ -101,5 +117,8 @@ export const useSuppliers = (limit?: number | undefined) => {
     getSuppliersData,
     isLoadingGetSuppliers,
     isErrorGetSuppliers,
+    getSuppByIdData,
+    getSuppByIdIsLoading,
+    getSuppByIdIsError,
   };
 };

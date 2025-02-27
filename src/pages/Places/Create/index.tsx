@@ -1,9 +1,9 @@
-import { CreatePlaceForm } from "modules/lots/presentation";
 import { Cancel } from "shared/Actions";
 import { Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useTranslate } from "utils";
 import { useNavigate } from "shared/Router";
+import { CreatePlaceForm } from "modules/places/presentation";
 
 export const CreatePlace = () => {
   const { t } = useTranslate();

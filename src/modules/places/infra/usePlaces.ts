@@ -7,18 +7,15 @@ import {
   updatePlace,
 } from "./mutations";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
-import { useParams } from "shared/Router";
 import { useState } from "react";
 import { getPlaces } from "./queries";
 
 export const usePlaces = () => {
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(5);
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
-
-  const params = useParams();
 
   const {
     mutate: addPlaceMutation,
@@ -90,7 +87,7 @@ export const usePlaces = () => {
     isLoading: isLoadingGetPlaces,
     isError: isErrorGetPlaces,
   } = useQuery({
-    queryKey: ["places"],
+    queryKey: ["places", pageSize, lastVisible],
     queryFn: () => getPlaces(pageSize, lastVisible ? lastVisible : null),
     onSuccess: (data) => {
       setLastVisible(data.lastVisible);

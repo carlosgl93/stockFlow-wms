@@ -8,7 +8,7 @@ import { getPlaceById } from "modules/lots/infraestructure";
 import {
   CreatePlaceForm,
   PlaceNotFoundResult,
-} from "modules/lots/presentation";
+} from "modules/places/presentation";
 
 export const EditPlacePage = () => {
   const { placeId } = useParams<{ placeId: string }>();

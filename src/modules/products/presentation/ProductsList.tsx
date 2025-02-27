@@ -61,21 +61,24 @@ const ProductsList = ({ products }: IProps) => {
         </Box>
       ),
     },
-    { field: "name", headerName: "Name", width: 150 },
-    { field: "category", headerName: "Category", width: 150 },
-    { field: "type", headerName: "Type", width: 150 },
-    { field: "units", headerName: "Units", width: 100 },
-    { field: "quantity", headerName: "Quantity", width: 100 },
-    { field: "unitsPerSurface", headerName: "Units per Surface", width: 150 },
+    { field: "extCode", headerName: t("Codigo Ext"), width: 100 },
+    { field: "intCode", headerName: t("Codigo Int"), width: 100 },
+    { field: "name", headerName: t("Name"), width: 150 },
+    { field: "units", headerName: t("Units"), width: 100 },
     {
       field: "container",
-      headerName: "Container",
-      width: 150,
+      headerName: t("Container"),
+      width: 100,
     },
+    { field: "type", headerName: t("Type"), width: 100 },
+    { field: "quantity", headerName: t("Quantity"), width: 100 },
+    { field: "category", headerName: t("Category"), width: 100 },
   ];
 
   const rows = products.map((product) => ({
     id: product.id,
+    extCode: product.extCode,
+    intCode: product.internalCode,
     name: product.name,
     category: product.category,
     type: product.boxDetails?.type,

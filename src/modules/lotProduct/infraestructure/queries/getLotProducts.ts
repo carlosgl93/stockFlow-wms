@@ -21,20 +21,37 @@ import { ValidationError, APIError } from "shared/Error";
  * @throws {APIError} - If there is an error retrieving the documents.
  */
 export const getLotProducts = async (
-  lotId: string,
-  pageSize: number,
+  lotId?: string,
+  productId?: string,
+  pageSize?: number,
   lastVisible?: string
 ): Promise<{ lotProducts: ILotProduct[]; lastVisible: string }> => {
-  if (!lotId) {
-    throw new ValidationError("Invalid lotId");
+  if (!lotId || !productId) {
+    throw new ValidationError("LotId or productId are required");
   }
 
-  if (!pageSize || pageSize <= 0) {
-    throw new ValidationError("Invalid pageSize");
-  }
+  const pageLimit = pageSize || 25;
 
   const lotProductRef = collection(db, "LotProducts");
-  let q = query(lotProductRef, where("lotId", "==", lotId), limit(pageSize));
+  let q = query(lotProductRef);
+  if (!productId) {
+    q = query(lotProductRef, where("lotId", "==", lotId), limit(pageLimit));
+  }
+  if (!lotId) {
+    q = query(
+      lotProductRef,
+      where("productId", "==", productId),
+      limit(pageLimit)
+    );
+  }
+  if (lotId && productId) {
+    q = query(
+      lotProductRef,
+      where("lotId", "==", lotId),
+      where("productId", "==", productId),
+      limit(pageLimit)
+    );
+  }
 
   if (lastVisible) {
     const lastVisibleDoc = await getDocs(
@@ -45,7 +62,7 @@ export const getLotProducts = async (
         lotProductRef,
         where("lotId", "==", lotId),
         startAfter(lastVisibleDoc.docs[0]),
-        limit(pageSize)
+        limit(pageLimit)
       );
     }
   }
