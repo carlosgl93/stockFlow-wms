@@ -40,199 +40,66 @@ import {
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
 import { ValidationError } from "shared/Error";
-import { useDispatches } from "../infraestructure";
+import { CreateDispatchController, useDispatches } from "../infraestructure";
 import { DocumentType, IDispatch } from "../types";
 import { usePlaces } from "modules/places/infra";
+import { AppThemeProvider } from "theme/materialTheme";
+import { DataGrid } from "@mui/x-data-grid";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
 }: {
   dispatchToEdit?: IDispatch;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
-  const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
-  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-  const [searchResults, setSearchedResults] = useState<
-    null | (IProduct | ITransporter | ISupplier)[]
-  >(null);
-  const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
-
-  const toast = useToast();
-  const { t } = useTranslate();
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
-    limit: 5,
-  });
-  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
-  const { products: getProductsData, isFetching } = useProducts(5);
-  const { getPlacesData, isLoadingGetPlaces } = usePlaces();
-
-  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
-  const [transporters, setTransporters] = useState<ITransporter[]>([]);
-  const [products, setProducts] = useState<IProduct[]>([]);
-
   const {
-    addDispatchMutation,
-    updateDispatchMutation,
-    isLoadingAddDispatch,
-    isLoadingUpdateDispatch,
-  } = useDispatches();
-
-  const {
+    isLoading,
+    isSearchingSupplier,
+    isSearchingTransporter,
+    isSearchingProduct,
+    searchResults,
+    willSpecifyPlace,
+    suppliers,
+    transporters,
+    products,
     handleSubmit,
     control,
-    setValue,
-    formState: { errors },
+    errors,
     trigger,
     watch,
-  } = useForm<IDispatch>();
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isOpenCreateTransporter,
-    onOpen: onOpenCreateTransporter,
-    onClose: onCloseCreateTransporter,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenCreateProduct,
-    onOpen: onOpenCreateProduct,
-    onClose: onCloseCreateProduct,
-  } = useDisclosure();
-
-  const handleNewSupplier = useCallback(
-    (newSupplier: ISupplier) => {
-      setSuppliers((prev) => [...prev, newSupplier]);
-      Logger.info("new supplier", [newSupplier]);
-      setValue("supplierId", newSupplier.id || "");
-      onClose();
-    },
-    [setValue, onClose]
-  );
-
-  const handleNewTransporter = useCallback(
-    (newTransporter: ITransporter) => {
-      setTransporters((prev) => [...prev, newTransporter]);
-      setValue("transporterId", newTransporter.id || "");
-      onCloseCreateTransporter();
-    },
-    [setValue, onCloseCreateTransporter]
-  );
-
-  const handleNewProduct = useCallback(
-    (newProduct: IProduct) => {
-      setProducts((prev) => [...prev, newProduct]);
-      setValue("productId", newProduct.id || "");
-      onCloseCreateProduct();
-    },
-    [setValue, onCloseCreateProduct]
-  );
-
-  const onSubmit = async (data: IDispatch) => {
-    const validation = await trigger();
-
-    if (!validation) {
-      toast({
-        title: "Error",
-        description: `${t(
-          "Please fill all the fields"
-        )} fields to fill: ${Object.keys(errors).join(", ")}`,
-        status: "error",
-      });
-      return;
-    }
-
-    try {
-      if (dispatchToEdit) {
-        if (!dispatchToEdit.id) {
-          throw new ValidationError("Entry to edit has no id");
-        }
-        await updateDispatchMutation({
-          dispatchId: dispatchToEdit.id,
-          values: data,
-        });
-      } else {
-        await addDispatchMutation(data);
-      }
-    } catch (error) {
-      let errorMessage = "An unknown error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      toast({
-        title: "Error",
-        description: errorMessage,
-        status: "error",
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (dispatchToEdit) {
-      Object.keys(dispatchToEdit).forEach((key) => {
-        setValue(
-          key as keyof IDispatch,
-          dispatchToEdit[key as keyof IDispatch]
-        );
-      });
-      trigger();
-    } else if (import.meta.env.MODE === "development") {
-      const entry = DispatchFixture.toStructure();
-      Object.keys(entry).forEach((key) => {
-        setValue(key as keyof IDispatch, entry[key as keyof IDispatch]);
-      });
-      trigger();
-    }
-  }, [setValue, dispatchToEdit, trigger]);
-
-  useEffect(() => {
-    const uniqueSuppliers = [
-      ...((searchResults as ISupplier[]) || []),
-      ...(getSuppliersData?.suppliers || []),
-    ].filter(
-      (supplier, index, self) =>
-        index === self.findIndex((s) => s.id === supplier.id)
-    );
-    setSuppliers(uniqueSuppliers);
-    setValue("supplierId", uniqueSuppliers[0]?.id || "");
-    trigger();
-  }, [searchResults, getSuppliersData?.suppliers, isOpen]);
-
-  useEffect(() => {
-    const uniqueTransporters = [
-      ...((searchResults as ITransporter[]) || []),
-      ...(getTransporters || []),
-    ].filter(
-      (transporter, index, self) =>
-        index === self.findIndex((s) => s.id === transporter.id)
-    );
-    setTransporters(uniqueTransporters);
-    setValue("transporterId", uniqueTransporters[0]?.id || "");
-    trigger();
-  }, [
-    searchResults,
-    getTransporters,
-    isOpenCreateProduct,
+    onSubmit,
+    handleNewSupplier,
+    handleNewTransporter,
+    handleNewProduct,
+    onOpen,
+    onClose,
+    isOpen,
     isOpenCreateTransporter,
-  ]);
-
-  useEffect(() => {
-    const uniqueProducts = [
-      ...((searchResults as IProduct[]) || []),
-      ...(getProductsData || []),
-    ].filter(
-      (product, index, self) =>
-        index === self.findIndex((s) => s.id === product.id)
-    );
-    setProducts(uniqueProducts);
-    setValue("productId", uniqueProducts[0]?.id || "");
-    trigger();
-  }, [searchResults, getProductsData, isOpenCreateProduct]);
-
-  useEffect(() => {
-    setValue("placeId", getPlacesData?.places[0]?.id || "");
-    trigger();
-  }, [getPlacesData]);
+    onOpenCreateTransporter,
+    onCloseCreateTransporter,
+    isOpenCreateProduct,
+    onOpenCreateProduct,
+    onCloseCreateProduct,
+    isLoadingGetSuppliers,
+    isLoadingGetTransporters,
+    isFetching,
+    isLoadingGetPlaces,
+    isLoadingAddDispatch,
+    isLoadingUpdateDispatch,
+    toast,
+    t,
+    addDispatchMutation,
+    updateDispatchMutation,
+    setIsSearchingProduct,
+    setIsSearchingSupplier,
+    setIsSearchingTransporter,
+    setSuppliers,
+    setIsLoading,
+    setTransporters,
+    setProducts,
+    getPlacesData,
+    columns,
+    rows,
+  } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
     return <Loading />;
@@ -603,26 +470,25 @@ export const CreateDispatchForm = ({
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        {/* TODO: Implement boxes per pallet calculator */}
+        <Button onClick={handleAddProductToEntry} colorScheme="green">
+          {t("Add product to the list")}
+        </Button>
+        <AppThemeProvider>
+          <DataGrid
+            rows={rows || []}
+            columns={columns}
+            rowCount={rows?.length || 100}
+          />
+        </AppThemeProvider>
         <Button
           type="submit"
           colorScheme="teal"
           disabled={isLoadingAddDispatch || isLoadingUpdateDispatch}
         >
-          {dispatchToEdit ? t("Edit Entry") : t("Create Entry")}
+          {dispatchToEdit ? t("Edit Dispatch") : t("Create Dispatch")}
         </Button>
       </Box>
-      {/* TODO: IMPLEMENT GRID TO DISPLAY THE SELECTED PRODUCTS THAT HAVE BEEN SELECTED TO DISPATCH WITH THE FOLLOWING COLUMNS:
-        1. Row number
-        2. extCode
-        3. internalCode
-        4. product name
-        5. Safety Document boolean
-        6. Units number
-        7. Loose Units number
-        8. Total Units number
-        9. Status
-      */}
+
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent width={"100%"} maxW={"80vw"}>

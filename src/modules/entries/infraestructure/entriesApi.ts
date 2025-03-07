@@ -718,3 +718,52 @@ export const fetchEntriesByProductId = async (
     throw new APIError("Failed to fetch entries by product ID", error);
   }
 };
+
+export const fetchEntriesByProductIdAndLotId = async (
+  productId?: string,
+  lotId?: string
+): Promise<IEntry[]> => {
+  Logger.info("fetchEntriesByProductIdAndLotId", { productId, lotId });
+  try {
+    const entriesRef = collection(db, "entries");
+    const entriesSnapshot = await getDocs(entriesRef);
+    const entries = entriesSnapshot.docs.map(
+      (doc) => ({ ...doc.data(), id: doc.id } as IEntry)
+    );
+
+    const entriesWithProductAndLot = [];
+
+    for (const entry of entries) {
+      const productsRef = collection(db, "entries", entry.id!, "products");
+      let q;
+      if (productId && lotId) {
+        q = query(
+          productsRef,
+          where("id", "==", productId),
+          where("lotId", "==", lotId)
+        );
+      } else if (productId) {
+        q = query(productsRef, where("id", "==", productId));
+      } else if (lotId) {
+        q = query(productsRef, where("lotId", "==", lotId));
+      } else {
+        continue;
+      }
+      const productsSnapshot = await getDocs(q);
+
+      if (!productsSnapshot.empty) {
+        const products = productsSnapshot.docs.map(
+          (doc) => ({ ...doc.data() } as IProductEntry)
+        );
+        entriesWithProductAndLot.push({ ...entry, productsToEnter: products });
+      }
+    }
+
+    return entriesWithProductAndLot;
+  } catch (error) {
+    throw new APIError(
+      "Failed to fetch entries by product ID and/or lot ID",
+      error
+    );
+  }
+};

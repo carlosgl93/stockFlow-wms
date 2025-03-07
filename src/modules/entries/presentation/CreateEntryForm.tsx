@@ -460,7 +460,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        {/* TODO: Implement boxes per pallet calculator */}
         <Button onClick={handleAddProductToEntry} colorScheme="green">
           {t("Add product to the list")}
         </Button>

@@ -13,7 +13,8 @@ import { IEntry } from "modules/entries/types";
 import { Logger } from "utils/logger";
 
 interface IProps {
-  stock: IEntry[];
+  entries: IEntry[];
+  stock: IStock[];
   productId: string;
   selectedLot: string;
   suppsAndTrans: ISuppsAndTrans;
@@ -32,6 +33,7 @@ interface IRow {
 }
 
 export const StockList = ({
+  entries,
   stock,
   productId,
   selectedLot,
@@ -106,52 +108,36 @@ export const StockList = ({
 
   const generateRows = (): IRow[] => {
     let total = 0;
-    const rows = selectedLot
-      ? stock
-          .filter((i) =>
-            i.productsToEnter.find(
-              (p) => p.id === productId && p.lotId === selectedLot
-            )
-          )
-          .map((item) => {
-            Logger.info("item", { item });
-            const product = item.productsToEnter[0];
-            total += product?.totalUnitsNumber || 0;
-            const suppAndTransData = suppsAndTrans.find(
-              (s) => s.entryId === item.id
-            );
-            return {
-              id: item.id!,
-              docNumber: item.docNumber,
-              lotId: product?.lotId,
-              expiryDate: product?.expirityDate,
-              // documentType: item.docType,
-              supplier: suppAndTransData?.supplier.company || "",
-              transporter: suppAndTransData?.transporter.name || "",
-              palletNumber: product?.palletNumber,
-              unitsNumber: product?.unitsNumber,
-              looseUnitsNumber: product?.looseUnitsNumber,
-            };
-          })
-      : stock.map((item) => {
-          const product = item.productsToEnter.find((p) => p.id === productId);
-          total += product?.totalUnitsNumber || 0;
-          const suppAndTransData = suppsAndTrans.find(
-            (s) => s.entryId === item.id
-          );
-          return {
-            id: item.id!,
-            docNumber: item.docNumber,
-            lotId: product?.lotId,
-            expiryDate: product?.expirityDate,
-            // documentType: item.docType,
-            supplier: suppAndTransData?.supplier.company || "",
-            transporter: suppAndTransData?.transporter.name || "",
-            palletNumber: product?.palletNumber,
-            unitsNumber: product?.unitsNumber,
-            looseUnitsNumber: product?.looseUnitsNumber,
-          };
-        });
+    const rows = entries
+      .filter((entry) =>
+        entry.productsToEnter.some(
+          (product) =>
+            (!productId || product.id === productId) &&
+            (!selectedLot || product.lotId === selectedLot)
+        )
+      )
+      .map((entry) => {
+        const product = entry.productsToEnter.find(
+          (product) =>
+            (!productId || product.id === productId) &&
+            (!selectedLot || product.lotId === selectedLot)
+        );
+        total += product?.totalUnitsNumber || 0;
+        const suppAndTransData = suppsAndTrans.find(
+          (s) => s.entryId === entry.id
+        );
+        return {
+          id: entry.id!,
+          docNumber: entry.docNumber,
+          lotId: product?.lotId,
+          expiryDate: product?.expirityDate,
+          supplier: suppAndTransData?.supplier.company || "",
+          transporter: suppAndTransData?.transporter.name || "",
+          palletNumber: product?.palletNumber,
+          unitsNumber: product?.unitsNumber,
+          looseUnitsNumber: product?.looseUnitsNumber,
+        };
+      });
     setTotalUnits(total);
     return rows;
   };
@@ -159,8 +145,9 @@ export const StockList = ({
   useEffect(() => {
     const rows = generateRows();
     setRows(rows);
-  }, [stock, selectedLot, productId]);
+  }, [entries, stock, selectedLot, productId, suppsAndTrans]);
 
+  Logger.info("rows", { rows });
   if (rows.length === 0) {
     return <EmptyStateResult />;
   }
@@ -175,7 +162,7 @@ export const StockList = ({
           loading={isFetching || isLoadingGetLots}
           rows={rows}
           columns={columns}
-          rowCount={stock?.length}
+          rowCount={rows.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
         />

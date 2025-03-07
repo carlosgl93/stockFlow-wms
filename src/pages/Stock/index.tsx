@@ -8,7 +8,10 @@ import {
   Select,
 } from "@chakra-ui/react";
 import { withRequireAuth } from "modules/auth/application";
-import { fetchEntriesByProductId } from "modules/entries/infraestructure";
+import {
+  fetchEntriesByProductId,
+  fetchEntriesByProductIdAndLotId,
+} from "modules/entries/infraestructure";
 import { IEntry } from "modules/entries/types";
 import { searchProduct } from "modules/products/infrastructure";
 import { IProduct } from "modules/products/types";
@@ -37,12 +40,10 @@ import { APIError } from "shared/Error";
 const StockPage = () => {
   const [productEntries, setProductEntries] = useState<IEntry[]>([]);
   const [productStock, setProductStock] = useState<IStock[]>([]);
-  const [result, setResult] = useState([]);
   const [searchedStockProduct, setSearchedStockProduct] = useState("");
   const [searchedProductsResult, setSearchedProductsResult] = useState<
     IProduct[]
   >([]);
-  const [searchedLot, setSearchedLot] = useState("");
   const [lotsResults, setLotsResults] = useState<IStock[]>([]);
   const [lotSelected, setLotSelected] = useState("");
   const [suppsAndTrans, setSuppsAndTrans] = useState<ISuppsAndTrans>([]);
@@ -51,27 +52,34 @@ const StockPage = () => {
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
   const [isFetchingEntriesByProductId, setIsFetchingEntriesByProductId] =
     useState(false);
+  const [isFetchingEntries, setIsFetchingEntries] = useState(false);
   const { t } = useTranslate();
-  const redirect = useRedirect();
 
   const { control } = useForm();
   const { stockData, isLoadingGetStock } = useStock();
 
+  // fetch entries
   useEffect(() => {
-    // fetch entries
     const fetchProductEntries = async () => {
-      // setIsFetchingEntriesByProductId(true);
-      if (!searchedStockProduct) return;
-      const entries = await fetchEntriesByProductId(searchedStockProduct);
-      setProductEntries(entries);
-      // setIsFetchingEntriesByProductId(false);
+      setIsFetchingEntries(true);
+      try {
+        const entries = await fetchEntriesByProductIdAndLotId(
+          searchedStockProduct,
+          lotSelected
+        );
+        setProductEntries(entries);
+      } catch (error) {
+        Logger.error("Failed to fetch entries", error as unknown as APIError);
+      } finally {
+        setIsFetchingEntries(false);
+      }
     };
     fetchProductEntries();
-  }, [searchedStockProduct]);
+  }, [searchedStockProduct, lotSelected]);
 
+  // fetch stock based on the entries
   useEffect(() => {
-    // fetch stock based on the entries
-    if (!lotSelected && !searchedStockProduct) return;
+    // if (!lotSelected && !searchedStockProduct) return;
     if (searchedStockProduct) {
       const fetchStockByProductId = async () => {
         if (!searchedStockProduct) return;
@@ -97,8 +105,8 @@ const StockPage = () => {
     }
   }, [searchedStockProduct, lotSelected]);
 
+  // fetch transporter and supplier by id
   useEffect(() => {
-    // fetch transporter and supplier by id
     const fetchSupplierAndTransporter = async () => {
       if (!productEntries.length) return;
 
@@ -202,6 +210,8 @@ const StockPage = () => {
     }
   };
 
+  Logger.info("product entries and stock", { productEntries, productStock });
+
   return (
     <Page>
       <PageHeader
@@ -247,9 +257,6 @@ const StockPage = () => {
                 </FlexColumn>
               )}
             />
-            {/* {errors.productId && (
-              <Box color="red">{t("This field is required")}</Box>
-            )} */}
           </FormControl>
           <FormControl mb={4}>
             <FlexBox alignItems={"center"} mb={2}>
@@ -292,11 +299,12 @@ const StockPage = () => {
           </FormControl>
         </Box>
       </PageHeader>
-      {isLoadingGetStock || isFetchingEntriesByProductId ? (
+      {isLoadingGetStock || isFetchingEntries ? (
         <Loading size="md" />
       ) : (
         <StockList
-          stock={productEntries}
+          entries={productEntries}
+          stock={productStock}
           productId={searchedStockProduct}
           selectedLot={lotSelected}
           suppsAndTrans={suppsAndTrans}

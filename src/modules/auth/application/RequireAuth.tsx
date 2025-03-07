@@ -10,6 +10,7 @@ export interface IRequireAuthProps {
 const RequireAuth = ({ children, to }: IRequireAuthProps) => {
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
   const setRedirectPath = useAuthStore((store) => store.setRedirectPath);
+  const redirectPath = useAuthStore((store) => store.redirectPath);
   const location = useLocation();
 
   useEffect(() => {
@@ -18,7 +19,11 @@ const RequireAuth = ({ children, to }: IRequireAuthProps) => {
     }
   }, [isAuthenticated, location.pathname, setRedirectPath]);
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={to ?? "/sign-in"} />;
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to={to ?? redirectPath ?? "/sign-in"} />
+  );
 };
 
 export { RequireAuth };

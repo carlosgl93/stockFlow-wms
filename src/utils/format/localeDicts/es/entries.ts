@@ -9,7 +9,7 @@ export const entries = {
   "Expiry Date": "Fecha de caducidad",
   "Pallet Number": "N de pallet",
   "Units Number": "N de unidades",
-  "Loose Units Number": "N de unidades sueltas",
+  "Loose Units Number": "N U. sueltas",
   "Total Units Number": "N total de unidades",
   "Height (CMs)": "Altura (CMs)",
   "Width (CMs)": "Ancho (CMs)",
