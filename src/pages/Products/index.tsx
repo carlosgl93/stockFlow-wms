@@ -48,6 +48,6 @@ const ProductsPage = () => {
   );
 };
 
-export const Component = withRequireAuth(ProductsPage, { to: "/sign-in" });
+export const Component = ProductsPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

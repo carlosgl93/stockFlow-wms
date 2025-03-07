@@ -314,6 +314,6 @@ const StockPage = () => {
   );
 };
 
-export const Component = withRequireAuth(StockPage, { to: "/sign-in" });
+export const Component = StockPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

@@ -99,6 +99,7 @@ export const CreateDispatchForm = ({
     getPlacesData,
     columns,
     rows,
+    handleAddProductToDispatch,
   } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
@@ -470,7 +471,7 @@ export const CreateDispatchForm = ({
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        <Button onClick={handleAddProductToEntry} colorScheme="green">
+        <Button onClick={handleAddProductToDispatch} colorScheme="green">
           {t("Add product to the list")}
         </Button>
         <AppThemeProvider>

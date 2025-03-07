@@ -17,4 +17,5 @@ export const auth = {
   "Sign Up": "Registrarse",
   Logout: "Cerrar sesión",
   "Company name": "Empresa",
+  "Sign in successful": "Inicio de sesión exitoso",
 };

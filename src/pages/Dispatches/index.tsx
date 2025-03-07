@@ -1,6 +1,5 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
-import { withRequireAuth } from "modules/auth/application";
 import { useDispatches } from "modules/dispatches/infraestructure";
 import { DispatchesList } from "modules/dispatches/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -49,6 +48,6 @@ const DispatchesPage = () => {
   );
 };
 
-export const Component = withRequireAuth(DispatchesPage, { to: "/sign-in" });
+export const Component = DispatchesPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

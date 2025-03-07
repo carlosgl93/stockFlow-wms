@@ -132,24 +132,28 @@ export const CreateDispatchController = ({
       });
       return;
     } else {
-      const newProductToAdd: IDispatchRow = {
+      const newProductToAdd: IProductEntry = {
         id: getValues("productId"),
         unitsNumber: getValues("unitsNumber"),
         looseUnitsNumber: getValues("looseUnitsNumber"),
         totalUnitsNumber: getValues("totalUnitsNumber"),
+        lotId: getValues("lotId"),
+        placeId: getValues("placeId"),
+        palletNumber: getValues("palletNumber"),
+        heightCMs: getValues("heightCMs"),
+        widthCMs: getValues("widthCMs"),
       };
       const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
       if (
-        !addedToEntry.find(
+        !addedToDispatch.find(
           (entry) =>
             `${entry.id}-${entry.lotId}-${entry.palletNumber}` === uniqueId
         )
       ) {
-        setAddedToEntry((prev) => [...prev, newProductToAdd]);
+        setAddedToDispatch((prev) => [...prev, newProductToAdd]);
       }
       setValue("lotId", "");
       setValue("placeId", "");
-      setValue("expirityDate", "");
       setValue("palletNumber", "");
       setValue("heightCMs", 0);
       setValue("widthCMs", 0);
@@ -268,6 +272,8 @@ export const CreateDispatchController = ({
         unitsNumber: p.unitsNumber,
         looseUnitsNumber: p.looseUnitsNumber,
         totalUnitsNumber: p.totalUnitsNumber,
+        lotId: p.lotId,
+        palletNumber: p.palletNumber,
       });
     }
     return acc;
@@ -387,5 +393,6 @@ export const CreateDispatchController = ({
     getPlacesData,
     columns,
     rows,
+    handleAddProductToDispatch,
   };
 };

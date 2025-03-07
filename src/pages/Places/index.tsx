@@ -44,6 +44,6 @@ const PlacesPage = () => {
   );
 };
 
-export const Component = withRequireAuth(PlacesPage, { to: "/sign-in" });
+export const Component = PlacesPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

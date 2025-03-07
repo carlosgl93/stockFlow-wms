@@ -10,6 +10,6 @@ const LotPage = () => {
   );
 };
 
-export const Component = withRequireAuth(LotPage, { to: "/sign-in" });
+export const Component = LotPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

@@ -1,6 +1,5 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
-import { withRequireAuth } from "modules/auth/application";
 import { EntriesListController } from "modules/entries/infraestructure";
 import { EntriesList } from "modules/entries/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -41,6 +40,6 @@ const EntriesPage = () => {
   );
 };
 
-export const Component = withRequireAuth(EntriesPage, { to: "/sign-in" });
+export const Component = EntriesPage;
 
 export const ErrorBoundary = ErrorPageStrategy;

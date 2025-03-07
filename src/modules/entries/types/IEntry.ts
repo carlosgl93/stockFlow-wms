@@ -17,11 +17,11 @@ export interface IProductEntry {
   lotId: string;
   stockId?: string;
   placeId?: string;
-  expirityDate: string;
+  expirityDate?: string;
   palletNumber: string;
   heightCMs: number;
   widthCMs: number;
-  description: string;
+  description?: string;
 }
 
 export interface IEntryForm {

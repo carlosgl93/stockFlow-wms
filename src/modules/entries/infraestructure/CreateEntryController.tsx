@@ -261,7 +261,7 @@ export const CreateEntryController = ({
         productName: products.find((pr) => pr.id === p.id)?.name || "",
         lot: p.lotId,
         palletNumber: p.palletNumber,
-        expirityDate: p.expirityDate,
+        expirityDate: p.expirityDate || "",
         unitsNumber: p.unitsNumber,
         looseUnitsNumber: p.looseUnitsNumber,
         totalUnitsNumber: p.totalUnitsNumber,
