@@ -11,213 +11,75 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useEntries } from "../infraestructure/useEntries";
-import { useToast } from "shared/Toast";
-import { IEntry } from "../types";
-import { useTranslate } from "utils";
+import { Controller } from "react-hook-form";
+import { IEntry, IEntryForm } from "../types";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
-import { Logger } from "utils/logger";
 import {
-  useSuppliers,
   CreateSupplierForm,
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { useLots, usePlaces } from "modules/lots/infraestructure";
-import { EntryFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
-import { searchProduct, useProducts } from "modules/products/infrastructure";
+import { searchProduct } from "modules/products/infrastructure";
 import { Search } from "shared/Form";
 import { ITransporter } from "modules/transporters/types";
-import {
-  searchTransporter,
-  useTransporters,
-} from "modules/transporters/infrastructure";
+import { searchTransporter } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
-import { ValidationError } from "shared/Error";
+import { DataGrid } from "@mui/x-data-grid";
+import { CreateEntryController } from "../infraestructure";
+import { AppThemeProvider } from "theme/materialTheme";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
-  const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
-  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
-  const [searchResults, setSearchedResults] = useState<
-    null | (IProduct | ITransporter | ISupplier)[]
-  >(null);
-  const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
-
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers(5);
-  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
-  const { products: getProductsData, isFetching } = useProducts(5);
-  const { getPlacesData, isLoadingGetPlaces } = usePlaces();
-
-  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
-  const [transporters, setTransporters] = useState<ITransporter[]>([]);
-  const [products, setProducts] = useState<IProduct[]>([]);
-
   const {
-    addEntryMutation,
-    updateEntryMutation,
+    isLoading,
+    setIsLoading,
+    isSearchingSupplier,
+    setIsSearchingSupplier,
+    isSearchingTransporter,
+    setIsSearchingTransporter,
+    isSearchingProduct,
+    setIsSearchingProduct,
+    searchResults,
+    addedProducts,
+    isLoadingGetSuppliers,
+    isLoadingGetTransporters,
+    isFetching,
+    getPlacesData,
+    isLoadingGetPlaces,
+    suppliers,
+    setSuppliers,
+    transporters,
+    setTransporters,
+    products,
+    setProducts,
     isLoadingAddEntry,
     isLoadingUpdateEntry,
-  } = useEntries();
-
-  const {
     handleSubmit,
     control,
-    setValue,
-    formState: { errors },
-    trigger,
+    errors,
     watch,
-  } = useForm<IEntry>();
-  const toast = useToast();
-  const { t } = useTranslate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isOpenCreateTransporter,
-    onOpen: onOpenCreateTransporter,
-    onClose: onCloseCreateTransporter,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenCreateProduct,
-    onOpen: onOpenCreateProduct,
-    onClose: onCloseCreateProduct,
-  } = useDisclosure();
-
-  const handleNewSupplier = useCallback(
-    (newSupplier: ISupplier) => {
-      setSuppliers((prev) => [...prev, newSupplier]);
-      Logger.info("new supplier", [newSupplier]);
-      setValue("supplierId", newSupplier.id || "");
-      onClose();
-    },
-    [setValue, onClose]
-  );
-
-  const handleNewTransporter = useCallback(
-    (newTransporter: ITransporter) => {
-      setTransporters((prev) => [...prev, newTransporter]);
-      setValue("transporterId", newTransporter.id || "");
-      onCloseCreateTransporter();
-    },
-    [setValue, onCloseCreateTransporter]
-  );
-
-  const handleNewProduct = useCallback(
-    (newProduct: IProduct) => {
-      setProducts((prev) => [...prev, newProduct]);
-      setValue("productId", newProduct.id || "");
-      onCloseCreateProduct();
-    },
-    [setValue, onCloseCreateProduct]
-  );
-
-  const onSubmit = async (data: IEntry) => {
-    const validation = await trigger();
-
-    if (!validation) {
-      toast({
-        title: "Error",
-        description: `${t(
-          "Please fill all the fields"
-        )} fields to fill: ${Object.keys(errors).join(", ")}`,
-        status: "error",
-      });
-      return;
-    }
-
-    try {
-      if (entryToEdit) {
-        if (!entryToEdit.id) {
-          throw new ValidationError("Entry to edit has no id");
-        }
-        await updateEntryMutation({ entryId: entryToEdit.id, values: data });
-      } else {
-        await addEntryMutation(data);
-      }
-    } catch (error) {
-      let errorMessage = "An unknown error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      toast({
-        title: "Error",
-        description: errorMessage,
-        status: "error",
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (entryToEdit) {
-      Object.keys(entryToEdit).forEach((key) => {
-        setValue(key as keyof IEntry, entryToEdit[key as keyof IEntry]);
-      });
-      trigger();
-    } else if (import.meta.env.MODE === "development") {
-      const entry = EntryFixture.toStructure();
-      Object.keys(entry).forEach((key) => {
-        setValue(key as keyof IEntry, entry[key as keyof IEntry]);
-      });
-      trigger();
-    }
-  }, [setValue, entryToEdit, trigger]);
-
-  useEffect(() => {
-    const uniqueSuppliers = [
-      ...((searchResults as ISupplier[]) || []),
-      ...(getSuppliersData?.suppliers || []),
-    ].filter(
-      (supplier, index, self) =>
-        index === self.findIndex((s) => s.id === supplier.id)
-    );
-    setSuppliers(uniqueSuppliers);
-    setValue("supplierId", uniqueSuppliers[0]?.id || "");
-    trigger();
-  }, [searchResults, getSuppliersData?.suppliers, isOpen]);
-
-  useEffect(() => {
-    const uniqueTransporters = [
-      ...((searchResults as ITransporter[]) || []),
-      ...(getTransporters || []),
-    ].filter(
-      (transporter, index, self) =>
-        index === self.findIndex((s) => s.id === transporter.id)
-    );
-    setTransporters(uniqueTransporters);
-    setValue("transporterId", uniqueTransporters[0]?.id || "");
-    trigger();
-  }, [
-    searchResults,
-    getTransporters,
-    isOpenCreateProduct,
+    t,
+    isOpen,
+    onOpen,
+    onClose,
     isOpenCreateTransporter,
-  ]);
-
-  useEffect(() => {
-    const uniqueProducts = [
-      ...((searchResults as IProduct[]) || []),
-      ...(getProductsData || []),
-    ].filter(
-      (product, index, self) =>
-        index === self.findIndex((s) => s.id === product.id)
-    );
-    setProducts(uniqueProducts);
-    setValue("productId", uniqueProducts[0]?.id || "");
-    trigger();
-  }, [searchResults, getProductsData, isOpenCreateProduct]);
-
-  useEffect(() => {
-    setValue("placeId", getPlacesData?.places[0]?.id || "");
-    trigger();
-  }, [getPlacesData]);
+    onOpenCreateTransporter,
+    onCloseCreateTransporter,
+    handleNewTransporter,
+    isOpenCreateProduct,
+    onOpenCreateProduct,
+    onCloseCreateProduct,
+    handleNewProduct,
+    handleNewSupplier,
+    onSubmit,
+    columns,
+    rows,
+    register,
+    handleAddProductToEntry,
+  } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -227,7 +89,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     <>
       <Box
         as="form"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(
+          onSubmit as unknown as (data: IEntryForm) => void // TODO: improve this. im using this because i need to extract the product data from the form
+        )}
         p={5}
         display={"flex"}
         flexDirection={"column"}
@@ -375,7 +239,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="productId"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
               render={({ field }) => (
                 <>
                   {isSearchingProduct && (
@@ -420,7 +283,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="lotId"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} />}
             />
             {errors.lotId && (
@@ -471,7 +334,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="expirityDate"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} type="date" />}
             />
             {errors.expirityDate && (
@@ -486,7 +349,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="palletNumber"
               control={control}
               defaultValue=""
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input {...field} />}
             />
             {errors.palletNumber && (
@@ -499,8 +362,16 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="unitsNumber"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
+              rules={{}}
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("unitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
+              )}
             />
             {errors.unitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
@@ -512,8 +383,16 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="looseUnitsNumber"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
+              rules={{}}
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("looseUnitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
+              )}
             />
             {errors.looseUnitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
@@ -526,10 +405,15 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             <Controller
               name="totalUnitsNumber"
               control={control}
-              defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => (
-                <Input type="number" {...field} isReadOnly />
+                <Input
+                  type="number"
+                  {...field}
+                  {...register("totalUnitsNumber", {
+                    valueAsNumber: true,
+                  })}
+                />
               )}
             />
             {errors.totalUnitsNumber && (
@@ -542,7 +426,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="heightCMs"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input type="number" {...field} />}
             />
             {errors.heightCMs && (
@@ -555,7 +439,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="widthCMs"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
+              rules={{}}
               render={({ field }) => <Input type="number" {...field} />}
             />
             {errors.widthCMs && (
@@ -569,18 +453,30 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             name="description"
             control={control}
             defaultValue=""
-            rules={{ required: true }}
+            rules={{}}
             render={({ field }) => <Input {...field} />}
           />
           {errors.description && (
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        {/* TODO: Implement boxes per pallet calculator */}
+        <Button onClick={handleAddProductToEntry} colorScheme="green">
+          {t("Add product to the list")}
+        </Button>
+        <AppThemeProvider>
+          <DataGrid
+            rows={rows || []}
+            columns={columns}
+            rowCount={rows?.length || 100}
+          />
+        </AppThemeProvider>
+
         <Button
           type="submit"
           colorScheme="teal"
-          disabled={isLoadingAddEntry || isLoadingUpdateEntry}
+          disabled={
+            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts.length
+          }
         >
           {entryToEdit ? t("Edit Entry") : t("Create Entry")}
         </Button>

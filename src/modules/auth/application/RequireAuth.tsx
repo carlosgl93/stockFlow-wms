@@ -1,7 +1,5 @@
-import { ReactNode } from "react";
-
-import { Navigate } from "shared/Router";
-
+import { ReactNode, useEffect } from "react";
+import { Navigate, useLocation } from "shared/Router";
 import { useAuthStore } from "./authStore";
 
 export interface IRequireAuthProps {
@@ -11,8 +9,21 @@ export interface IRequireAuthProps {
 
 const RequireAuth = ({ children, to }: IRequireAuthProps) => {
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
+  const setRedirectPath = useAuthStore((store) => store.setRedirectPath);
+  const redirectPath = useAuthStore((store) => store.redirectPath);
+  const location = useLocation();
 
-  return isAuthenticated ? <>{children}</> : <Navigate to={to ?? "/sign-in"} />;
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setRedirectPath(location.pathname);
+    }
+  }, [isAuthenticated, location.pathname, setRedirectPath]);
+
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to={to ?? redirectPath ?? "/sign-in"} />
+  );
 };
 
 export { RequireAuth };

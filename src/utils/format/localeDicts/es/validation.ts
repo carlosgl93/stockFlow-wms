@@ -20,14 +20,14 @@ export const validation = {
     "¡Desafortunadamente, aún no hay nada para ti aquí!",
   "Reset filters": "Restablecer filtros",
   "Validation Error: Entry with this docNumber already exists":
-    "Error de validación: La entrada con este número de documento ya existe",
+    "Error de validación: el ingreso con este número de documento ya existe",
   "Validation Error: Invalid productId":
     "Error de validación: productId no válido",
   "Validation Error: Invalid lotId": "Error de validación: lotId no válido",
-  "Failed to add entry": "Error al agregar la entrada",
-  "Failed to update entry": "Error al actualizar la entrada",
-  "Entry added successfully": "Entrada agregada exitosamente",
-  "Entry updated successfully": "Entrada actualizada exitosamente",
+  "Failed to add entry": "Error al agregar el ingreso",
+  "Failed to update entry": "Error al actualizar el ingreso",
+  "Entry added successfully": "Ingreso agregado exitosamente",
+  "Entry updated successfully": "Ingreso actualizado exitosamente",
   "Please fill all the fields fields to fill":
     "Por favor, rellena todos los campos",
   "Failed to add supplier": "Error al agregar el proveedor",

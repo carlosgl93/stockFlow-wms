@@ -1,11 +1,10 @@
 import { Box, Button, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect } from "react";
-import { usePlaces } from "../infraestructure/usePlaces";
 import { useToast } from "shared/Toast";
-import { IPlace } from "../infraestructure/types/IPlace";
 import { useTranslate } from "utils";
 import { Loading } from "shared/Layout";
+import { IPlace, usePlaces } from "../infra";
 
 export const CreatePlaceForm = ({ placeToEdit }: { placeToEdit?: IPlace }) => {
   const {

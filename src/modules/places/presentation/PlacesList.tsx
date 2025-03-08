@@ -10,7 +10,7 @@ import {
 import { EmptyStateResult } from "shared/Result";
 import { AppThemeProvider } from "theme/materialTheme";
 import { useRedirect, useTranslate } from "utils";
-import { usePlaces, IPlace } from "../infraestructure";
+import { IPlace, usePlaces } from "../infra";
 
 interface IProps {
   places: IPlace[];

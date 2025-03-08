@@ -2,21 +2,45 @@ import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Box, IconButton } from "@chakra-ui/react";
 import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
-import { IStock } from "../types";
+import { IRenderStock, IStock, ISuppsAndTrans } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useRedirect, useTranslate } from "utils";
+import { dateVO, useRedirect, useTranslate } from "utils";
 import { useStock } from "../infraestructure";
 import { useEffect, useState } from "react";
 import { useProducts } from "modules/products/infrastructure";
 import { useLots } from "modules/lots/infraestructure";
+import { IEntry } from "modules/entries/types";
+import { Logger } from "utils/logger";
 
 interface IProps {
+  entries: IEntry[];
   stock: IStock[];
+  productId: string;
+  selectedLot: string;
+  suppsAndTrans: ISuppsAndTrans;
 }
 
-export const StockList = ({ stock }: IProps) => {
+interface IRow {
+  id: string;
+  docNumber: string;
+  lotId: string | undefined;
+  expiryDate: string | undefined;
+  supplier: string;
+  transporter: string;
+  palletNumber: string | undefined;
+  unitsNumber: number | undefined;
+  looseUnitsNumber: number | undefined;
+}
+
+export const StockList = ({
+  entries,
+  stock,
+  productId,
+  selectedLot,
+  suppsAndTrans,
+}: IProps) => {
   const [paginationModel, setPaginationModel] = useState({
-    pageSize: 25,
+    pageSize: 10,
     page: 0,
   });
 
@@ -29,94 +53,116 @@ export const StockList = ({ stock }: IProps) => {
     {}
   );
   const [lotNames, setLotNames] = useState<{ [key: string]: string }>({});
+  const [totalUnits, setTotalUnits] = useState<number>(0);
+
+  const columns: GridColDef[] = [
+    // {
+    //   field: "actions",
+    //   headerName: t("Actions"),
+    //   width: 100,
+    //   renderCell: (params: GridRenderCellParams<IStock>) => (
+    //     <Box
+    //       display="flex"
+    //       gap={2}
+    //       justifyContent={"center"}
+    //       alignContent={"center"}
+    //       h={"100%"}
+    //     >
+    //       <IconButton
+    //         aria-label="Edit Stock"
+    //         icon={<EditIcon />}
+    //         onClick={() => redirect(`/stock/edit/${params.row.id}`)}
+    //       />
+    //       {!isLoadingRemoveStock ? (
+    //         <IconButton
+    //           aria-label="Remove Stock"
+    //           icon={<DeleteIcon />}
+    //           onClick={() => removeStockMutation(params.row.id || "")}
+    //         />
+    //       ) : (
+    //         <IconButton
+    //           aria-label="Remove Stock"
+    //           icon={<TimeIcon />}
+    //           onClick={() => removeStockMutation(params.row.id || "")}
+    //         />
+    //       )}
+    //     </Box>
+    //   ),
+    // },
+    { field: "docNumber", headerName: t("Doc Number"), width: 150 },
+    { field: "lotId", headerName: t("Lot"), width: 150 },
+    { field: "expiryDate", headerName: t("Expiry Date"), width: 150 },
+    { field: "documentType", headerName: t("Document Type"), width: 150 },
+    { field: "supplier", headerName: t("Supplier"), width: 150 },
+    { field: "transporter", headerName: t("Transporter"), width: 150 },
+    { field: "palletNumber", headerName: t("Pallet Number"), width: 150 },
+    { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
+    {
+      field: "looseUnitsNumber",
+      headerName: t("Loose Units Number"),
+      width: 150,
+    },
+  ];
+
+  const [rows, setRows] = useState<IRow[]>([]);
+
+  const generateRows = (): IRow[] => {
+    let total = 0;
+    const rows = entries
+      .filter((entry) =>
+        entry.productsToEnter.some(
+          (product) =>
+            (!productId || product.id === productId) &&
+            (!selectedLot || product.lotId === selectedLot)
+        )
+      )
+      .map((entry) => {
+        const product = entry.productsToEnter.find(
+          (product) =>
+            (!productId || product.id === productId) &&
+            (!selectedLot || product.lotId === selectedLot)
+        );
+        total += product?.totalUnitsNumber || 0;
+        const suppAndTransData = suppsAndTrans.find(
+          (s) => s.entryId === entry.id
+        );
+        return {
+          id: entry.id!,
+          docNumber: entry.docNumber,
+          lotId: product?.lotId,
+          expiryDate: product?.expirityDate,
+          supplier: suppAndTransData?.supplier.company || "",
+          transporter: suppAndTransData?.transporter.name || "",
+          palletNumber: product?.palletNumber,
+          unitsNumber: product?.unitsNumber,
+          looseUnitsNumber: product?.looseUnitsNumber,
+        };
+      });
+    setTotalUnits(total);
+    return rows;
+  };
 
   useEffect(() => {
-    const productNamesMap: { [key: string]: string } = {};
-    products?.forEach((product) => {
-      productNamesMap[product.id || ""] = product.name;
-    });
-    setProductNames(productNamesMap);
+    const rows = generateRows();
+    setRows(rows);
+  }, [entries, stock, selectedLot, productId, suppsAndTrans]);
 
-    const lotNamesMap: { [key: string]: string } = {};
-    getLotsData?.lots?.forEach((lot) => {
-      lotNamesMap[lot.id] = lot.name;
-    });
-    setLotNames(lotNamesMap);
-  }, [products, getLotsData]);
-
-  if (stock.length === 0) {
+  Logger.info("rows", { rows });
+  if (rows.length === 0) {
     return <EmptyStateResult />;
   }
 
-  const columns: GridColDef[] = [
-    {
-      field: "actions",
-      headerName: t("Actions"),
-      width: 100,
-      renderCell: (params: GridRenderCellParams<IStock>) => (
-        <Box
-          display="flex"
-          gap={2}
-          justifyContent={"center"}
-          alignContent={"center"}
-          h={"100%"}
-        >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={() => redirect(`/stock/${params.row.id}`)}
-          /> */}
-          <IconButton
-            aria-label="Edit Stock"
-            icon={<EditIcon />}
-            onClick={() => redirect(`/stock/edit/${params.row.id}`)}
-          />
-          {!isLoadingRemoveStock ? (
-            <IconButton
-              aria-label="Remove Stock"
-              icon={<DeleteIcon />}
-              onClick={() => removeStockMutation(params.row.id || "")}
-            />
-          ) : (
-            <IconButton
-              aria-label="Remove Stock"
-              icon={<TimeIcon />}
-              onClick={() => removeStockMutation(params.row.id || "")}
-            />
-          )}
-        </Box>
-      ),
-    },
-    { field: "productId", headerName: "Product ID", width: 150 },
-    { field: "lotId", headerName: "Lot ID", width: 150 },
-    { field: "productName", headerName: "Product Name", width: 150 },
-    { field: "lotName", headerName: "Lot Name", width: 150 },
-    { field: "unitsNumber", headerName: "Units Number", width: 150 },
-    { field: "looseUnitsNumber", headerName: "Loose Units Number", width: 150 },
-    { field: "created_at", headerName: "Created At", width: 150 },
-    { field: "updated_at", headerName: "Updated At", width: 150 },
-  ];
-
-  const rows = stock.map((item) => ({
-    id: item.id,
-    productId: item.productId,
-    lotId: item.lotId,
-    productName: productNames[item.productId] || "",
-    lotName: lotNames[item.lotId] || "",
-    unitsNumber: item.unitsNumber,
-    looseUnitsNumber: item.looseUnitsNumber,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-  }));
-
   return (
     <Box height={400} width="100%">
+      <Box mt={2}>
+        {t("Total Units:")} {totalUnits}
+      </Box>
       <AppThemeProvider>
         <DataGrid
           loading={isFetching || isLoadingGetLots}
           rows={rows}
           columns={columns}
-          rowCount={stock?.length}
+          rowCount={rows.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
         />

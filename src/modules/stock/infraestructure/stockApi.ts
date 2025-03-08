@@ -1,5 +1,5 @@
 import { db } from "shared/firebase";
-import { IStock } from "../types";
+import { IRenderStock, IStock } from "../types";
 import { APIError, ValidationError } from "shared/Error";
 import { dateVO } from "utils/format";
 import {
@@ -12,17 +12,17 @@ import {
   orderBy,
   limit,
   startAfter,
-  where,
   runTransaction,
-  DocumentReference,
+  where,
 } from "firebase/firestore";
 import { Logger } from "utils/logger";
+import { IProduct } from "modules/products/types";
 
 export const fetchStock = async (
   page: number,
   pageSize: number,
   lastVisible: string | null
-): Promise<IStock[]> => {
+): Promise<IRenderStock[]> => {
   Logger.info("fetchStock", { page, pageSize, lastVisible });
   try {
     const stockRef = collection(db, "stock");
@@ -37,14 +37,30 @@ export const fetchStock = async (
       );
     }
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(
+    const stockEntries = snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as IStock)
     );
+
+    // Fetch all product details in a single batch
+    const productPromises = stockEntries.map((stock) =>
+      getDoc(doc(db, "products", stock.productId))
+    );
+    const productDocs = await Promise.all(productPromises);
+
+    // Map the product details to their respective stock entries
+    const stockWithProducts = stockEntries.map((stock, index) => {
+      const productDoc = productDocs[index];
+      const productData = productDoc.exists()
+        ? (productDoc.data() as IProduct)
+        : null;
+      return { ...stock, product: productData as IProduct };
+    });
+
+    return stockWithProducts;
   } catch (error) {
     throw new APIError("Failed to fetch stock", error);
   }
 };
-
 export const addStock = async (stock: IStock): Promise<IStock> => {
   try {
     const now = dateVO.now();
@@ -139,6 +155,72 @@ export const getStockById = async (stockId: string): Promise<IStock> => {
       throw new ValidationError("Stock does not exist.");
     }
     return { id: stockDoc.id, ...stockDoc.data() } as IStock;
+  } catch (error) {
+    throw new APIError("Failed to fetch stock", error);
+  }
+};
+
+export const getStockByProdId = async (prodId: string): Promise<IStock[]> => {
+  try {
+    const stockRef = collection(db, "stock");
+    const q = query(
+      stockRef,
+      where("productId", "==", prodId),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+    const snapshot = await getDocs(q);
+    const stockEntries = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as IStock)
+    );
+    Logger.info("getStockByProdId", { stockEntries });
+
+    return stockEntries;
+  } catch (error) {
+    throw new APIError("Failed to fetch stock", error);
+  }
+};
+
+export const getStockByLotId = async (lotId: string): Promise<IStock[]> => {
+  try {
+    const stockRef = collection(db, "stock");
+    const q = query(
+      stockRef,
+      where("lotId", "==", lotId),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+    const snapshot = await getDocs(q);
+    const stockEntries = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as IStock)
+    );
+
+    Logger.info("getStockByLotId", { stockEntries });
+    return stockEntries;
+  } catch (error) {
+    throw new APIError("Failed to fetch stock", error);
+  }
+};
+
+export const getStockByProdIdAndLotId = async (
+  prodId: string,
+  lotId: string
+): Promise<IStock[]> => {
+  try {
+    const stockRef = collection(db, "stock");
+    const q = query(
+      stockRef,
+      where("productId", "==", prodId),
+      where("lotId", "==", lotId),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+    const snapshot = await getDocs(q);
+    const stockEntries = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as IStock)
+    );
+
+    return stockEntries;
   } catch (error) {
     throw new APIError("Failed to fetch stock", error);
   }

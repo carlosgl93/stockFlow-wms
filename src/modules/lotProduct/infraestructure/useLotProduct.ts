@@ -83,7 +83,7 @@ export const useLotProduct = () => {
     isError: isErrorGetLotProducts,
   } = useQuery({
     queryKey: ["getLotProducts", params?.lotProductId],
-    queryFn: () => getLotProducts(params.lotProductId || "", 10),
+    queryFn: () => getLotProducts(params.lotProductId, params.productId),
   });
 
   return {

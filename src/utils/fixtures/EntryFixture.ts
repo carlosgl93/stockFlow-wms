@@ -1,7 +1,7 @@
-import { IEntry } from "modules/entries/types";
+import { IEntryForm } from "modules/entries/types";
 import { createFixture } from "./createFixture";
 
-export const EntryFixture = createFixture<IEntry>({
+export const EntryFixture = createFixture<IEntryForm>({
   id: "1",
   supplierId: "supplier-1",
   docNumber: "DOC123456",

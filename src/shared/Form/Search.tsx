@@ -29,7 +29,7 @@ export const Search = <T,>({
     setIsLoading(true);
     const results = await searchFunction(name);
     Logger.info("results found: ", results);
-    if (results.length) {
+    if (results?.length) {
       setResults(results);
     } else {
       setDisplayFeedback(true);
@@ -38,11 +38,11 @@ export const Search = <T,>({
       }, 3000);
     }
     setIsLoading(false);
-  }, 300);
+  }, 1000);
 
   useEffect(() => {
     if (query.trim() !== "") {
-      handleSearch(query);
+      handleSearch(query.toLowerCase());
     } else {
       setResults([]);
     }

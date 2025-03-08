@@ -45,15 +45,21 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
   const toast = useToast();
 
   const loginMutation = useMutation(["login"], login, {
-    onError: (error: ValidationError) =>
+    onError: (error: ValidationError) => {
       toast({
-        title: "An error occurred.",
-        description: `"Please try again later." ${t(error.message)}`,
+        title: t(`There was an error signing in ${error.message}`),
         status: "error",
-        duration: 9000,
         isClosable: true,
-      }),
-    onSuccess: () => notifySuccess(),
+      });
+    },
+
+    onSuccess: () => {
+      toast({
+        title: t("Sign in successful"),
+        status: "success",
+        isClosable: true,
+      });
+    },
   });
 
   const onSubmit = (data: SignInFormValues) => {

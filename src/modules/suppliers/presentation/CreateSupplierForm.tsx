@@ -28,7 +28,7 @@ export const CreateSupplierForm = ({
     updateSupplierMutation,
     isLoadingAddSupplier,
     isLoadingUpdateSupplier,
-  } = useSuppliers();
+  } = useSuppliers({});
   const {
     handleSubmit,
     control,
