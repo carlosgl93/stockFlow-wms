@@ -21,7 +21,7 @@ import { Logger } from "utils/logger";
 export async function searchLot(name: string) {
   Logger.info("searchLot", { name });
   if (typeof name !== "string" || name.trim() === "") {
-    Logger.error("Invalid product name provided");
+    Logger.error("Invalid lot name provided");
     return [];
   }
 

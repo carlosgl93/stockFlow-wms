@@ -49,8 +49,9 @@ export const CreateEntryController = ({
 
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
+
   const [products, setProducts] = useState<IProduct[]>([]);
-  const notImplemented = useNotImplementedYetToast();
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
 
   const {
     addEntryMutation,
@@ -392,6 +393,15 @@ export const CreateEntryController = ({
     }
   };
 
+  const product = watch("productId");
+
+  useEffect(() => {
+    const productData = products?.find((p) => p.id === product);
+    if (productData) {
+      setSelectedProduct(productData);
+    }
+  }, [product]);
+
   return {
     isLoading,
     setIsLoading,
@@ -453,5 +463,7 @@ export const CreateEntryController = ({
     getValues,
     handleAddProductToEntry,
     register,
+    selectedProduct,
+    setSelectedProduct,
   };
 };

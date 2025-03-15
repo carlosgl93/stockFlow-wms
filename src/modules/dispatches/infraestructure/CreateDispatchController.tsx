@@ -17,6 +17,8 @@ import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FlexBox } from "shared/Layout";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { IProductEntry } from "modules/entries/types";
+import { ILot, useLots } from "modules/lots/infraestructure";
+import { IStock } from "modules/stock/types";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -27,11 +29,13 @@ export const CreateDispatchController = ({
   const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
   const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [isSearchingLot, setIsSearchingLot] = useState(false);
   const [searchResults, setSearchedResults] = useState<
-    null | (IProduct | ITransporter | ISupplier)[]
+    null | (IProduct | ITransporter | ISupplier | IStock)[]
   >(null);
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
   const [addedToDispatch, setAddedToDispatch] = useState<IProductEntry[]>([]);
+  const [productId, setProductId] = useState("");
 
   const toast = useToast();
   const { t } = useTranslate();
@@ -45,6 +49,7 @@ export const CreateDispatchController = ({
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
+  const [lots, setLots] = useState<IStock[]>([]);
 
   const {
     addDispatchMutation,
@@ -61,7 +66,19 @@ export const CreateDispatchController = ({
     trigger,
     watch,
     getValues,
+    clearErrors,
   } = useForm<IDispatch>();
+
+  const {
+    getLotsData,
+    isLoadingGetLots,
+    getProductLotsData,
+    isLoadingGetProductLots,
+  } = useLots({
+    productId,
+    pageSize: 10,
+    page: 1,
+  });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -114,6 +131,7 @@ export const CreateDispatchController = ({
       heightCMs,
       widthCMs,
     } = newDataToDispatch;
+    Logger.info("newDataToDispatch", [newDataToDispatch]);
     if (
       totalUnitsNumber === 0 ||
       totalUnitsNumber === undefined ||
@@ -337,7 +355,17 @@ export const CreateDispatchController = ({
         index === self.findIndex((s) => s.id === product.id)
     );
     setProducts(uniqueProducts);
+    setProductId(uniqueProducts[0]?.id || "");
     setValue("productId", uniqueProducts[0]?.id || "");
+    trigger();
+  }, [searchResults, getProductsData, isOpenCreateProduct]);
+
+  useEffect(() => {
+    const uniqueLots = [...((searchResults as IStock[]) || [])].filter(
+      (lot, index, self) => index === self.findIndex((s) => s.id === lot.id)
+    );
+    setLots(uniqueLots);
+    setValue("lotId", uniqueLots[0]?.id || "");
     trigger();
   }, [searchResults, getProductsData, isOpenCreateProduct]);
 
@@ -345,6 +373,31 @@ export const CreateDispatchController = ({
     setValue("placeId", getPlacesData?.places[0]?.id || "");
     trigger();
   }, [getPlacesData]);
+
+  useEffect(() => {
+    setValue("lotId", getProductLotsData?.lots[0]?.id || "");
+    trigger();
+  }, [getProductLotsData]);
+
+  useEffect(() => {
+    clearErrors();
+  }, [
+    getSuppliersData,
+    getTransporters,
+    getProductsData,
+    getPlacesData,
+    getLotsData,
+    getProductLotsData,
+  ]);
+
+  Logger.info("logs", {
+    suppliers,
+    transporters,
+    products,
+    productId,
+    getProductLotsData,
+  });
+
   return {
     isLoading,
     isSearchingSupplier,
@@ -394,5 +447,14 @@ export const CreateDispatchController = ({
     columns,
     rows,
     handleAddProductToDispatch,
+    lots,
+    setLots,
+    isSearchingLot,
+    setIsSearchingLot,
+    getProductLotsData,
+    isLoadingGetLots,
+    isLoadingGetProductLots,
+    setProductId,
+    setValue,
   };
 };

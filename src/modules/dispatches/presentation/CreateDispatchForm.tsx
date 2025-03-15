@@ -11,40 +11,31 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  useDisclosure,
   RadioGroup,
   Radio,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useToast } from "shared/Toast";
-import { useTranslate } from "utils";
+import { Controller } from "react-hook-form";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
 import { AddButton, Search as SearchButton } from "shared/Actions";
-import { Logger } from "utils/logger";
 import {
-  useSuppliers,
   CreateSupplierForm,
   ISupplier,
   searchSupplier,
 } from "modules/suppliers";
-import { DispatchFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
-import { searchProduct, useProducts } from "modules/products/infrastructure";
+import { searchProduct } from "modules/products/infrastructure";
 import { Search } from "shared/Form";
 import { ITransporter } from "modules/transporters/types";
-import {
-  searchTransporter,
-  useTransporters,
-} from "modules/transporters/infrastructure";
+import { searchTransporter } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
-import { ValidationError } from "shared/Error";
-import { CreateDispatchController, useDispatches } from "../infraestructure";
+import { CreateDispatchController } from "../infraestructure";
 import { DocumentType, IDispatch } from "../types";
-import { usePlaces } from "modules/places/infra";
 import { AppThemeProvider } from "theme/materialTheme";
 import { DataGrid } from "@mui/x-data-grid";
+import { Logger } from "utils/logger";
+import { ILot, searchLot } from "modules/lots/infraestructure";
+import { IStock } from "modules/stock/types";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
@@ -100,6 +91,14 @@ export const CreateDispatchForm = ({
     columns,
     rows,
     handleAddProductToDispatch,
+    isSearchingLot,
+    lots,
+    setLots,
+    setIsSearchingLot,
+    getProductLotsData,
+    isLoadingGetProductLots,
+    setProductId,
+    setValue,
   } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
@@ -305,6 +304,7 @@ export const CreateDispatchForm = ({
                     {...field}
                     onChange={(e) => {
                       field.onChange(e); // Update the form state
+                      setProductId(e.target.value); // Update the product ID
                       setIsSearchingProduct(false); // Close the search
                     }}
                   >
@@ -322,14 +322,52 @@ export const CreateDispatchForm = ({
             )}
           </FormControl>
           {/* TODO:  */}
-          <FormControl mb={4}>
-            <FormLabel my={3}>{t("Lot")}</FormLabel>
+          <FormControl mb={0}>
+            <FlexBox mb={0}>
+              <FormLabel my={3}>{t("Lot")}</FormLabel>
+              <FlexBox gap={2}>
+                <SearchButton
+                  onSearch={() => setIsSearchingLot((prev) => !prev)}
+                />
+                {/* <AddButton onAdd={onOpen} /> */}
+              </FlexBox>
+            </FlexBox>
             <Controller
               name="lotId"
               control={control}
               defaultValue=""
               rules={{ required: true }}
-              render={({ field }) => <Input {...field} />}
+              render={({ field }) => (
+                <>
+                  {isSearchingLot && (
+                    <Search<IStock>
+                      placeholderText={t("Search for a lot name")}
+                      searchFunction={searchLot}
+                      setResults={setLots}
+                      notFoundText="No lots found"
+                      setIsLoading={setIsLoading}
+                    />
+                  )}
+                  {/* {isLoadingGetProductLots && (
+                    <FlexBox justifyContent="center" w={"100%"}>
+                      <Loading size="xs" />
+                    </FlexBox>
+                  )} */}
+                  <Select
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setIsSearchingLot(false);
+                    }}
+                  >
+                    {getProductLotsData?.lots?.map((lot) => (
+                      <option key={lot.id} value={lot.id}>
+                        {lot.lotId}
+                      </option>
+                    ))}
+                  </Select>
+                </>
+              )}
             />
             {errors.lotId && (
               <Box color="red">{t("This field is required")}</Box>

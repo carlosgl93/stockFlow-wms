@@ -2,17 +2,25 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@chakra-ui/react";
 import { UpdateLotParams, addLot, removeLot, updateLot } from "./mutations";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
-import { useParams } from "shared/Router";
 import { getLots } from "./queries/getLots";
 import { useState } from "react";
+import { getProductLots } from "./queries";
 
-export const useLots = (pageSize: number = 10, page: number = 1) => {
+type UseLotsProps = {
+  productId?: string;
+  pageSize?: number;
+  page?: number;
+};
+
+export const useLots = ({
+  productId = "",
+  pageSize = 10,
+  page = 1,
+}: UseLotsProps) => {
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
-
-  const params = useParams();
 
   const {
     mutate: addLotMutation,
@@ -90,6 +98,36 @@ export const useLots = (pageSize: number = 10, page: number = 1) => {
     },
   });
 
+  const {
+    data: getProductLotsData,
+    isLoading: isLoadingGetProductLots,
+    isError: isErrorGetProductLots,
+  } = useQuery({
+    queryKey: ["productLots", productId, page, pageSize],
+    queryFn: () =>
+      getProductLots({
+        productId,
+        page,
+        pageSize,
+      }),
+    enabled: !!productId,
+    onSuccess: (data) => {
+      setLastVisible(data.lastVisible);
+    },
+  });
+
+  const {
+    data: getUniqueLots,
+    isLoading: isLoadingGetUniqueLots,
+    isError: isErrorGetUniqueLots,
+  } = useQuery({
+    queryKey: ["lots"],
+    queryFn: () => getLots(pageSize, page),
+    onSuccess: (data) => {
+      setLastVisible(data.lastVisible);
+    },
+  });
+
   return {
     addLotMutation,
     isLoadingAddLot,
@@ -103,5 +141,8 @@ export const useLots = (pageSize: number = 10, page: number = 1) => {
     getLotsData,
     isLoadingGetLots,
     isErrorGetLots,
+    getProductLotsData,
+    isLoadingGetProductLots,
+    isErrorGetProductLots,
   };
 };

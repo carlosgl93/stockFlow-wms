@@ -35,4 +35,5 @@ export const dispatches = {
   Dispatched: "Dispatched",
   Delivered: "Delivered",
   Cancelled: "Cancelled",
+  "Create Customer": "Crear Cliente",
 };

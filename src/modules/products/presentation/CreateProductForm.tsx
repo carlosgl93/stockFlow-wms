@@ -154,7 +154,8 @@ export const CreateProductForm = ({
     }
   }, [setValue, productToEdit, trigger]);
 
-  useEffect(() => {}, []);
+  const selectionType = watch("selectionType");
+  const unitOfMeasure = watch("boxDetails.unitOfMeasure");
 
   if (saveProductIsLoading) {
     return <Loading size="md" />;
@@ -304,24 +305,6 @@ export const CreateProductForm = ({
       {/* UNIT TYPE FIELDS */}
       <Box gap={16} display="flex" justifyContent="space-around">
         <FormControl mb={4}>
-          <FormLabel>{t("N of Units")}</FormLabel>
-          <Controller
-            name="boxDetails.units"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
-          />
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>{t("Quantity")}</FormLabel>
-          <Controller
-            name="boxDetails.quantity"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
-          />
-        </FormControl>
-        <FormControl mb={4}>
           <FormLabel>{t("Unit of Measure")}</FormLabel>
           <Controller
             name="boxDetails.unitOfMeasure"
@@ -340,6 +323,39 @@ export const CreateProductForm = ({
             )}
           />
         </FormControl>
+        {selectionType === "box" && (
+          <FormControl mb={4}>
+            <FormLabel>{t(`${unitOfMeasure} per box`)}</FormLabel>
+            <Controller
+              name="boxDetails.units"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} />}
+            />
+          </FormControl>
+        )}
+
+        {selectionType === "unit" && (
+          <FormControl mb={4}>
+            <FormLabel>{t(`${unitOfMeasure} per unit`)}</FormLabel>
+            <Controller
+              name="boxDetails.quantity"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} />}
+            />
+          </FormControl>
+        )}
+
+        {/* <FormControl mb={4}>
+          <FormLabel>{t("Quantity")}</FormLabel>
+          <Controller
+            name="boxDetails.quantity"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => <Input {...field} />}
+          />
+        </FormControl> */}
       </Box>
       <Box display="flex" gap={16} justifyContent="space-around">
         <FormControl mb={4}>

@@ -31,6 +31,8 @@ import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
 import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
+import { useEffect, useState } from "react";
+import { Logger } from "utils/logger";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const {
@@ -79,7 +81,14 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     rows,
     register,
     handleAddProductToEntry,
+    selectedProduct,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
+
+  Logger.info("logs", {
+    suppliers,
+    transporters,
+    products,
+  });
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -377,27 +386,29 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
-          <FormControl mb={4}>
-            <FormLabel>{t("Loose Units Number")}</FormLabel>
-            <Controller
-              name="looseUnitsNumber"
-              control={control}
-              defaultValue={0}
-              rules={{}}
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  {...field}
-                  {...register("looseUnitsNumber", {
-                    valueAsNumber: true,
-                  })}
-                />
+          {selectedProduct?.selectionType === "box" && (
+            <FormControl mb={4}>
+              <FormLabel>{t("Loose Units Number")}</FormLabel>
+              <Controller
+                name="looseUnitsNumber"
+                control={control}
+                defaultValue={0}
+                rules={{}}
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    {...field}
+                    {...register("looseUnitsNumber", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                )}
+              />
+              {errors.looseUnitsNumber && (
+                <Box color="red">{t("This field is required")}</Box>
               )}
-            />
-            {errors.looseUnitsNumber && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
+            </FormControl>
+          )}
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>

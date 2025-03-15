@@ -1,8 +1,8 @@
 export enum IUnitOfMeasure {
-  Liter = "Litre",
+  Liter = "Liter",
   CC = "C.C",
   Kilo = "Kilogram",
   Meter = "Meter",
-  Unit = "Unit",
+  // Unit = "Unit",
   Centimetre = "Centimetre",
 }

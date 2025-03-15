@@ -48,7 +48,10 @@ export const StockList = ({
   const { removeStockMutation, isLoadingRemoveStock } = useStock();
   const { t } = useTranslate();
   const { products, isFetching } = useProducts();
-  const { getLotsData, isLoadingGetLots } = useLots();
+  const { getLotsData, isLoadingGetLots } = useLots({
+    productId,
+    pageSize: 10,
+  });
   const [productNames, setProductNames] = useState<{ [key: string]: string }>(
     {}
   );
