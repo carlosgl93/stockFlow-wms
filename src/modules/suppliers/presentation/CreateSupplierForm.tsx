@@ -43,8 +43,8 @@ export const CreateSupplierForm = ({
   const CTAText = location.pathname.includes("dispatches/create")
     ? t("Create Customer")
     : supplierToEdit
-    ? "Edit Supplier"
-    : "Create Supplier";
+    ? t("Edit Supplier")
+    : t("Create Supplier");
 
   const onSubmit = async (data: ISupplier) => {
     const validation = await trigger();

@@ -127,4 +127,10 @@ export const products = {
   "Unit per box": "Unidades por caja",
   "Centimetres per unit": "Centímetros por unidad",
   "Centimetres per box": "Centímetros por caja",
+  "Box / Unit": "Caja / Unidad",
+  unit: "unidad",
+  box: "caja",
+  "Units per box": "Unidades por caja",
+  "by box": "por caja",
+  "by unit": "por unidad",
 };

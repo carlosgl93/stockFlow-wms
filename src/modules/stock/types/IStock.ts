@@ -11,6 +11,7 @@ export interface IStock {
   looseUnitsNumber: number;
   createdAt: string;
   updatedAt: string;
+  placeId?: string;
   places?: IPlace[];
 }
 

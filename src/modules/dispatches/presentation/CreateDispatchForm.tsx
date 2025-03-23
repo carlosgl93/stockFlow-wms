@@ -33,8 +33,7 @@ import { CreateDispatchController } from "../infraestructure";
 import { DocumentType, IDispatch } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
 import { DataGrid } from "@mui/x-data-grid";
-import { Logger } from "utils/logger";
-import { ILot, searchLot } from "modules/lots/infraestructure";
+import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
 
 export const CreateDispatchForm = ({
@@ -99,6 +98,11 @@ export const CreateDispatchForm = ({
     isLoadingGetProductLots,
     setProductId,
     setValue,
+    setLotId,
+    totalStockByLotAndProduct,
+    isLoadingTotalStockByLotAndProduct,
+    isErrorTotalStockByLotAndProduct,
+    productId,
   } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
@@ -321,7 +325,6 @@ export const CreateDispatchForm = ({
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
-          {/* TODO:  */}
           <FormControl mb={0}>
             <FlexBox mb={0}>
               <FormLabel my={3}>{t("Lot")}</FormLabel>
@@ -329,7 +332,6 @@ export const CreateDispatchForm = ({
                 <SearchButton
                   onSearch={() => setIsSearchingLot((prev) => !prev)}
                 />
-                {/* <AddButton onAdd={onOpen} /> */}
               </FlexBox>
             </FlexBox>
             <Controller
@@ -358,10 +360,11 @@ export const CreateDispatchForm = ({
                     onChange={(e) => {
                       field.onChange(e);
                       setIsSearchingLot(false);
+                      setLotId(e.target.value);
                     }}
                   >
                     {getProductLotsData?.lots?.map((lot) => (
-                      <option key={lot.id} value={lot.id}>
+                      <option key={lot.id} value={lot.lotId}>
                         {lot.lotId}
                       </option>
                     ))}
@@ -387,7 +390,7 @@ export const CreateDispatchForm = ({
                   </FlexBox>
                 ) : (
                   <Select {...field}>
-                    {getPlacesData?.places.length === 0 ? (
+                    {getPlacesData?.places?.length === 0 ? (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
                       </option>
@@ -427,7 +430,17 @@ export const CreateDispatchForm = ({
             )}
           </FormControl>
           <FormControl mb={4}>
-            <FormLabel>{t("Units Number")}</FormLabel>
+            <FormLabel
+              display="flex"
+              justifyContent="space-between"
+              width={"100%"}
+            >
+              <span>{t("Units Number")} </span>
+              {/* TODO: Fetch total stock for this product and lot and show it here */}
+              <span style={{ color: "red" }}>
+                {t("In stock")} {totalStockByLotAndProduct?.unitsNumber}
+              </span>
+            </FormLabel>
             <Controller
               name="unitsNumber"
               control={control}
@@ -439,23 +452,49 @@ export const CreateDispatchForm = ({
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
-          <FormControl mb={4}>
-            <FormLabel>{t("Loose Units Number")}</FormLabel>
-            <Controller
-              name="looseUnitsNumber"
-              control={control}
-              defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
-            />
-            {errors.looseUnitsNumber && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
+          {products.find((p) => p.id === productId)?.selectionType ===
+            "box" && (
+            <FormControl mb={4}>
+              <FormLabel
+                display="flex"
+                justifyContent="space-between"
+                width={"100%"}
+              >
+                <span>{t("Loose Units Number")}</span>
+                <span style={{ color: "red" }}>
+                  {t("In stock")} {totalStockByLotAndProduct?.looseUnitsNumber}
+                </span>
+              </FormLabel>
+              <Controller
+                name="looseUnitsNumber"
+                control={control}
+                defaultValue={0}
+                rules={{ required: true }}
+                render={({ field }) => <Input type="number" {...field} />}
+              />
+              {errors.looseUnitsNumber && (
+                <Box color="red">{t("This field is required")}</Box>
+              )}
+            </FormControl>
+          )}
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
-            <FormLabel>{t("Total Units Number")}</FormLabel>
+            <FormLabel
+              display="flex"
+              justifyContent="space-between"
+              width={"100%"}
+            >
+              <span>{t("Total")}</span>{" "}
+              <span
+                style={{
+                  color: "red",
+                }}
+              >
+                {t("Total in stock")} {totalStockByLotAndProduct?.totalUnits}
+              </span>
+            </FormLabel>
+
             <Controller
               name="totalUnitsNumber"
               control={control}

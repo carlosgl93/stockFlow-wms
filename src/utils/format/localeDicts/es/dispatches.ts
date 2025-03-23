@@ -36,4 +36,10 @@ export const dispatches = {
   Delivered: "Delivered",
   Cancelled: "Cancelled",
   "Create Customer": "Crear Cliente",
+  "Available units for this lot and product:":
+    "Unidades disponibles para este lote y producto:",
+  "Available loose units for this lot and product:":
+    "Unidades sueltas disponibles para este lote y producto:",
+  "In stock": "En stock",
+  "Total in stock": "Total en stock",
 };

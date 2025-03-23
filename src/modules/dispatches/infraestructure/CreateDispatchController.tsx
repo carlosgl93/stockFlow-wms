@@ -1,24 +1,26 @@
-import { useToast, useDisclosure, IconButton } from "@chakra-ui/react";
-import { usePlaces } from "modules/places/infra";
-import { useProducts } from "modules/products/infrastructure";
-import { IProduct } from "modules/products/types";
-import { ISupplier, useSuppliers } from "modules/suppliers";
-import { useTransporters } from "modules/transporters/infrastructure";
-import { ITransporter } from "modules/transporters/types";
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { ValidationError } from "shared/Error";
+import { useToast, useDisclosure, IconButton } from "@chakra-ui/react";
 import { useTranslate } from "utils";
-import { DispatchFixture } from "utils/fixtures";
+import { Logger } from "utils/logger";
 import { IDispatch, IDispatchRow } from "../types";
 import { useDispatches } from "./useDispatches";
-import { Logger } from "utils/logger";
+import { ISupplier, useSuppliers } from "modules/suppliers";
+import { useTransporters } from "modules/transporters/infrastructure";
+import { useProducts } from "modules/products/infrastructure";
+import { usePlaces } from "modules/places/infra";
+import { useLots } from "modules/lots/infraestructure";
+import { useLotProductStock } from "modules/lotProduct/infraestructure";
+
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FlexBox } from "shared/Layout";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { IProductEntry } from "modules/entries/types";
-import { ILot, useLots } from "modules/lots/infraestructure";
+import { ValidationError } from "shared/Error";
+import { DispatchFixture } from "utils/fixtures";
 import { IStock } from "modules/stock/types";
+import { ITransporter } from "modules/transporters/types";
+import { IProduct } from "modules/products/types";
+import { IProductEntry } from "modules/entries/types";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -36,7 +38,7 @@ export const CreateDispatchController = ({
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
   const [addedToDispatch, setAddedToDispatch] = useState<IProductEntry[]>([]);
   const [productId, setProductId] = useState("");
-
+  const [lotId, setLotId] = useState("");
   const toast = useToast();
   const { t } = useTranslate();
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
@@ -45,18 +47,10 @@ export const CreateDispatchController = ({
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData, isFetching } = useProducts(5);
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
-
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
-
-  const {
-    addDispatchMutation,
-    updateDispatchMutation,
-    isLoadingAddDispatch,
-    isLoadingUpdateDispatch,
-  } = useDispatches();
 
   const {
     handleSubmit,
@@ -80,6 +74,22 @@ export const CreateDispatchController = ({
     page: 1,
   });
 
+  const {
+    totalStockByLotAndProduct,
+    isLoadingTotalStockByLotAndProduct,
+    isErrorTotalStockByLotAndProduct,
+  } = useLotProductStock({
+    productId: watch("productId"),
+    lotId: watch("lotId"),
+  });
+
+  const {
+    addDispatchMutation,
+    updateDispatchMutation,
+    isLoadingAddDispatch,
+    isLoadingUpdateDispatch,
+  } = useDispatches();
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isOpenCreateTransporter,
@@ -96,7 +106,6 @@ export const CreateDispatchController = ({
   const handleNewSupplier = useCallback(
     (newSupplier: ISupplier) => {
       setSuppliers((prev) => [...prev, newSupplier]);
-      Logger.info("new supplier", [newSupplier]);
       setValue("supplierId", newSupplier.id || "");
       onClose();
     },
@@ -346,26 +355,29 @@ export const CreateDispatchController = ({
     isOpenCreateTransporter,
   ]);
 
-  useEffect(() => {
-    const uniqueProducts = [
+  const uniqueProducts = useMemo(() => {
+    return [
       ...((searchResults as IProduct[]) || []),
       ...(getProductsData || []),
     ].filter(
       (product, index, self) =>
         index === self.findIndex((s) => s.id === product.id)
     );
+  }, [searchResults, getProductsData]);
+
+  useEffect(() => {
     setProducts(uniqueProducts);
     setProductId(uniqueProducts[0]?.id || "");
     setValue("productId", uniqueProducts[0]?.id || "");
     trigger();
-  }, [searchResults, getProductsData, isOpenCreateProduct]);
+  }, [uniqueProducts, isOpenCreateProduct]);
 
   useEffect(() => {
     const uniqueLots = [...((searchResults as IStock[]) || [])].filter(
       (lot, index, self) => index === self.findIndex((s) => s.id === lot.id)
     );
     setLots(uniqueLots);
-    setValue("lotId", uniqueLots[0]?.id || "");
+    setValue("lotId", uniqueLots[0]?.lotId || "");
     trigger();
   }, [searchResults, getProductsData, isOpenCreateProduct]);
 
@@ -375,9 +387,14 @@ export const CreateDispatchController = ({
   }, [getPlacesData]);
 
   useEffect(() => {
-    setValue("lotId", getProductLotsData?.lots[0]?.id || "");
+    const lotId = getProductLotsData?.lots[0]?.lotId;
+    if (!getProductLotsData || !lotId) {
+      return;
+    }
+    setValue("lotId", lotId);
+    // setLotId(lotId);
     trigger();
-  }, [getProductLotsData]);
+  }, [productId, getProductLotsData]);
 
   useEffect(() => {
     clearErrors();
@@ -390,13 +407,16 @@ export const CreateDispatchController = ({
     getProductLotsData,
   ]);
 
-  Logger.info("logs", {
-    suppliers,
-    transporters,
-    products,
-    productId,
-    getProductLotsData,
-  });
+  useEffect(() => {
+    Logger.info("changing units number", {
+      unitsNumber: watch("unitsNumber"),
+      looseUnitsNumber: watch("looseUnitsNumber"),
+    });
+    setValue(
+      "totalUnitsNumber",
+      watch("unitsNumber") + watch("looseUnitsNumber")
+    );
+  }, [watch("looseUnitsNumber", watch("unitsNumber"))]);
 
   return {
     isLoading,
@@ -456,5 +476,10 @@ export const CreateDispatchController = ({
     isLoadingGetProductLots,
     setProductId,
     setValue,
+    setLotId,
+    totalStockByLotAndProduct,
+    isLoadingTotalStockByLotAndProduct,
+    isErrorTotalStockByLotAndProduct,
+    productId,
   };
 };

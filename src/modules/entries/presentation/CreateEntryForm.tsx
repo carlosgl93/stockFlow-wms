@@ -313,7 +313,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   </FlexBox>
                 ) : (
                   <Select {...field}>
-                    {getPlacesData?.places.length === 0 ? (
+                    {getPlacesData?.places?.length === 0 ? (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
                       </option>
@@ -486,7 +486,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           type="submit"
           colorScheme="teal"
           disabled={
-            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts.length
+            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts?.length
           }
         >
           {entryToEdit ? t("Edit Entry") : t("Create Entry")}

@@ -6,8 +6,8 @@ import { useSecondaryTextColor } from "theme";
 interface IProps {
   image: ReactNode;
   heading: string;
-  subheading: string;
-  children: ReactNode;
+  subheading?: string;
+  children?: ReactNode;
 }
 
 const Result = ({ children, heading, image, subheading }: IProps) => {

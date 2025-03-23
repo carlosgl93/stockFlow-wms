@@ -325,7 +325,7 @@ export const CreateProductForm = ({
         </FormControl>
         {selectionType === "box" && (
           <FormControl mb={4}>
-            <FormLabel>{t(`${unitOfMeasure} per box`)}</FormLabel>
+            <FormLabel>{t(`Units per box`)}</FormLabel>
             <Controller
               name="boxDetails.units"
               control={control}
@@ -397,7 +397,9 @@ export const CreateProductForm = ({
           />
         </FormControl>
         <FormControl mb={4}>
-          <FormLabel>{t("Kilos")}</FormLabel>
+          <FormLabel>{`${t("Kilogram") + "s"}  ${
+            watch("selectionType") === "box" ? t("by box") : t("by unit")
+          }`}</FormLabel>
           <Controller
             name="boxDetails.kilos"
             control={control}

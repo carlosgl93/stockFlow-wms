@@ -22,7 +22,12 @@ export const useDispatches = () => {
 
   const { dispatchId } = useParams<{ dispatchId: string }>();
 
-  const { data: dispatchesData, isLoading: isLoadingGetDispatches } = useQuery({
+  const {
+    data: dispatchesData,
+    // isLoading: isLoadingGetDispatches,
+    isFetching: isLoadingGetDispatches,
+    status,
+  } = useQuery({
     queryKey: ["dispatches", page, pageSize, lastVisible],
     queryFn: () => fetchDispatches(page, pageSize, lastVisible),
   });

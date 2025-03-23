@@ -17,7 +17,7 @@ export const DispatchesList = ({ dispatches }: IProps) => {
   const { removeDispatchMutation, isLoadingRemoveDispatch } = useDispatches();
   const { t } = useTranslate();
 
-  if (dispatches.length === 0) {
+  if (dispatches?.length === 0) {
     return <EmptyStateResult />;
   }
 
@@ -77,7 +77,7 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     { field: "dispatchStatus", headerName: "Dispatch Status", width: 150 },
   ];
 
-  const rows = dispatches.map((dispatch) => ({
+  const rows = dispatches?.map((dispatch) => ({
     id: dispatch.id,
     docNumber: dispatch.docNumber,
     supplierId: dispatch.supplierId,

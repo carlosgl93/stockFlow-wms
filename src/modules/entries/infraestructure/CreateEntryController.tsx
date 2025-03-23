@@ -129,7 +129,7 @@ export const CreateEntryController = ({
 
   const onSubmit = async (data: IEntry) => {
     const validation = await trigger();
-    if (!validation && addedToEntry.length === 0) {
+    if (!validation && addedToEntry?.length === 0) {
       toast({
         title: "Error",
         description: `${t(

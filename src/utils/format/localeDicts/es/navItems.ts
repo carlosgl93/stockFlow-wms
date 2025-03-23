@@ -16,4 +16,5 @@ export const navItems = {
   "Move products": "Mover productos",
   "Rearrange products location": "Reorganizar ubicación de productos",
   Labeling: "Etiquetado",
+  Cancel: "Cancelar",
 };
