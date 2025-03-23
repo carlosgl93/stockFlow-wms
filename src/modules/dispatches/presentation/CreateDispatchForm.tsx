@@ -103,6 +103,7 @@ export const CreateDispatchForm = ({
     isLoadingTotalStockByLotAndProduct,
     isErrorTotalStockByLotAndProduct,
     productId,
+    placesForProductAndLot,
   } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
@@ -384,7 +385,7 @@ export const CreateDispatchForm = ({
               control={control}
               defaultValue=""
               render={({ field }) =>
-                isLoadingGetPlaces ? (
+                isLoadingGetPlaces || isLoadingTotalStockByLotAndProduct ? (
                   <FlexBox justifyContent="center" w={"100%"}>
                     <Loading size="xs" />
                   </FlexBox>
@@ -401,7 +402,12 @@ export const CreateDispatchForm = ({
                       {t("I will not specify a place")}
                     </option>
 
-                    {getPlacesData?.places.map((places) => (
+                    {(totalStockByLotAndProduct?.placesIds?.length
+                      ? getPlacesData?.places.filter((p) =>
+                          totalStockByLotAndProduct?.placesIds?.includes(p.id)
+                        )
+                      : getPlacesData?.places
+                    )?.map((places) => (
                       <option key={places.id} value={places.id}>
                         {places.name}
                       </option>

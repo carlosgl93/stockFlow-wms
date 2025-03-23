@@ -8,7 +8,6 @@ import {
 } from "firebase/firestore";
 import { db } from "shared/firebase";
 import { ValidationError, APIError } from "shared/Error";
-import { ILot } from "../types";
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
 
@@ -31,10 +30,6 @@ export const getProductLots = async ({
   pageSize?: number;
   page?: number;
 }): Promise<{ lots: IStock[]; lastVisible: string }> => {
-  Logger.info(
-    `getProductLots called with productId: ${productId}, pageSize: ${pageSize}, page: ${page}`
-  );
-
   if (!pageSize || pageSize <= 0) {
     Logger.error("Invalid pageSize");
     throw new ValidationError("Invalid pageSize");
@@ -48,7 +43,6 @@ export const getProductLots = async ({
   );
 
   if (page > 1) {
-    Logger.info(`Fetching documents for page: ${page}`);
     const lastVisibleDoc = await getDocs(
       query(
         lotProductRef,
@@ -66,7 +60,6 @@ export const getProductLots = async ({
   }
 
   try {
-    Logger.info("Executing query to fetch lots");
     const querySnapshot = await getDocs(q);
     const lots: IStock[] = [];
     querySnapshot.forEach((doc) => {
@@ -74,9 +67,6 @@ export const getProductLots = async ({
     });
 
     const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    Logger.info(
-      `Query successful, fetched ${lots.length} lots, lastVisible: ${lastVisibleDoc?.id}`
-    );
     return { lots, lastVisible: lastVisibleDoc?.id };
   } catch (error) {
     Logger.error("Failed to retrieve LotProducts", [error]);

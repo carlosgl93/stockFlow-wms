@@ -8,4 +8,6 @@ export interface ILotProduct {
   totalUnits: number;
   createdAt: string;
   updatedAt?: string;
+  placeId?: string;
+  placesIds?: string[];
 }

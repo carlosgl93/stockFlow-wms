@@ -24,7 +24,6 @@ export const fetchDispatches = async (
   pageSize: number,
   lastVisible: string | null
 ): Promise<IDispatch[]> => {
-  Logger.info("fetchDispatches", { page, pageSize, lastVisible });
   try {
     const dispatchesRef = collection(db, "dispatches");
     let q = query(dispatchesRef, orderBy("createdAt"), limit(pageSize));

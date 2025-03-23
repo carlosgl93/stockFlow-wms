@@ -24,8 +24,6 @@ export const getLots = async (
   pageSize: number,
   page: number = 1
 ): Promise<{ lots: ILot[]; lastVisible: string }> => {
-  Logger.info(`getLots called with pageSize: ${pageSize}, page: ${page}`);
-
   if (!pageSize || pageSize <= 0) {
     Logger.error("Invalid pageSize");
     throw new ValidationError("Invalid pageSize");
@@ -35,7 +33,6 @@ export const getLots = async (
   let q = query(lotProductRef, limit(pageSize));
 
   if (page > 1) {
-    Logger.info(`Fetching documents for page: ${page}`);
     const lastVisibleDoc = await getDocs(
       query(lotProductRef, limit((page - 1) * pageSize))
     );
@@ -44,7 +41,6 @@ export const getLots = async (
   }
 
   try {
-    Logger.info("Executing query to fetch lots");
     const querySnapshot = await getDocs(q);
     const lots: ILot[] = [];
     querySnapshot.forEach((doc) => {
@@ -52,9 +48,6 @@ export const getLots = async (
     });
 
     const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    Logger.info(
-      `Query successful, fetched ${lots.length} lots, lastVisible: ${lastVisibleDoc?.id}`
-    );
     return { lots, lastVisible: lastVisibleDoc?.id };
   } catch (error) {
     Logger.error("Failed to retrieve LotProducts", [error]);

@@ -17,7 +17,6 @@ export const getTotalStockByProductIdAndLotId = async (
   productId: string,
   lotId: string
 ): Promise<ILotProduct> => {
-  Logger.info("getTotalStockByProductIdAndLotId", { productId, lotId });
   if (!lotId || !productId) {
     throw new ValidationError("Invalid lotId or productId");
   }
@@ -35,10 +34,12 @@ export const getTotalStockByProductIdAndLotId = async (
     querySnapshot.forEach((doc) => {
       lotProducts.push({ id: doc.id, ...doc.data() } as ILotProduct);
     });
-    Logger.info("lotProducts - asdf", lotProducts);
+    Logger.info("lot products", lotProducts);
     const reducedLotProduct = lotProducts.reduce(
       (acc, curr) => {
-        Logger.info("lotProducts - curr", curr);
+        if (acc.placesIds && curr.placeId) {
+          acc.placesIds.push(curr?.placeId);
+        }
         acc.unitsNumber += curr.unitsNumber || 0;
         acc.looseUnitsNumber += curr.looseUnitsNumber || 0;
         acc.totalUnits += curr.unitsNumber + curr.looseUnitsNumber || 0;
@@ -54,6 +55,8 @@ export const getTotalStockByProductIdAndLotId = async (
         totalUnits: 0,
         createdAt: "",
         updatedAt: "",
+        placeId: "",
+        placesIds: [],
       } as ILotProduct
     );
 

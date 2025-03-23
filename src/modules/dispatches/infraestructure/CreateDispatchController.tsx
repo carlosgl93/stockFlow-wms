@@ -8,7 +8,11 @@ import { useDispatches } from "./useDispatches";
 import { ISupplier, useSuppliers } from "modules/suppliers";
 import { useTransporters } from "modules/transporters/infrastructure";
 import { useProducts } from "modules/products/infrastructure";
-import { usePlaces } from "modules/places/infra";
+import {
+  getPlacesByProductIdAndLotId,
+  IPlace,
+  usePlaces,
+} from "modules/places/infra";
 import { useLots } from "modules/lots/infraestructure";
 import { useLotProductStock } from "modules/lotProduct/infraestructure";
 
@@ -51,6 +55,8 @@ export const CreateDispatchController = ({
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
+  const [placesForProductAndLot, setPlacesForProductAndLot] =
+    useState<IPlace[]>();
 
   const {
     handleSubmit,
@@ -82,6 +88,8 @@ export const CreateDispatchController = ({
     productId: watch("productId"),
     lotId: watch("lotId"),
   });
+
+  Logger.info("totalStockByLotAndProduct", totalStockByLotAndProduct);
 
   const {
     addDispatchMutation,
@@ -307,6 +315,7 @@ export const CreateDispatchController = ({
   }, [] as IDispatchRow[]);
 
   useEffect(() => {
+    // USE EFFECT TO SET THE VALUES OF THE FORM BASED ON THE DISPATCH TO EDIT OR A FIXTURE
     if (dispatchToEdit) {
       Object.keys(dispatchToEdit).forEach((key) => {
         setValue(
@@ -325,6 +334,7 @@ export const CreateDispatchController = ({
   }, [setValue, dispatchToEdit, trigger]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE SUPPLIERS AND DISCARD THE REPEATED ONES
     const uniqueSuppliers = [
       ...((searchResults as ISupplier[]) || []),
       ...(getSuppliersData?.suppliers || []),
@@ -338,6 +348,7 @@ export const CreateDispatchController = ({
   }, [searchResults, getSuppliersData?.suppliers, isOpen]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE TRANSPORTERS AND DISCARD THE REPEATED ONES
     const uniqueTransporters = [
       ...((searchResults as ITransporter[]) || []),
       ...(getTransporters || []),
@@ -366,6 +377,7 @@ export const CreateDispatchController = ({
   }, [searchResults, getProductsData]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE PRODUCTS AND DISCARD THE REPEATED ONES
     setProducts(uniqueProducts);
     setProductId(uniqueProducts[0]?.id || "");
     setValue("productId", uniqueProducts[0]?.id || "");
@@ -373,6 +385,7 @@ export const CreateDispatchController = ({
   }, [uniqueProducts, isOpenCreateProduct]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE LOTS AND DISCARD THE REPEATED ONES
     const uniqueLots = [...((searchResults as IStock[]) || [])].filter(
       (lot, index, self) => index === self.findIndex((s) => s.id === lot.id)
     );
@@ -382,11 +395,13 @@ export const CreateDispatchController = ({
   }, [searchResults, getProductsData, isOpenCreateProduct]);
 
   useEffect(() => {
+    // USE EFFECT TO SET THE VALUE OF THE PLACE SELECTOR TO THE FIRST OPTION OF THE DB
     setValue("placeId", getPlacesData?.places[0]?.id || "");
     trigger();
   }, [getPlacesData]);
 
   useEffect(() => {
+    // USE EFFECT TO SET THE VALUE OF THE LOT SELECTOR BASED ON THE JUST SELECTED PRODUCT
     const lotId = getProductLotsData?.lots[0]?.lotId;
     if (!getProductLotsData || !lotId) {
       return;
@@ -408,10 +423,6 @@ export const CreateDispatchController = ({
   ]);
 
   useEffect(() => {
-    Logger.info("changing units number", {
-      unitsNumber: watch("unitsNumber"),
-      looseUnitsNumber: watch("looseUnitsNumber"),
-    });
     setValue(
       "totalUnitsNumber",
       watch("unitsNumber") + watch("looseUnitsNumber")
@@ -481,5 +492,6 @@ export const CreateDispatchController = ({
     isLoadingTotalStockByLotAndProduct,
     isErrorTotalStockByLotAndProduct,
     productId,
+    placesForProductAndLot,
   };
 };
