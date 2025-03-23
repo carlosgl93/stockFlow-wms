@@ -1,22 +1,39 @@
+import { IProductEntry } from "modules/entries/types";
+
 export interface IDispatch {
   id?: string;
   docType?: DocumentType;
   supplierId: string;
   docNumber: string;
   transporterId: string;
-  productId: string;
-  lotId: string;
-  placeId?: string;
-  stockId?: string;
+  products: IProductEntry[];
   dispatchDate: string;
   deliveryDate: string;
-  palletNumber: string;
+  createdAt?: string;
+  updatedAt?: string;
+  dispatchedStatus?: DispatchedStatus;
+}
+
+export interface IDispatchForm {
+  id?: string;
+  docType?: DocumentType;
+  supplierId: string;
+  docNumber: string;
+  productId: string;
   unitsNumber: number;
   looseUnitsNumber: number;
   totalUnitsNumber: number;
+  lotId: string;
+  stockId?: string;
+  placeId?: string;
+  expirityDate?: string;
+  palletNumber: string;
   heightCMs: number;
   widthCMs: number;
-  description: string;
+  description?: string;
+  transporterId: string;
+  dispatchDate: string;
+  deliveryDate: string;
   createdAt?: string;
   updatedAt?: string;
   dispatchedStatus?: DispatchedStatus;

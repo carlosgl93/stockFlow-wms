@@ -35,6 +35,7 @@ import { AppThemeProvider } from "theme/materialTheme";
 import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
+import { Logger } from "utils/logger";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
@@ -103,7 +104,6 @@ export const CreateDispatchForm = ({
     isLoadingTotalStockByLotAndProduct,
     isErrorTotalStockByLotAndProduct,
     productId,
-    placesForProductAndLot,
   } = CreateDispatchController({ dispatchToEdit });
 
   if (isLoadingAddDispatch || isLoadingUpdateDispatch) {
@@ -442,7 +442,6 @@ export const CreateDispatchForm = ({
               width={"100%"}
             >
               <span>{t("Units Number")} </span>
-              {/* TODO: Fetch total stock for this product and lot and show it here */}
               <span style={{ color: "red" }}>
                 {t("In stock")} {totalStockByLotAndProduct?.unitsNumber}
               </span>
@@ -451,11 +450,24 @@ export const CreateDispatchForm = ({
               name="unitsNumber"
               control={control}
               defaultValue={0}
-              rules={{ required: true }}
-              render={({ field }) => <Input type="number" {...field} />}
+              rules={{
+                required: true,
+                validate: (value) => {
+                  if (value > (totalStockByLotAndProduct?.unitsNumber || 0)) {
+                    return t("The units number can't be higher than the stock");
+                  }
+                },
+              }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="number"
+                  isInvalid={!!errors.unitsNumber}
+                />
+              )}
             />
             {errors.unitsNumber && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Box color="red">{errors.unitsNumber.message}</Box>
             )}
           </FormControl>
           {products.find((p) => p.id === productId)?.selectionType ===
@@ -475,11 +487,28 @@ export const CreateDispatchForm = ({
                 name="looseUnitsNumber"
                 control={control}
                 defaultValue={0}
-                rules={{ required: true }}
-                render={({ field }) => <Input type="number" {...field} />}
+                rules={{
+                  required: true,
+                  validate: (value) => {
+                    if (
+                      value > (totalStockByLotAndProduct?.looseUnitsNumber || 0)
+                    ) {
+                      return t(
+                        "The units number can't be higher than the loose stock"
+                      );
+                    }
+                  },
+                }}
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    {...field}
+                    isInvalid={!!errors.looseUnitsNumber}
+                  />
+                )}
               />
               {errors.looseUnitsNumber && (
-                <Box color="red">{t("This field is required")}</Box>
+                <Box color="red">{errors.looseUnitsNumber.message}</Box>
               )}
             </FormControl>
           )}

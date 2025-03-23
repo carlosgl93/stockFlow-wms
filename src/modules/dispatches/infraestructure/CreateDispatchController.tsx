@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useToast, useDisclosure, IconButton } from "@chakra-ui/react";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
-import { IDispatch, IDispatchRow } from "../types";
+import { IDispatch, IDispatchForm, IDispatchRow } from "../types";
 import { useDispatches } from "./useDispatches";
 import { ISupplier, useSuppliers } from "modules/suppliers";
 import { useTransporters } from "modules/transporters/infrastructure";
@@ -25,6 +25,7 @@ import { IStock } from "modules/stock/types";
 import { ITransporter } from "modules/transporters/types";
 import { IProduct } from "modules/products/types";
 import { IProductEntry } from "modules/entries/types";
+import { getProductCompositeId } from "modules/entries/infraestructure";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -55,19 +56,17 @@ export const CreateDispatchController = ({
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
-  const [placesForProductAndLot, setPlacesForProductAndLot] =
-    useState<IPlace[]>();
 
   const {
     handleSubmit,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
     trigger,
     watch,
     getValues,
     clearErrors,
-  } = useForm<IDispatch>();
+  } = useForm<IDispatchForm>();
 
   const {
     getLotsData,
@@ -88,8 +87,6 @@ export const CreateDispatchController = ({
     productId: watch("productId"),
     lotId: watch("lotId"),
   });
-
-  Logger.info("totalStockByLotAndProduct", totalStockByLotAndProduct);
 
   const {
     addDispatchMutation,
@@ -139,7 +136,17 @@ export const CreateDispatchController = ({
   );
 
   const handleAddProductToDispatch = () => {
-    const newDataToDispatch = getValues(); // making the new product entry to add
+    if (!isValid) {
+      toast({
+        title: "Error",
+        description: `${t("Please fill/check all the fields")} ${t(
+          `fields to fill/check`
+        )}: ${Object.keys(errors).join(", ")}`,
+        status: "error",
+      });
+      return;
+    }
+    const newDataToDispatch = getValues();
     const {
       totalUnitsNumber,
       lotId,
@@ -187,11 +194,6 @@ export const CreateDispatchController = ({
       ) {
         setAddedToDispatch((prev) => [...prev, newProductToAdd]);
       }
-      setValue("lotId", "");
-      setValue("placeId", "");
-      setValue("palletNumber", "");
-      setValue("heightCMs", 0);
-      setValue("widthCMs", 0);
       setValue("unitsNumber", 0);
       setValue("looseUnitsNumber", 0);
       setValue("totalUnitsNumber", 0);
@@ -199,7 +201,7 @@ export const CreateDispatchController = ({
     }
   };
 
-  const onSubmit = async (data: IDispatch) => {
+  const onSubmit = async (data: IDispatchForm) => {
     const validation = await trigger();
 
     if (!validation) {
@@ -213,17 +215,28 @@ export const CreateDispatchController = ({
       return;
     }
 
+    const dataToSubmit = {
+      docType: data.docType,
+      supplierId: data.supplierId,
+      transporterId: data.transporterId,
+      dispatchDate: data.dispatchDate,
+      deliveryDate: data.deliveryDate,
+      docNumber: data.docNumber,
+      products: addedToDispatch,
+    };
+
     try {
+      Logger.info("data", [data]);
       if (dispatchToEdit) {
         if (!dispatchToEdit.id) {
           throw new ValidationError("Entry to edit has no id");
         }
         await updateDispatchMutation({
           dispatchId: dispatchToEdit.id,
-          values: data,
+          values: dataToSubmit,
         });
       } else {
-        await addDispatchMutation(data);
+        await addDispatchMutation(dataToSubmit);
       }
     } catch (error) {
       let errorMessage = "An unknown error occurred";
@@ -250,29 +263,19 @@ export const CreateDispatchController = ({
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={notImplemented}
-          />
-          <IconButton
-            aria-label="Edit Entry"
-            icon={<EditIcon />}
-            onClick={notImplemented}
-          /> */}
           {
             <IconButton
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
-              onClick={
-                () => {}
-                // setAddedToEntry((prev) => {
-                //   return prev.filter((p) => {
-                //     const uniqueId = getProductCompositeId(p);
-                //     return uniqueId !== params.id;
-                //   });
-                // })
-              }
+              onClick={() => {
+                Logger.info("params", [params, addedToDispatch]);
+                setAddedToDispatch((prev) => {
+                  return prev.filter((p) => {
+                    const uniqueId = getProductCompositeId(p);
+                    return uniqueId !== params.id;
+                  });
+                });
+              }}
             />
           }
         </FlexBox>
@@ -318,16 +321,21 @@ export const CreateDispatchController = ({
     // USE EFFECT TO SET THE VALUES OF THE FORM BASED ON THE DISPATCH TO EDIT OR A FIXTURE
     if (dispatchToEdit) {
       Object.keys(dispatchToEdit).forEach((key) => {
-        setValue(
-          key as keyof IDispatch,
-          dispatchToEdit[key as keyof IDispatch]
-        );
+        if (key === "products") {
+          setAddedToDispatch(dispatchToEdit.products);
+        } else {
+          setValue(
+            key as keyof IDispatchForm,
+            // @ts-ignore
+            dispatchToEdit[key as keyof IDispatch]
+          );
+        }
       });
       trigger();
     } else if (import.meta.env.MODE === "development") {
       const entry = DispatchFixture.toStructure();
       Object.keys(entry).forEach((key) => {
-        setValue(key as keyof IDispatch, entry[key as keyof IDispatch]);
+        setValue(key as keyof IDispatchForm, entry[key as keyof IDispatchForm]);
       });
       trigger();
     }
@@ -423,11 +431,23 @@ export const CreateDispatchController = ({
   ]);
 
   useEffect(() => {
-    setValue(
-      "totalUnitsNumber",
-      watch("unitsNumber") + watch("looseUnitsNumber")
-    );
-  }, [watch("looseUnitsNumber", watch("unitsNumber"))]);
+    const { unitsNumber, looseUnitsNumber } = getValues();
+    if (
+      typeof unitsNumber === "number" &&
+      typeof looseUnitsNumber === "number"
+    ) {
+      setValue(
+        "totalUnitsNumber",
+        watch("unitsNumber") + watch("looseUnitsNumber")
+      );
+    } else {
+      setValue(
+        "totalUnitsNumber",
+        (parseInt(watch("unitsNumber") as unknown as string) || 0) +
+          (parseInt(watch("looseUnitsNumber") as unknown as string) || 0)
+      );
+    }
+  }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
 
   return {
     isLoading,
@@ -492,6 +512,5 @@ export const CreateDispatchController = ({
     isLoadingTotalStockByLotAndProduct,
     isErrorTotalStockByLotAndProduct,
     productId,
-    placesForProductAndLot,
   };
 };

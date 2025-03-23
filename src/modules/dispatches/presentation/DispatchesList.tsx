@@ -77,22 +77,22 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     { field: "dispatchStatus", headerName: "Dispatch Status", width: 150 },
   ];
 
-  const rows = dispatches?.map((dispatch) => ({
+  const rows = dispatches?.map((dispatch, i) => ({
     id: dispatch.id,
     docNumber: dispatch.docNumber,
     supplierId: dispatch.supplierId,
     transporterId: dispatch.transporterId,
-    productId: dispatch.productId,
-    lotId: dispatch.lotId,
+    productId: dispatch.products[i].id,
+    lotId: dispatch.products[i].lotId,
     dispatchDate: dispatch.dispatchDate,
     deliveryDate: dispatch.deliveryDate,
-    palletNumber: dispatch.palletNumber,
-    unitsNumber: dispatch.unitsNumber,
-    looseUnitsNumber: dispatch.looseUnitsNumber,
-    totalUnitsNumber: dispatch.totalUnitsNumber,
-    heightCMs: dispatch.heightCMs,
-    widthCMs: dispatch.widthCMs,
-    description: dispatch.description,
+    palletNumber: dispatch.products[i].palletNumber,
+    unitsNumber: dispatch.products[i].unitsNumber,
+    looseUnitsNumber: dispatch.products[i].looseUnitsNumber,
+    totalUnitsNumber: dispatch.products[i].totalUnitsNumber,
+    heightCMs: dispatch.products[i].heightCMs,
+    widthCMs: dispatch.products[i].widthCMs,
+    description: dispatch.products[i].description,
   }));
 
   return (

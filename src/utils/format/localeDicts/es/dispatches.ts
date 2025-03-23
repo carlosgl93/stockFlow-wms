@@ -42,4 +42,13 @@ export const dispatches = {
     "Unidades sueltas disponibles para este lote y producto:",
   "In stock": "En stock",
   "Total in stock": "Total en stock",
+  "The units number can't be higher than the stock":
+    "El número de unidades no puede ser mayor que el stock",
+  "The units number can't be higher than the loose stock":
+    "El número de unidades no puede ser mayor que el stock suelto",
+  "The units number can't be higher than the stock and loose stock":
+    "El número de unidades no puede ser mayor que el stock y el stock suelto",
+  "Please fill/check all the fields":
+    "Por favor, complete/verifique todos los campos",
+  "fields to fill/check": `campos para completar/verificar`,
 };

@@ -2,7 +2,7 @@ export interface IEntry {
   id?: string;
   supplierId: string;
   docNumber: string;
-  transporterId: string; // name of the driver
+  transporterId: string;
   productsToEnter: IProductEntry[];
   description: string; // equivalent to nota
   createdAt?: string;
