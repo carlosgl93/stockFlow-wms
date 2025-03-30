@@ -32,9 +32,9 @@ export const dispatches = {
   Invoice: "Factura",
   Pending: "Pendiente",
   "Document type is required": "El tipo de documento es obligatorio",
-  Dispatched: "Dispatched",
-  Delivered: "Delivered",
-  Cancelled: "Cancelled",
+  Dispatched: "Despachado",
+  Delivered: "Entregado",
+  Cancelled: "Cancelado",
   "Create Customer": "Crear Cliente",
   "Available units for this lot and product:":
     "Unidades disponibles para este lote y producto:",
@@ -51,4 +51,8 @@ export const dispatches = {
   "Please fill/check all the fields":
     "Por favor, complete/verifique todos los campos",
   "fields to fill/check": `campos para completar/verificar`,
+  Actions: "Acciones",
+  Confirm: "Confirmar",
+  "Are you sure you want to remove this dispatch?":
+    "¿Está seguro de que desea eliminar este despacho?",
 };

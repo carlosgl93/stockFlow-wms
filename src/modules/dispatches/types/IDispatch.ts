@@ -12,6 +12,7 @@ export interface IDispatch {
   createdAt?: string;
   updatedAt?: string;
   dispatchedStatus?: DispatchedStatus;
+  description?: string;
 }
 
 export interface IDispatchForm {

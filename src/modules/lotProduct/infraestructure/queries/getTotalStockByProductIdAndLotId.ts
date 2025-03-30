@@ -40,6 +40,10 @@ export const getTotalStockByProductIdAndLotId = async (
         if (acc.placesIds && curr.placeId) {
           acc.placesIds.push(curr?.placeId);
         }
+        Logger.info("type of", [
+          typeof acc.unitsNumber,
+          typeof curr.unitsNumber,
+        ]);
         acc.unitsNumber += curr.unitsNumber || 0;
         acc.looseUnitsNumber += curr.looseUnitsNumber || 0;
         acc.totalUnits += curr.unitsNumber + curr.looseUnitsNumber || 0;

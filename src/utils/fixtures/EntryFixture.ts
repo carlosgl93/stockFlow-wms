@@ -12,7 +12,7 @@ export const EntryFixture = createFixture<IEntryForm>({
   expirityDate: "2025-12-31",
   palletNumber: "PAL123",
   unitsNumber: 100,
-  looseUnitsNumber: 10,
+  looseUnitsNumber: 0,
   totalUnitsNumber: 110,
   heightCMs: 150,
   widthCMs: 100,

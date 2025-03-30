@@ -73,4 +73,7 @@ export const entries = {
   "Please add products to the entry": "Por favor, agrega productos al ingreso:",
   "Entry with this docNumber already exists.":
     "Ya existe un ingreso con este número de guía.",
+  "Are you sure you want to delete this entry?":
+    "¿Estás seguro de que deseas eliminar este ingreso?",
+  "Delete Entry": "Eliminar ingreso",
 };

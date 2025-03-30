@@ -28,7 +28,7 @@ export const useDispatches = () => {
     isFetching: isLoadingGetDispatches,
     status,
   } = useQuery({
-    queryKey: ["dispatches", page, pageSize, lastVisible],
+    queryKey: ["dispatches"],
     queryFn: () => fetchDispatches(page, pageSize, lastVisible),
   });
 
@@ -119,5 +119,8 @@ export const useDispatches = () => {
     getDispatchByIdData,
     isFetchingGetDispatchById,
     isErrorGetDispatchById,
+    page,
+    lastVisible,
+    pageSize,
   };
 };

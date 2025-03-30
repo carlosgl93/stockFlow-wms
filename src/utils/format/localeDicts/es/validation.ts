@@ -33,4 +33,5 @@ export const validation = {
   "Failed to add supplier": "Error al agregar el proveedor",
   "Failed to update supplier": "Error al actualizar el proveedor",
   "Supplier added successfully": "Proveedor agregado exitosamente",
+  "Confirm Removal": "Confirmar eliminación",
 };

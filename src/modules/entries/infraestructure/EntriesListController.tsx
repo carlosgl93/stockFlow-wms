@@ -11,6 +11,8 @@ import { getTransporterById } from "modules/transporters/infrastructure";
 
 export const EntriesListController = () => {
   const [rows, setRows] = useState<IEntry[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null); // State for selected entry
   const redirect = useRedirect();
   const {
     removeEntryMutation,
@@ -19,7 +21,6 @@ export const EntriesListController = () => {
     isLoadingGetEntries,
   } = useEntries();
   const { t } = useTranslate();
-  Logger.info("entriesData", entriesData);
   const columns: GridColDef[] = [
     {
       field: "actions",
@@ -33,29 +34,24 @@ export const EntriesListController = () => {
           alignContent={"center"}
           h={"100%"}
         >
-          <IconButton
+          {/* <IconButton
             aria-label="View Details"
             icon={<SearchIcon />}
             onClick={() => redirect(`/entries/${params.row.id}`)}
-          />
+          /> */}
           <IconButton
             aria-label="Edit Entry"
             icon={<EditIcon />}
             onClick={() => redirect(`/entries/edit/${params.row.id}`)}
           />
-          {!isLoadingRemoveEntry ? (
-            <IconButton
-              aria-label="Remove Entry"
-              icon={<DeleteIcon />}
-              onClick={() => removeEntryMutation(params.row.id || "")}
-            />
-          ) : (
-            <IconButton
-              aria-label="Remove Entry"
-              icon={<TimeIcon />}
-              onClick={() => removeEntryMutation(params.row.id || "")}
-            />
-          )}
+          <IconButton
+            aria-label="Remove Entry"
+            icon={<DeleteIcon />}
+            onClick={() => {
+              setSelectedEntryId(params.row.id || null);
+              setIsModalOpen(true);
+            }}
+          />
         </Box>
       ),
     },
@@ -85,12 +81,23 @@ export const EntriesListController = () => {
     fetchSupportingData();
   }, [entriesData]);
 
-  Logger.info("rows", rows);
+  const handleConfirmRemove = () => {
+    if (selectedEntryId) {
+      removeEntryMutation(selectedEntryId);
+      setIsModalOpen(false);
+    }
+  };
 
   return {
     columns,
     rows,
     entriesData,
     isLoadingGetEntries,
+    isLoadingRemoveEntry,
+    isModalOpen,
+    selectedEntryId,
+    handleClose: () => setIsModalOpen(false),
+    handleConfirmRemove,
+    t,
   };
 };

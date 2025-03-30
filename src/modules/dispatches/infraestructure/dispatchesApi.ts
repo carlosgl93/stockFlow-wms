@@ -26,7 +26,7 @@ export const fetchDispatches = async (
 ): Promise<IDispatch[]> => {
   try {
     const dispatchesRef = collection(db, "dispatches");
-    let q = query(dispatchesRef, orderBy("createdAt"), limit(pageSize));
+    let q = query(dispatchesRef);
     if (lastVisible) {
       const lastVisibleDoc = await getDoc(doc(db, "dispatches", lastVisible));
       q = query(
@@ -37,9 +37,10 @@ export const fetchDispatches = async (
       );
     }
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(
+    const result = snapshot.docs.map(
       (doc) => ({ ...doc.data(), id: doc.id } as IDispatch)
     );
+    return result;
   } catch (error) {
     throw new APIError("Failed to fetch dispatches", error);
   }

@@ -11,9 +11,7 @@ import {
   IProductEntry,
 } from "../types";
 import { useTranslate } from "utils";
-import { Logger } from "utils/logger";
 import { useSuppliers, ISupplier } from "modules/suppliers";
-import { getLots } from "modules/lots/infraestructure";
 import { EntryFixture } from "utils/fixtures";
 import { IProduct } from "modules/products/types";
 import { useProducts } from "modules/products/infrastructure";
@@ -59,8 +57,6 @@ export const CreateEntryController = ({
     isLoadingAddEntry,
     isLoadingUpdateEntry,
   } = useEntries();
-
-  const {} = usePlaces();
 
   const {
     handleSubmit,
@@ -116,7 +112,6 @@ export const CreateEntryController = ({
 
   const makeEntryFromForm = (data: IEntry) => {
     const { id, supplierId, docNumber, transporterId, description } = data;
-    Logger.info("making entry from form", addedToEntry);
     return {
       id,
       supplierId,

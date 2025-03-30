@@ -30,7 +30,7 @@ import { searchTransporter } from "modules/transporters/infrastructure";
 import { CreateProductForm } from "modules/products/presentation";
 import { CreateTransporterForm } from "modules/transporters/presentation";
 import { CreateDispatchController } from "../infraestructure";
-import { DocumentType, IDispatch } from "../types";
+import { DocumentType, IDispatch, DispatchedStatus } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
 import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
@@ -453,9 +453,13 @@ export const CreateDispatchForm = ({
               rules={{
                 required: true,
                 validate: (value) => {
-                  if (value > (totalStockByLotAndProduct?.unitsNumber || 0)) {
-                    return t("The units number can't be higher than the stock");
-                  }
+                  if (value > 0 && totalStockByLotAndProduct?.unitsNumber) {
+                    if (value > totalStockByLotAndProduct?.unitsNumber) {
+                      return t(
+                        "The units number can't be higher than the stock"
+                      );
+                    }
+                  } else return true;
                 },
               }}
               render={({ field }) => (
@@ -491,7 +495,8 @@ export const CreateDispatchForm = ({
                   required: true,
                   validate: (value) => {
                     if (
-                      value > (totalStockByLotAndProduct?.looseUnitsNumber || 0)
+                      totalStockByLotAndProduct?.looseUnitsNumber &&
+                      value > totalStockByLotAndProduct?.looseUnitsNumber
                     ) {
                       return t(
                         "The units number can't be higher than the loose stock"
@@ -580,6 +585,31 @@ export const CreateDispatchForm = ({
             render={({ field }) => <Input {...field} />}
           />
           {errors.description && (
+            <Box color="red">{t("This field is required")}</Box>
+          )}
+        </FormControl>
+        <FormControl mb={4}>
+          <FormLabel>{t("Dispatch Status")}</FormLabel>
+          <Controller
+            name="dispatchedStatus"
+            control={control}
+            defaultValue={
+              dispatchToEdit?.dispatchedStatus || DispatchedStatus.Pending
+            }
+            rules={{ required: true }}
+            render={({ field }) => (
+              <RadioGroup {...field} display={"flex"} gap={4} mt={4}>
+                {Object.values(DispatchedStatus).map((status) => {
+                  return (
+                    <Radio key={status} value={status}>
+                      {t(status)}
+                    </Radio>
+                  );
+                })}
+              </RadioGroup>
+            )}
+          />
+          {errors.dispatchedStatus && (
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>

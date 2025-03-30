@@ -31,7 +31,6 @@ import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
 import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useEffect, useState } from "react";
 import { Logger } from "utils/logger";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {

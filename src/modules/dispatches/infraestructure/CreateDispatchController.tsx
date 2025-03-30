@@ -8,11 +8,7 @@ import { useDispatches } from "./useDispatches";
 import { ISupplier, useSuppliers } from "modules/suppliers";
 import { useTransporters } from "modules/transporters/infrastructure";
 import { useProducts } from "modules/products/infrastructure";
-import {
-  getPlacesByProductIdAndLotId,
-  IPlace,
-  usePlaces,
-} from "modules/places/infra";
+import { usePlaces } from "modules/places/infra";
 import { useLots } from "modules/lots/infraestructure";
 import { useLotProductStock } from "modules/lotProduct/infraestructure";
 
@@ -26,6 +22,9 @@ import { ITransporter } from "modules/transporters/types";
 import { IProduct } from "modules/products/types";
 import { IProductEntry } from "modules/entries/types";
 import { getProductCompositeId } from "modules/entries/infraestructure";
+import { useNavigate } from "shared/Router";
+import { useQueryClient } from "@tanstack/react-query";
+import zIndex from "@mui/material/styles/zIndex";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -56,7 +55,9 @@ export const CreateDispatchController = ({
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
-
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { page, pageSize, lastVisible } = useDispatches();
   const {
     handleSubmit,
     control,
@@ -222,7 +223,22 @@ export const CreateDispatchController = ({
       dispatchDate: data.dispatchDate,
       deliveryDate: data.deliveryDate,
       docNumber: data.docNumber,
+      dispatchedStatus: data.dispatchedStatus, // Include the new field
       products: addedToDispatch,
+      // adding products name to the description
+      // the idea is to have a description with the product names
+      // and customer and transporter
+      description: `${[
+        ...new Set(
+          addedToDispatch.map(
+            (p) => uniqueProducts.find((up) => up.id === p.id)?.name
+          )
+        ),
+      ]
+        .filter(Boolean)
+        .join(", ")} - ${
+        suppliers.find((s) => s.id === data.supplierId)?.company
+      } - ${transporters.find((t) => t.id === data.transporterId)?.name}`,
     };
 
     try {
@@ -231,13 +247,23 @@ export const CreateDispatchController = ({
         if (!dispatchToEdit.id) {
           throw new ValidationError("Entry to edit has no id");
         }
-        await updateDispatchMutation({
-          dispatchId: dispatchToEdit.id,
-          values: dataToSubmit,
-        });
+        await updateDispatchMutation(
+          {
+            dispatchId: dispatchToEdit.id,
+            values: dataToSubmit,
+          },
+          {
+            onSuccess: async () => {
+              await queryClient.invalidateQueries({
+                queryKey: ["dispatches", page, pageSize, lastVisible],
+              });
+            },
+          }
+        );
       } else {
         await addDispatchMutation(dataToSubmit);
       }
+      navigate("/dispatches");
     } catch (error) {
       let errorMessage = "An unknown error occurred";
       if (error instanceof Error) {
@@ -248,6 +274,7 @@ export const CreateDispatchController = ({
         description: errorMessage,
         status: "error",
       });
+    } finally {
     }
   };
 
@@ -268,7 +295,6 @@ export const CreateDispatchController = ({
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
               onClick={() => {
-                Logger.info("params", [params, addedToDispatch]);
                 setAddedToDispatch((prev) => {
                   return prev.filter((p) => {
                     const uniqueId = getProductCompositeId(p);
