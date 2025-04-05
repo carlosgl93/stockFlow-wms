@@ -54,11 +54,11 @@ export const DispatchesList = ({ dispatches }: IProps) => {
           alignContent={"center"}
           h={"100%"}
         >
-          <IconButton
+          {/* <IconButton
             aria-label="View Details"
             icon={<SearchIcon />}
             onClick={() => redirect(`/dispatches/${params.row.id}`)}
-          />
+          /> */}
           <IconButton
             aria-label="Edit Dispatch"
             icon={<EditIcon />}
