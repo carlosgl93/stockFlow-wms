@@ -86,6 +86,10 @@ export const router = createBrowserRouter([
         lazy: () => import("./Dispatches/Create"),
       },
       {
+        path: "/dispatches/edit/:dispatchId",
+        lazy: () => import("./Dispatches/Edit"),
+      },
+      {
         path: "/stock",
         lazy: () => import("./Stock"),
       },

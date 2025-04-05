@@ -35,7 +35,6 @@ import { AppThemeProvider } from "theme/materialTheme";
 import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
-import { Logger } from "utils/logger";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
