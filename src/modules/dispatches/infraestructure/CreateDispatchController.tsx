@@ -156,7 +156,6 @@ export const CreateDispatchController = ({
       heightCMs,
       widthCMs,
     } = newDataToDispatch;
-    Logger.info("newDataToDispatch", [newDataToDispatch]);
     if (
       totalUnitsNumber === 0 ||
       totalUnitsNumber === undefined ||

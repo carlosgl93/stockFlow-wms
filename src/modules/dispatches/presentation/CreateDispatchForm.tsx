@@ -48,14 +48,12 @@ export const CreateDispatchForm = ({
     isSearchingTransporter,
     isSearchingProduct,
     searchResults,
-    willSpecifyPlace,
     suppliers,
     transporters,
     products,
     handleSubmit,
     control,
     errors,
-    trigger,
     watch,
     onSubmit,
     handleNewSupplier,
@@ -76,10 +74,7 @@ export const CreateDispatchForm = ({
     isLoadingGetPlaces,
     isLoadingAddDispatch,
     isLoadingUpdateDispatch,
-    toast,
     t,
-    addDispatchMutation,
-    updateDispatchMutation,
     setIsSearchingProduct,
     setIsSearchingSupplier,
     setIsSearchingTransporter,
@@ -92,17 +87,13 @@ export const CreateDispatchForm = ({
     rows,
     handleAddProductToDispatch,
     isSearchingLot,
-    lots,
     setLots,
     setIsSearchingLot,
     getProductLotsData,
-    isLoadingGetProductLots,
     setProductId,
-    setValue,
     setLotId,
     totalStockByLotAndProduct,
     isLoadingTotalStockByLotAndProduct,
-    isErrorTotalStockByLotAndProduct,
     productId,
   } = CreateDispatchController({ dispatchToEdit });
 
@@ -575,7 +566,7 @@ export const CreateDispatchForm = ({
             )}
           </FormControl>
         </Box>
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Description")}</FormLabel>
           <Controller
             name="description"
@@ -587,7 +578,7 @@ export const CreateDispatchForm = ({
           {errors.description && (
             <Box color="red">{t("This field is required")}</Box>
           )}
-        </FormControl>
+        </FormControl> */}
         <FormControl mb={4}>
           <FormLabel>{t("Dispatch Status")}</FormLabel>
           <Controller

@@ -82,9 +82,8 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     handleAddProductToEntry,
     selectedProduct,
     addedToEntry,
+    setSelectedProduct,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
-
-  Logger.info("selectedProduct", [selectedProduct, watch("productId")]);
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -265,8 +264,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   <Select
                     {...field}
                     onChange={(e) => {
-                      field.onChange(e); // Update the form state
-                      setIsSearchingProduct(false); // Close the search
+                      field.onChange(e);
+                      setIsSearchingProduct(false);
+                      setSelectedProduct(
+                        products.find(
+                          (product) => product.id === e.target.value
+                        ) || null
+                      );
                     }}
                   >
                     {products?.map((product) => (
@@ -454,7 +458,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             )}
           </FormControl>
         </Box>
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Description")}</FormLabel>
           <Controller
             name="description"
@@ -466,7 +470,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           {errors.description && (
             <Box color="red">{t("This field is required")}</Box>
           )}
-        </FormControl>
+        </FormControl> */}
         <Button onClick={handleAddProductToEntry} colorScheme="green">
           {t("Add product to the list")}
         </Button>

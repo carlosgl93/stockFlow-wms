@@ -4,8 +4,6 @@ import { Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useTranslate } from "utils";
 import { useNavigate } from "shared/Router";
-import { CreateEntryController } from "modules/entries/infraestructure";
-import { Logger } from "utils/logger";
 
 export const CreateEntryPage = () => {
   const { t } = useTranslate();

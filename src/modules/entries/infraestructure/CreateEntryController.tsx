@@ -22,7 +22,6 @@ import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
-import { Logger } from "utils/logger";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -118,7 +117,17 @@ export const CreateEntryController = ({
       supplierId,
       docNumber,
       transporterId,
-      description,
+      description: `${[
+        ...new Set(
+          addedToEntry.map((p) => products.find((up) => up.id === p.id)?.name)
+        ),
+      ]
+        .filter(Boolean)
+        .join(", ")} - ${
+        suppliers.find((s) => s.id === getValues("supplierId"))?.company
+      } - ${
+        transporters.find((t) => t.id === getValues("transporterId"))?.name
+      }`,
       productsToEnter: addedToEntry,
     };
   };
