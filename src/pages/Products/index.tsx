@@ -4,7 +4,6 @@ import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 import { useNotImplementedYetToast } from "shared/Toast";
 import { ProductsList } from "modules/products/presentation";
-import { withRequireAuth } from "modules/auth/application";
 import { useRedirect, useTranslate } from "utils";
 import { useProducts } from "modules/products/infrastructure";
 

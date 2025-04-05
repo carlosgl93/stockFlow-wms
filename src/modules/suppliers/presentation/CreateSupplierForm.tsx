@@ -15,6 +15,7 @@ import { ISupplier } from "../types/ISupplier";
 import { useTranslate } from "utils";
 import { Loading } from "shared/Layout";
 import { SupplierFixture } from "utils/fixtures";
+import { useLocation } from "shared/Router";
 
 export const CreateSupplierForm = ({
   supplierToEdit,
@@ -38,6 +39,12 @@ export const CreateSupplierForm = ({
   } = useForm<ISupplier>();
   const toast = useToast();
   const { t } = useTranslate();
+  const location = useLocation();
+  const CTAText = location.pathname.includes("dispatches/create")
+    ? t("Create Customer")
+    : supplierToEdit
+    ? t("Edit Supplier")
+    : t("Create Supplier");
 
   const onSubmit = async (data: ISupplier) => {
     const validation = await trigger();
@@ -264,7 +271,7 @@ export const CreateSupplierForm = ({
         disabled={isLoadingAddSupplier || isLoadingUpdateSupplier}
         mt={4}
       >
-        {supplierToEdit ? t("Edit Supplier") : t("Create Supplier")}
+        {CTAText}
       </Button>
     </Box>
   );

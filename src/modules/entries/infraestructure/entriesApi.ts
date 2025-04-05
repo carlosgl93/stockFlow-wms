@@ -428,8 +428,9 @@ export const updateEntry = async ({
 
           // Update stock quantities based on the difference
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber + unitsDifference,
-            looseUnitsNumber: stockData.looseUnitsNumber + looseUnitsDifference,
+            unitsNumber: stockData?.unitsNumber + unitsDifference,
+            looseUnitsNumber:
+              stockData?.looseUnitsNumber + looseUnitsDifference,
             updatedAt: dateVO.now(),
           });
 

@@ -3,7 +3,6 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { IProduct } from "../types";
 import { db, storage } from "shared/firebase";
 import { ValidationError } from "shared/Error";
-import { Logger } from "utils/logger";
 import { lowerAndTrim } from "utils";
 
 export const saveProduct = async (product: IProduct) => {

@@ -13,7 +13,10 @@ export const CreateLotForm = ({ lotToEdit }: { lotToEdit?: ILot }) => {
     updateLotMutation,
     isLoadingAddLot,
     isLoadingUpdateLot,
-  } = useLots();
+  } = useLots({
+    page: 1,
+    pageSize: 10,
+  });
   const {
     handleSubmit,
     control,

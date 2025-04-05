@@ -22,7 +22,7 @@ const PlacesList = ({ places }: IProps) => {
   const { removePlaceMutation, isLoadingRemovePlace } = usePlaces();
   const { t } = useTranslate();
 
-  if (places.length === 0) {
+  if (places?.length === 0) {
     return <EmptyStateResult />;
   }
 
@@ -66,20 +66,20 @@ const PlacesList = ({ places }: IProps) => {
       ),
     },
     { field: "name", headerName: "Name", width: 150 },
-    { field: "entryDate", headerName: "Entry Date", width: 150 },
-    { field: "departureDate", headerName: "Departure Date", width: 150 },
-    { field: "movementHistory", headerName: "Movement History", width: 200 },
+    // { field: "entryDate", headerName: "Entry Date", width: 150 },
+    // { field: "departureDate", headerName: "Departure Date", width: 150 },
+    // { field: "movementHistory", headerName: "Movement History", width: 200 },
   ];
 
-  const rows = places.map((place) => ({
+  const rows = places?.map((place) => ({
     id: place.id,
     name: place.name,
-    entryDate: place.entryDate,
-    departureDate: place.departureDate,
-    movementHistory: place.movementHistory,
+    // entryDate: place.entryDate,
+    // departureDate: place.departureDate,
+    // movementHistory: place.movementHistory,
   }));
 
-  if (places.length === 0) {
+  if (places?.length === 0) {
     return <EmptyStateResult />;
   }
 

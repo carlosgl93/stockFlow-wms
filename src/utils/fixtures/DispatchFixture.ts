@@ -1,7 +1,7 @@
-import { IDispatch } from "modules/dispatches/types";
+import { IDispatchForm } from "modules/dispatches/types";
 import { createFixture } from "./createFixture";
 
-export const DispatchFixture = createFixture<IDispatch>({
+export const DispatchFixture = createFixture<IDispatchForm>({
   id: "1",
   supplierId: "supplier-1",
   docNumber: "DOC12345",

@@ -1,22 +1,30 @@
+import { useMemo, useEffect, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import { useToast, useDisclosure, IconButton } from "@chakra-ui/react";
-import { usePlaces } from "modules/places/infra";
-import { useProducts } from "modules/products/infrastructure";
-import { IProduct } from "modules/products/types";
+import { useTranslate } from "utils";
+import { Logger } from "utils/logger";
+import { IDispatch, IDispatchForm, IDispatchRow } from "../types";
+import { useDispatches } from "./useDispatches";
 import { ISupplier, useSuppliers } from "modules/suppliers";
 import { useTransporters } from "modules/transporters/infrastructure";
-import { ITransporter } from "modules/transporters/types";
-import { useCallback, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { ValidationError } from "shared/Error";
-import { useTranslate } from "utils";
-import { DispatchFixture } from "utils/fixtures";
-import { IDispatch, IDispatchRow } from "../types";
-import { useDispatches } from "./useDispatches";
-import { Logger } from "utils/logger";
+import { useProducts } from "modules/products/infrastructure";
+import { usePlaces } from "modules/places/infra";
+import { useLots } from "modules/lots/infraestructure";
+import { useLotProductStock } from "modules/lotProduct/infraestructure";
+
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FlexBox } from "shared/Layout";
 import { DeleteIcon } from "@chakra-ui/icons";
+import { ValidationError } from "shared/Error";
+import { DispatchFixture } from "utils/fixtures";
+import { IStock } from "modules/stock/types";
+import { ITransporter } from "modules/transporters/types";
+import { IProduct } from "modules/products/types";
 import { IProductEntry } from "modules/entries/types";
+import { getProductCompositeId } from "modules/entries/infraestructure";
+import { useNavigate } from "shared/Router";
+import { useQueryClient } from "@tanstack/react-query";
+import zIndex from "@mui/material/styles/zIndex";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -27,12 +35,14 @@ export const CreateDispatchController = ({
   const [isSearchingSupplier, setIsSearchingSupplier] = useState(false);
   const [isSearchingTransporter, setIsSearchingTransporter] = useState(false);
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [isSearchingLot, setIsSearchingLot] = useState(false);
   const [searchResults, setSearchedResults] = useState<
-    null | (IProduct | ITransporter | ISupplier)[]
+    null | (IProduct | ITransporter | ISupplier | IStock)[]
   >(null);
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
   const [addedToDispatch, setAddedToDispatch] = useState<IProductEntry[]>([]);
-
+  const [productId, setProductId] = useState("");
+  const [lotId, setLotId] = useState("");
   const toast = useToast();
   const { t } = useTranslate();
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
@@ -41,10 +51,43 @@ export const CreateDispatchController = ({
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData, isFetching } = useProducts(5);
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
-
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
+  const [lots, setLots] = useState<IStock[]>([]);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { page, pageSize, lastVisible } = useDispatches();
+  const {
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors, isValid },
+    trigger,
+    watch,
+    getValues,
+    clearErrors,
+  } = useForm<IDispatchForm>();
+
+  const {
+    getLotsData,
+    isLoadingGetLots,
+    getProductLotsData,
+    isLoadingGetProductLots,
+  } = useLots({
+    productId,
+    pageSize: 10,
+    page: 1,
+  });
+
+  const {
+    totalStockByLotAndProduct,
+    isLoadingTotalStockByLotAndProduct,
+    isErrorTotalStockByLotAndProduct,
+  } = useLotProductStock({
+    productId: watch("productId"),
+    lotId: watch("lotId"),
+  });
 
   const {
     addDispatchMutation,
@@ -52,16 +95,6 @@ export const CreateDispatchController = ({
     isLoadingAddDispatch,
     isLoadingUpdateDispatch,
   } = useDispatches();
-
-  const {
-    handleSubmit,
-    control,
-    setValue,
-    formState: { errors },
-    trigger,
-    watch,
-    getValues,
-  } = useForm<IDispatch>();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -79,7 +112,6 @@ export const CreateDispatchController = ({
   const handleNewSupplier = useCallback(
     (newSupplier: ISupplier) => {
       setSuppliers((prev) => [...prev, newSupplier]);
-      Logger.info("new supplier", [newSupplier]);
       setValue("supplierId", newSupplier.id || "");
       onClose();
     },
@@ -105,7 +137,17 @@ export const CreateDispatchController = ({
   );
 
   const handleAddProductToDispatch = () => {
-    const newDataToDispatch = getValues(); // making the new product entry to add
+    if (!isValid) {
+      toast({
+        title: "Error",
+        description: `${t("Please fill/check all the fields")} ${t(
+          `fields to fill/check`
+        )}: ${Object.keys(errors).join(", ")}`,
+        status: "error",
+      });
+      return;
+    }
+    const newDataToDispatch = getValues();
     const {
       totalUnitsNumber,
       lotId,
@@ -152,11 +194,6 @@ export const CreateDispatchController = ({
       ) {
         setAddedToDispatch((prev) => [...prev, newProductToAdd]);
       }
-      setValue("lotId", "");
-      setValue("placeId", "");
-      setValue("palletNumber", "");
-      setValue("heightCMs", 0);
-      setValue("widthCMs", 0);
       setValue("unitsNumber", 0);
       setValue("looseUnitsNumber", 0);
       setValue("totalUnitsNumber", 0);
@@ -164,7 +201,7 @@ export const CreateDispatchController = ({
     }
   };
 
-  const onSubmit = async (data: IDispatch) => {
+  const onSubmit = async (data: IDispatchForm) => {
     const validation = await trigger();
 
     if (!validation) {
@@ -178,18 +215,54 @@ export const CreateDispatchController = ({
       return;
     }
 
+    const dataToSubmit = {
+      docType: data.docType,
+      supplierId: data.supplierId,
+      transporterId: data.transporterId,
+      dispatchDate: data.dispatchDate,
+      deliveryDate: data.deliveryDate,
+      docNumber: data.docNumber,
+      dispatchedStatus: data.dispatchedStatus, // Include the new field
+      products: addedToDispatch,
+      // adding products name to the description
+      // the idea is to have a description with the product names
+      // and customer and transporter
+      description: `${[
+        ...new Set(
+          addedToDispatch.map(
+            (p) => uniqueProducts.find((up) => up.id === p.id)?.name
+          )
+        ),
+      ]
+        .filter(Boolean)
+        .join(", ")} - ${
+        suppliers.find((s) => s.id === data.supplierId)?.company
+      } - ${transporters.find((t) => t.id === data.transporterId)?.name}`,
+    };
+
     try {
+      Logger.info("data", [data]);
       if (dispatchToEdit) {
         if (!dispatchToEdit.id) {
           throw new ValidationError("Entry to edit has no id");
         }
-        await updateDispatchMutation({
-          dispatchId: dispatchToEdit.id,
-          values: data,
-        });
+        await updateDispatchMutation(
+          {
+            dispatchId: dispatchToEdit.id,
+            values: dataToSubmit,
+          },
+          {
+            onSuccess: async () => {
+              await queryClient.invalidateQueries({
+                queryKey: ["dispatches", page, pageSize, lastVisible],
+              });
+            },
+          }
+        );
       } else {
-        await addDispatchMutation(data);
+        await addDispatchMutation(dataToSubmit);
       }
+      navigate("/dispatches");
     } catch (error) {
       let errorMessage = "An unknown error occurred";
       if (error instanceof Error) {
@@ -200,6 +273,7 @@ export const CreateDispatchController = ({
         description: errorMessage,
         status: "error",
       });
+    } finally {
     }
   };
 
@@ -215,29 +289,18 @@ export const CreateDispatchController = ({
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={notImplemented}
-          />
-          <IconButton
-            aria-label="Edit Entry"
-            icon={<EditIcon />}
-            onClick={notImplemented}
-          /> */}
           {
             <IconButton
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
-              onClick={
-                () => {}
-                // setAddedToEntry((prev) => {
-                //   return prev.filter((p) => {
-                //     const uniqueId = getProductCompositeId(p);
-                //     return uniqueId !== params.id;
-                //   });
-                // })
-              }
+              onClick={() => {
+                setAddedToDispatch((prev) => {
+                  return prev.filter((p) => {
+                    const uniqueId = getProductCompositeId(p);
+                    return uniqueId !== params.id;
+                  });
+                });
+              }}
             />
           }
         </FlexBox>
@@ -280,24 +343,31 @@ export const CreateDispatchController = ({
   }, [] as IDispatchRow[]);
 
   useEffect(() => {
+    // USE EFFECT TO SET THE VALUES OF THE FORM BASED ON THE DISPATCH TO EDIT OR A FIXTURE
     if (dispatchToEdit) {
       Object.keys(dispatchToEdit).forEach((key) => {
-        setValue(
-          key as keyof IDispatch,
-          dispatchToEdit[key as keyof IDispatch]
-        );
+        if (key === "products") {
+          setAddedToDispatch(dispatchToEdit.products);
+        } else {
+          setValue(
+            key as keyof IDispatchForm,
+            // @ts-ignore
+            dispatchToEdit[key as keyof IDispatch]
+          );
+        }
       });
       trigger();
     } else if (import.meta.env.MODE === "development") {
       const entry = DispatchFixture.toStructure();
       Object.keys(entry).forEach((key) => {
-        setValue(key as keyof IDispatch, entry[key as keyof IDispatch]);
+        setValue(key as keyof IDispatchForm, entry[key as keyof IDispatchForm]);
       });
       trigger();
     }
   }, [setValue, dispatchToEdit, trigger]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE SUPPLIERS AND DISCARD THE REPEATED ONES
     const uniqueSuppliers = [
       ...((searchResults as ISupplier[]) || []),
       ...(getSuppliersData?.suppliers || []),
@@ -311,6 +381,7 @@ export const CreateDispatchController = ({
   }, [searchResults, getSuppliersData?.suppliers, isOpen]);
 
   useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE TRANSPORTERS AND DISCARD THE REPEATED ONES
     const uniqueTransporters = [
       ...((searchResults as ITransporter[]) || []),
       ...(getTransporters || []),
@@ -328,23 +399,81 @@ export const CreateDispatchController = ({
     isOpenCreateTransporter,
   ]);
 
-  useEffect(() => {
-    const uniqueProducts = [
+  const uniqueProducts = useMemo(() => {
+    return [
       ...((searchResults as IProduct[]) || []),
       ...(getProductsData || []),
     ].filter(
       (product, index, self) =>
         index === self.findIndex((s) => s.id === product.id)
     );
+  }, [searchResults, getProductsData]);
+
+  useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE PRODUCTS AND DISCARD THE REPEATED ONES
     setProducts(uniqueProducts);
+    setProductId(uniqueProducts[0]?.id || "");
     setValue("productId", uniqueProducts[0]?.id || "");
+    trigger();
+  }, [uniqueProducts, isOpenCreateProduct]);
+
+  useEffect(() => {
+    // USE EFFECT TO ONLY RENDER UNIQUE LOTS AND DISCARD THE REPEATED ONES
+    const uniqueLots = [...((searchResults as IStock[]) || [])].filter(
+      (lot, index, self) => index === self.findIndex((s) => s.id === lot.id)
+    );
+    setLots(uniqueLots);
+    setValue("lotId", uniqueLots[0]?.lotId || "");
     trigger();
   }, [searchResults, getProductsData, isOpenCreateProduct]);
 
   useEffect(() => {
+    // USE EFFECT TO SET THE VALUE OF THE PLACE SELECTOR TO THE FIRST OPTION OF THE DB
     setValue("placeId", getPlacesData?.places[0]?.id || "");
     trigger();
   }, [getPlacesData]);
+
+  useEffect(() => {
+    // USE EFFECT TO SET THE VALUE OF THE LOT SELECTOR BASED ON THE JUST SELECTED PRODUCT
+    const lotId = getProductLotsData?.lots[0]?.lotId;
+    if (!getProductLotsData || !lotId) {
+      return;
+    }
+    setValue("lotId", lotId);
+    // setLotId(lotId);
+    trigger();
+  }, [productId, getProductLotsData]);
+
+  useEffect(() => {
+    clearErrors();
+  }, [
+    getSuppliersData,
+    getTransporters,
+    getProductsData,
+    getPlacesData,
+    getLotsData,
+    getProductLotsData,
+  ]);
+
+  useEffect(() => {
+    const { unitsNumber, looseUnitsNumber } = getValues();
+    if (
+      typeof unitsNumber === "number" &&
+      typeof looseUnitsNumber === "number"
+    ) {
+      setValue(
+        "totalUnitsNumber",
+        watch("unitsNumber") + watch("looseUnitsNumber")
+      );
+    } else {
+      setValue(
+        "totalUnitsNumber",
+        (parseInt(watch("unitsNumber") as unknown as string) || 0) +
+          (parseInt(watch("looseUnitsNumber") as unknown as string) || 0)
+      );
+    }
+  }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
+
   return {
     isLoading,
     isSearchingSupplier,
@@ -394,5 +523,19 @@ export const CreateDispatchController = ({
     columns,
     rows,
     handleAddProductToDispatch,
+    lots,
+    setLots,
+    isSearchingLot,
+    setIsSearchingLot,
+    getProductLotsData,
+    isLoadingGetLots,
+    isLoadingGetProductLots,
+    setProductId,
+    setValue,
+    setLotId,
+    totalStockByLotAndProduct,
+    isLoadingTotalStockByLotAndProduct,
+    isErrorTotalStockByLotAndProduct,
+    productId,
   };
 };

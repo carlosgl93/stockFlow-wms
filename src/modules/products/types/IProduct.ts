@@ -13,7 +13,7 @@ export interface IProduct {
   riskCategory: RiskCategory;
   category: Category;
   safetyDocument?: FileList | null;
-  selectionType: string;
+  selectionType: "box" | "unit";
   boxDetails?: {
     units: number;
     quantity: number;

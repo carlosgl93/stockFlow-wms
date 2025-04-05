@@ -18,4 +18,10 @@ export const stock = {
   Place: "Ubicación",
   "No products found": "No se encontraron productos",
   Balance: "Saldo",
+  "Start by searching for a product AND/OR lot":
+    "Empieza buscando un producto Y/O lote",
+  "Total Units:": "Total",
+  "Whole Units:": "Unidades enteras",
+  "Loose Units:": "Unidades sueltas",
+  "Place:": "Ubicación",
 };

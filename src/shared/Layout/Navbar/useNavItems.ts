@@ -17,11 +17,11 @@ export const NAV_ITEMS: Array<INavItem> = [
         subLabel: "Manage places of the warehouse",
         href: "/places",
       },
-      {
-        label: "Products per lot",
-        subLabel: "Check products location per lot",
-        href: "/lots-products",
-      },
+      // {
+      //   label: "Products per lot",
+      //   subLabel: "Check products location per lot",
+      //   href: "/lots-products",
+      // },
       {
         label: "Products inventory",
         subLabel: "Check products stock / inventory",

@@ -70,7 +70,10 @@ export const entries = {
   "All fields are required": "Todos los campos son obligatorios",
   "Check the fields, some are missing": "Revisa los campos, faltan algunos",
   "Add product to the list": "Agregar producto a la lista",
-  "Please add products to the entry": "Por favor, agrega productos al ingreso:",
+  "Please add products to the entry": "Por favor, agrega productos al ingreso",
   "Entry with this docNumber already exists.":
     "Ya existe un ingreso con este número de guía.",
+  "Are you sure you want to delete this entry?":
+    "¿Estás seguro de que deseas eliminar este ingreso?",
+  "Delete Entry": "Eliminar ingreso",
 };

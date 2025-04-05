@@ -32,7 +32,27 @@ export const dispatches = {
   Invoice: "Factura",
   Pending: "Pendiente",
   "Document type is required": "El tipo de documento es obligatorio",
-  Dispatched: "Dispatched",
-  Delivered: "Delivered",
-  Cancelled: "Cancelled",
+  Dispatched: "Despachado",
+  Delivered: "Entregado",
+  Cancelled: "Cancelado",
+  "Create Customer": "Crear Cliente",
+  "Available units for this lot and product:":
+    "Unidades disponibles para este lote y producto:",
+  "Available loose units for this lot and product:":
+    "Unidades sueltas disponibles para este lote y producto:",
+  "In stock": "En stock",
+  "Total in stock": "Total en stock",
+  "The units number can't be higher than the stock":
+    "El número de unidades no puede ser mayor que el stock",
+  "The units number can't be higher than the loose stock":
+    "El número de unidades no puede ser mayor que el stock suelto",
+  "The units number can't be higher than the stock and loose stock":
+    "El número de unidades no puede ser mayor que el stock y el stock suelto",
+  "Please fill/check all the fields":
+    "Por favor, complete/verifique todos los campos",
+  "fields to fill/check": `campos para completar/verificar`,
+  Actions: "Acciones",
+  Confirm: "Confirmar",
+  "Are you sure you want to remove this dispatch?":
+    "¿Está seguro de que desea eliminar este despacho?",
 };

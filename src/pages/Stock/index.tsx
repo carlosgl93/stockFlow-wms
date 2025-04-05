@@ -1,17 +1,5 @@
-import { AddIcon, SearchIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  Text,
-  FormControl,
-  FormLabel,
-  Select,
-} from "@chakra-ui/react";
-import { withRequireAuth } from "modules/auth/application";
-import {
-  fetchEntriesByProductId,
-  fetchEntriesByProductIdAndLotId,
-} from "modules/entries/infraestructure";
+import { Box, Text, FormControl, FormLabel, Select } from "@chakra-ui/react";
+import { fetchEntriesByProductIdAndLotId } from "modules/entries/infraestructure";
 import { IEntry } from "modules/entries/types";
 import { searchProduct } from "modules/products/infrastructure";
 import { IProduct } from "modules/products/types";
@@ -25,17 +13,21 @@ import { StockList } from "modules/stock/presentation";
 import { useEffect, useState } from "react";
 import { Search } from "shared/Form";
 import { FlexBox, FlexColumn, Loading, Page, PageHeader } from "shared/Layout";
-import { ErrorPageStrategy, Result } from "shared/Result";
-import { useNotImplementedYetToast } from "shared/Toast";
-import { useRedirect, useTranslate } from "utils";
+import {
+  EmptyStateResult,
+  ErrorPageStrategy,
+  LetsBegin,
+  Result,
+} from "shared/Result";
+import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { Controller, useForm } from "react-hook-form";
 import { IStock, ISuppsAndTrans } from "modules/stock/types";
 import { searchLot } from "modules/lots/infraestructure";
 import { getTransporterById } from "modules/transporters/infrastructure";
-import { ISupplier, getSupplierById } from "modules/suppliers";
-import { ITransporter } from "modules/transporters/types";
+import { getSupplierById } from "modules/suppliers";
 import { APIError } from "shared/Error";
+import { getPlaceById, IPlace } from "modules/places/infra";
 
 const StockPage = () => {
   const [productEntries, setProductEntries] = useState<IEntry[]>([]);
@@ -47,6 +39,7 @@ const StockPage = () => {
   const [lotsResults, setLotsResults] = useState<IStock[]>([]);
   const [lotSelected, setLotSelected] = useState("");
   const [suppsAndTrans, setSuppsAndTrans] = useState<ISuppsAndTrans>([]);
+  const [placesInfo, setPlacesInfo] = useState<IPlace[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
@@ -58,7 +51,6 @@ const StockPage = () => {
   const { control } = useForm();
   const { stockData, isLoadingGetStock } = useStock();
 
-  // fetch entries
   useEffect(() => {
     const fetchProductEntries = async () => {
       setIsFetchingEntries(true);
@@ -108,13 +100,13 @@ const StockPage = () => {
   // fetch transporter and supplier by id
   useEffect(() => {
     const fetchSupplierAndTransporter = async () => {
-      if (!productEntries.length) return;
+      if (!productEntries?.length) return;
 
       const uniqueSupplierIds = Array.from(
-        new Set(productEntries.map((entry) => entry.supplierId))
+        new Set(productEntries?.map((entry) => entry.supplierId))
       );
       const uniqueTransporterIds = Array.from(
-        new Set(productEntries.map((entry) => entry.transporterId))
+        new Set(productEntries?.map((entry) => entry.transporterId))
       );
 
       const supplierPromises = uniqueSupplierIds.map((id) => {
@@ -148,7 +140,27 @@ const StockPage = () => {
     fetchSupplierAndTransporter();
   }, [productEntries]);
 
-  // Logger.info("suppsAndTrans", suppsAndTrans);
+  useEffect(() => {
+    const fetchPlacesInfo = async () => {
+      // filter to get unique placesIDs
+      const uniquePlacesIds = Array.from(
+        new Set(
+          productEntries
+            ?.map((entry) => entry.productsToEnter.map((p) => p.placeId))
+            .flat()
+        )
+      );
+
+      // fetch places info
+      const placesPromises = uniquePlacesIds.map((id) => {
+        return getPlaceById(id!);
+      });
+
+      const placesInfo = await Promise.all(placesPromises);
+      setPlacesInfo(placesInfo);
+    };
+    fetchPlacesInfo();
+  }, [productEntries]);
 
   const renderProductsOptions = () => {
     const uniqueProducts = Array.from(
@@ -210,7 +222,19 @@ const StockPage = () => {
     }
   };
 
-  Logger.info("product entries and stock", { productEntries, productStock });
+  const renderLoading = () => {
+    if (isLoadingGetStock || isFetchingEntries) {
+      return <Loading size="md" />;
+    }
+  };
+
+  const renderLetsBegin = () => {
+    if (stockData?.length && !(setSearchedStockProduct || lotSelected)) {
+      return (
+        <LetsBegin headingText="Start by searching for a product AND/OR lot" />
+      );
+    }
+  };
 
   return (
     <Page>
@@ -299,16 +323,19 @@ const StockPage = () => {
           </FormControl>
         </Box>
       </PageHeader>
-      {isLoadingGetStock || isFetchingEntries ? (
-        <Loading size="md" />
-      ) : (
+      {renderLoading()}
+      {renderLetsBegin()}
+      {productEntries ? (
         <StockList
           entries={productEntries}
           stock={productStock}
           productId={searchedStockProduct}
           selectedLot={lotSelected}
           suppsAndTrans={suppsAndTrans}
+          placesInfo={placesInfo}
         />
+      ) : (
+        <EmptyStateResult />
       )}
     </Page>
   );

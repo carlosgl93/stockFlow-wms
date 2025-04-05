@@ -109,7 +109,7 @@ const DesktopSubNav = ({ label, href, subLabel }: INavItem) => {
   return (
     <ChLink
       href={href}
-      target="_blank"
+      // target="_blank"
       rel="noreferrer noopener"
       role="group"
       display="block"

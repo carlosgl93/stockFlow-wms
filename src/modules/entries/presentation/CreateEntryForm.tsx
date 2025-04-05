@@ -31,6 +31,7 @@ import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
 import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
+import { Logger } from "utils/logger";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const {
@@ -79,6 +80,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     rows,
     register,
     handleAddProductToEntry,
+    selectedProduct,
+    addedToEntry,
+    setSelectedProduct,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
@@ -260,8 +264,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   <Select
                     {...field}
                     onChange={(e) => {
-                      field.onChange(e); // Update the form state
-                      setIsSearchingProduct(false); // Close the search
+                      field.onChange(e);
+                      setIsSearchingProduct(false);
+                      setSelectedProduct(
+                        products.find(
+                          (product) => product.id === e.target.value
+                        ) || null
+                      );
                     }}
                   >
                     {products?.map((product) => (
@@ -304,7 +313,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   </FlexBox>
                 ) : (
                   <Select {...field}>
-                    {getPlacesData?.places.length === 0 ? (
+                    {getPlacesData?.places?.length === 0 ? (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
                       </option>
@@ -377,27 +386,29 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
-          <FormControl mb={4}>
-            <FormLabel>{t("Loose Units Number")}</FormLabel>
-            <Controller
-              name="looseUnitsNumber"
-              control={control}
-              defaultValue={0}
-              rules={{}}
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  {...field}
-                  {...register("looseUnitsNumber", {
-                    valueAsNumber: true,
-                  })}
-                />
+          {selectedProduct?.selectionType === "box" && (
+            <FormControl mb={4}>
+              <FormLabel>{t("Loose Units Number")}</FormLabel>
+              <Controller
+                name="looseUnitsNumber"
+                control={control}
+                defaultValue={0}
+                rules={{}}
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    {...field}
+                    {...register("looseUnitsNumber", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                )}
+              />
+              {errors.looseUnitsNumber && (
+                <Box color="red">{t("This field is required")}</Box>
               )}
-            />
-            {errors.looseUnitsNumber && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
+            </FormControl>
+          )}
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
@@ -447,7 +458,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             )}
           </FormControl>
         </Box>
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Description")}</FormLabel>
           <Controller
             name="description"
@@ -459,7 +470,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           {errors.description && (
             <Box color="red">{t("This field is required")}</Box>
           )}
-        </FormControl>
+        </FormControl> */}
         <Button onClick={handleAddProductToEntry} colorScheme="green">
           {t("Add product to the list")}
         </Button>
@@ -475,7 +486,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           type="submit"
           colorScheme="teal"
           disabled={
-            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts.length
+            isLoadingAddEntry || isLoadingUpdateEntry || !addedToEntry?.length
           }
         >
           {entryToEdit ? t("Edit Entry") : t("Create Entry")}

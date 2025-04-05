@@ -4,7 +4,7 @@ import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IProduct } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useRedirect, useTranslate } from "utils";
+import { capitalize, useRedirect, useTranslate } from "utils";
 import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
 
 interface IProps {
@@ -64,6 +64,7 @@ const ProductsList = ({ products }: IProps) => {
     { field: "extCode", headerName: t("Codigo Ext"), width: 100 },
     { field: "intCode", headerName: t("Codigo Int"), width: 100 },
     { field: "name", headerName: t("Name"), width: 150 },
+    { field: "boxType", headerName: t("Box / Unit"), width: 100 },
     { field: "units", headerName: t("Units"), width: 100 },
     {
       field: "container",
@@ -80,9 +81,10 @@ const ProductsList = ({ products }: IProps) => {
     extCode: product.extCode,
     intCode: product.internalCode,
     name: product.name,
-    category: product.category,
-    type: product.boxDetails?.type,
-    units: product.boxDetails?.units,
+    boxType: capitalize(t(product.selectionType)),
+    category: t(product.category),
+    type: t(product.boxDetails?.type || ""),
+    units: product.selectionType === "box" ? product.boxDetails?.units : 1,
     quantity: product.boxDetails?.quantity,
     unitsPerSurface: product.boxDetails?.unitsPerSurface,
     container: product.boxDetails?.container,
