@@ -2,7 +2,7 @@ import { Box, IconButton, useDisclosure } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState, useCallback } from "react";
 import { useEntries } from "./useEntries";
-import { useNotImplementedYetToast, useToast } from "shared/Toast";
+import { useToast } from "shared/Toast";
 import {
   EntryDTO,
   IEntry,
@@ -22,6 +22,7 @@ import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
+import { Logger } from "utils/logger";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -124,11 +125,21 @@ export const CreateEntryController = ({
 
   const onSubmit = async (data: IEntry) => {
     const validation = await trigger();
-    if (!validation && addedToEntry?.length === 0) {
+
+    if (!addedToEntry?.length) {
+      toast({
+        title: "Error",
+        description: `${t("Please add products to the entry")}`,
+        status: "error",
+      });
+      return;
+    }
+
+    if (!validation) {
       toast({
         title: "Error",
         description: `${t(
-          "Please add products to the entry"
+          "Please check the fields"
         )} fields to fill: ${Object.keys(errors).join(", ")}`,
         status: "error",
       });
@@ -222,6 +233,7 @@ export const CreateEntryController = ({
     );
     setProducts(uniqueProducts);
     setValue("productId", uniqueProducts[0]?.id || "");
+    setSelectedProduct(uniqueProducts[0] || null);
     trigger();
   }, [searchResults, getProductsData, isOpenCreateProduct]);
 
@@ -248,6 +260,25 @@ export const CreateEntryController = ({
       });
     }
   }, [entryToEdit]);
+
+  useEffect(() => {
+    const { unitsNumber, looseUnitsNumber } = getValues();
+    if (
+      typeof unitsNumber === "number" &&
+      typeof looseUnitsNumber === "number"
+    ) {
+      setValue(
+        "totalUnitsNumber",
+        watch("unitsNumber") + watch("looseUnitsNumber")
+      );
+    } else {
+      setValue(
+        "totalUnitsNumber",
+        (parseInt(watch("unitsNumber") as unknown as string) || 0) +
+          (parseInt(watch("looseUnitsNumber") as unknown as string) || 0)
+      );
+    }
+  }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
 
   let rows: IEntryRow[] = addedToEntry.reduce((acc, p) => {
     const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
@@ -387,15 +418,6 @@ export const CreateEntryController = ({
       trigger();
     }
   };
-
-  const product = watch("productId");
-
-  useEffect(() => {
-    const productData = products?.find((p) => p.id === product);
-    if (productData) {
-      setSelectedProduct(productData);
-    }
-  }, [product]);
 
   return {
     isLoading,

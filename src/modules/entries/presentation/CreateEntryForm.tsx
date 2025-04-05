@@ -81,13 +81,10 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     register,
     handleAddProductToEntry,
     selectedProduct,
+    addedToEntry,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
-  Logger.info("logs", {
-    suppliers,
-    transporters,
-    products,
-  });
+  Logger.info("selectedProduct", [selectedProduct, watch("productId")]);
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -485,7 +482,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           type="submit"
           colorScheme="teal"
           disabled={
-            isLoadingAddEntry || isLoadingUpdateEntry || !!addedProducts?.length
+            isLoadingAddEntry || isLoadingUpdateEntry || !addedToEntry?.length
           }
         >
           {entryToEdit ? t("Edit Entry") : t("Create Entry")}
