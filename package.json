@@ -14,7 +14,8 @@
     "storybook": "storybook dev -p 6006",
     "test-storybook": "pnpm exec test-storybook --watch",
     "build-storybook": "storybook build",
-    "emulators": "firebase emulators:start"
+    "emulators": "firebase emulators:start",
+    "deploy": "pnpm run build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
