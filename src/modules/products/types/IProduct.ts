@@ -14,19 +14,21 @@ export interface IProduct {
   category: Category;
   safetyDocument?: FileList | null;
   selectionType: "box" | "unit";
-  boxDetails?: {
-    units: number;
-    quantity: number;
-    unitOfMeasure: IUnitOfMeasure;
-    container: IContainer;
-    type: string;
-    kilos: number;
-    height: number;
-    width: number;
-    depth: number;
-    unitsPerSurface: number;
-    palletType: PalletType;
-  };
+  boxDetails?: IBoxDetails;
 }
+
+export type IBoxDetails = {
+  units: number;
+  quantity: number;
+  unitOfMeasure: IUnitOfMeasure;
+  container: IContainer;
+  type: string;
+  kilos: number;
+  height: number;
+  width: number;
+  depth: number;
+  unitsPerSurface: number;
+  palletType: PalletType;
+};
 
 export { PalletType as IPallet };

@@ -19,6 +19,7 @@ import {
   IPallet,
   IUnitOfMeasure,
   IMaterialType,
+  IBoxDetails,
 } from "../types";
 import { useToast } from "shared/Toast";
 import { ProductFixture } from "utils/fixtures";
@@ -93,6 +94,9 @@ export const CreateProductForm = ({
 
   const onSubmit = async (data: IProduct) => {
     const validation = await trigger();
+    if (data.selectionType === "box" && data.boxDetails) {
+      data.boxDetails.quantity = 0;
+    }
 
     if (!validation) {
       Logger.error("Form is not valid", [errors]);
@@ -146,8 +150,18 @@ export const CreateProductForm = ({
     }
 
     if (productToEdit) {
+      Logger.info("Product to edit", [productToEdit]);
+      reset();
       Object.keys(productToEdit).forEach((key) => {
         setValue(key as keyof IProduct, productToEdit[key as keyof IProduct]);
+        if (key === "boxDetails" && productToEdit.boxDetails) {
+          Object.keys(productToEdit.boxDetails).forEach((boxKey) => {
+            setValue(
+              `boxDetails.${boxKey}` as keyof IProduct,
+              productToEdit.boxDetails?.[boxKey as keyof IBoxDetails]
+            );
+          });
+        }
       });
       trigger();
       return;
@@ -314,11 +328,13 @@ export const CreateProductForm = ({
             render={({ field }) => (
               <Select {...field}>
                 <option value="">{t("Select Unit of Measure")}</option>
-                {Object.values(IUnitOfMeasure).map((measure) => (
-                  <option key={measure} value={measure}>
-                    {t(measure)}
-                  </option>
-                ))}
+                {Object.values(IUnitOfMeasure).map((measure) => {
+                  return (
+                    <option key={measure} value={measure}>
+                      {t(measure)}
+                    </option>
+                  );
+                })}
               </Select>
             )}
           />
