@@ -158,7 +158,7 @@ export const CreateProductForm = ({
           Object.keys(productToEdit.boxDetails).forEach((boxKey) => {
             setValue(
               `boxDetails.${boxKey}` as keyof IProduct,
-              productToEdit.boxDetails[boxKey as keyof IBoxDetails]
+              productToEdit.boxDetails?.[boxKey as keyof IBoxDetails]
             );
           });
         }

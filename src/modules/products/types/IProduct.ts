@@ -14,7 +14,7 @@ export interface IProduct {
   category: Category;
   safetyDocument?: FileList | null;
   selectionType: "box" | "unit";
-  boxDetails: IBoxDetails;
+  boxDetails?: IBoxDetails;
 }
 
 export type IBoxDetails = {
