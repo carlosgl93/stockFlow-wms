@@ -223,14 +223,14 @@ export const CreateProductForm = ({
         </FormControl>
       </Box>
       <Box display="flex" justifyContent="space-around" gap={16}>
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Price")}</FormLabel>
           <Controller
             name="price"
             control={control}
             render={({ field }) => <Input type="number" {...field} />}
           />
-        </FormControl>
+        </FormControl> */}
         <FormControl mb={4}>
           <FormLabel>{t("Risk Category")}</FormLabel>
           <Controller

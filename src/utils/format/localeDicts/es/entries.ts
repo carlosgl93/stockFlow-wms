@@ -76,4 +76,18 @@ export const entries = {
   "Are you sure you want to delete this entry?":
     "¿Estás seguro de que deseas eliminar este ingreso?",
   "Delete Entry": "Eliminar ingreso",
+  "Boxes Number": "N de cajas",
+  "Total of": "Total de",
+  has: "tiene",
+  per: "por",
+  "per box": "por caja",
+  "per unit": "por unidad",
+  Liter: "Litro",
+  "Each box is made up of": "Cada caja está compuesta por",
+  of: "de",
+  units: "unidades",
+  "Each unit is made up of": "Cada unidad está compuesta por",
+  "Boxes to enter": "N de cajas a ingresar",
+  "Units to enter": "N de unidades a ingresar",
+  "Loose units to enter": "N de unidades sueltas a ingresar",
 };

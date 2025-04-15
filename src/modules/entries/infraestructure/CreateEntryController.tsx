@@ -296,6 +296,9 @@ export const CreateEntryController = ({
         id: uniqueId,
         productName: products.find((pr) => pr.id === p.id)?.name || "",
         lot: p.lotId,
+        place:
+          getPlacesData.places.find((pl) => pl.id === p.placeId)?.name ||
+          "No se especificó",
         palletNumber: p.palletNumber,
         expirityDate: p.expirityDate || "",
         unitsNumber: p.unitsNumber,
@@ -310,7 +313,7 @@ export const CreateEntryController = ({
     {
       field: "actions",
       headerName: t("Actions"),
-      width: 100,
+      width: 75,
       renderCell: (params: GridRenderCellParams<IEntry>) => (
         <Box
           display="flex"
@@ -319,16 +322,6 @@ export const CreateEntryController = ({
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={notImplemented}
-          />
-          <IconButton
-            aria-label="Edit Entry"
-            icon={<EditIcon />}
-            onClick={notImplemented}
-          /> */}
           {
             <IconButton
               aria-label="Remove Entry"
@@ -346,19 +339,20 @@ export const CreateEntryController = ({
         </Box>
       ),
     },
-    { field: "productName", headerName: "Product", width: 150 },
-    { field: "lot", headerName: "Lot", width: 150 },
-    { field: "expirityDate", headerName: "Expiry Date", width: 150 },
-    { field: "palletNumber", headerName: "Pallet Number", width: 150 },
-    { field: "unitsNumber", headerName: "Units Number", width: 150 },
+    { field: "productName", headerName: t("Product"), width: 150 },
+    { field: "lot", headerName: t("Lot"), width: 100 },
+    { field: "place", headerName: t("Place"), width: 100 },
+    { field: "expirityDate", headerName: t("Expiry Date"), width: 150 },
+    { field: "palletNumber", headerName: t("Pallet Number"), width: 100 },
+    { field: "unitsNumber", headerName: t("Units Number"), width: 100 },
     {
       field: "looseUnitsNumber",
-      headerName: "Loose Units Number",
+      headerName: t("Loose Units Number"),
       width: 150,
     },
     {
       field: "totalUnitsNumber",
-      headerName: "Total Units Number",
+      headerName: t("Total Units Number"),
       width: 150,
     },
   ];

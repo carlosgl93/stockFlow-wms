@@ -11,6 +11,8 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
+  Tooltip,
+  Text,
 } from "@chakra-ui/react";
 import { Controller } from "react-hook-form";
 import { IEntry, IEntryForm } from "../types";
@@ -31,9 +33,14 @@ import { CreateTransporterForm } from "modules/transporters/presentation";
 import { DataGrid } from "@mui/x-data-grid";
 import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
+import { InfoIcon } from "@chakra-ui/icons";
+import { useState } from "react";
 import { Logger } from "utils/logger";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
+  const [showBoxTooltip, setShowBoxTooltip] = useState(false);
+  const [showUnitsTooltip, setShowUnitsTooltip] = useState(false);
+  const [showTotalTooltip, setShowTotalTooltip] = useState(false);
   const {
     isLoading,
     setIsLoading,
@@ -84,6 +91,38 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     addedToEntry,
     setSelectedProduct,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
+
+  const boxesTooltipLabel = `${t("Each box is made up of")} ${
+    selectedProduct?.boxDetails?.units
+  } ${t(selectedProduct?.boxDetails?.container || "").toLowerCase()} ${t(
+    "of"
+  )} ${selectedProduct?.boxDetails?.quantity}  ${t(
+    selectedProduct?.boxDetails?.unitOfMeasure || ""
+  ).toLowerCase()}${
+    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
+  } ${t("per")} `;
+
+  const unitsTooltipLabel = `${t(
+    "Each unit is made up of"
+  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${
+    selectedProduct?.boxDetails!.quantity
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}${
+    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
+  }`;
+
+  const looseUnitsTooltipLabel = `${t(
+    "Each unit is made up of"
+  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${t("of")} ${
+    selectedProduct?.boxDetails!.quantity
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}${
+    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
+  }`;
+
+  const totalValue =
+    selectedProduct?.selectionType === "box"
+      ? (selectedProduct?.boxDetails?.units || 0) * watch("unitsNumber") +
+        watch("looseUnitsNumber")
+      : (selectedProduct?.boxDetails?.quantity || 0) * watch("unitsNumber");
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -358,15 +397,51 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="palletNumber"
               control={control}
               defaultValue=""
-              rules={{}}
               render={({ field }) => <Input {...field} />}
             />
-            {errors.palletNumber && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
           </FormControl>
           <FormControl mb={4}>
-            <FormLabel>{t("Units Number")}</FormLabel>
+            <FlexBox>
+              {selectedProduct?.selectionType === "box" ? (
+                <>
+                  <FormLabel>{t("Boxes Number")}</FormLabel>
+                  <Tooltip
+                    label={boxesTooltipLabel}
+                    isOpen={showBoxTooltip}
+                    placement="top"
+                    hasArrow
+                  >
+                    <InfoIcon
+                      onMouseOver={() => {
+                        setShowBoxTooltip(true);
+                      }}
+                      onMouseOut={() => {
+                        setShowBoxTooltip(false);
+                      }}
+                    />
+                  </Tooltip>
+                </>
+              ) : (
+                <>
+                  <FormLabel>{t("Units Number")}</FormLabel>
+                  <Tooltip
+                    label={unitsTooltipLabel}
+                    isOpen={showUnitsTooltip}
+                    placement="top"
+                    hasArrow
+                  >
+                    <InfoIcon
+                      onMouseOver={() => {
+                        setShowUnitsTooltip(true);
+                      }}
+                      onMouseOut={() => {
+                        setShowUnitsTooltip(false);
+                      }}
+                    />
+                  </Tooltip>
+                </>
+              )}
+            </FlexBox>
             <Controller
               name="unitsNumber"
               control={control}
@@ -388,7 +463,24 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           </FormControl>
           {selectedProduct?.selectionType === "box" && (
             <FormControl mb={4}>
-              <FormLabel>{t("Loose Units Number")}</FormLabel>
+              <FlexBox>
+                <FormLabel>{t("Loose Units Number")}</FormLabel>
+                <Tooltip
+                  label={looseUnitsTooltipLabel}
+                  isOpen={showUnitsTooltip}
+                  placement="top"
+                  hasArrow
+                >
+                  <InfoIcon
+                    onMouseOver={() => {
+                      setShowUnitsTooltip(true);
+                    }}
+                    onMouseOut={() => {
+                      setShowUnitsTooltip(false);
+                    }}
+                  />
+                </Tooltip>
+              </FlexBox>
               <Controller
                 name="looseUnitsNumber"
                 control={control}
@@ -412,7 +504,43 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
-            <FormLabel>{t("Total Units Number")}</FormLabel>
+            <FlexBox>
+              <FormLabel>
+                {`${t("Total of")} ${t(
+                  selectedProduct?.boxDetails?.unitOfMeasure || ""
+                )}s`}{" "}
+              </FormLabel>
+              <Tooltip
+                label={
+                  selectedProduct?.selectionType === "box"
+                    ? `${t("Units per box")}: (${
+                        selectedProduct?.boxDetails?.units
+                      }) * ${t("Boxes to enter")}  (${watch(
+                        "unitsNumber"
+                      )}) + ${t("Loose units to enter")} (${watch(
+                        "looseUnitsNumber"
+                      )}) = ${totalValue} ${t(
+                        selectedProduct.boxDetails?.unitOfMeasure || ""
+                      )}s`
+                    : `${selectedProduct?.boxDetails?.quantity} ${t(
+                        selectedProduct?.boxDetails?.unitOfMeasure || ""
+                      )}s * ${watch("unitsNumber")}`
+                }
+                isOpen={showTotalTooltip}
+                placement="top"
+                hasArrow
+              >
+                <InfoIcon
+                  onMouseOver={() => {
+                    setShowTotalTooltip(true);
+                  }}
+                  onMouseOut={() => {
+                    setShowTotalTooltip(false);
+                  }}
+                />
+              </Tooltip>
+            </FlexBox>
+
             <Controller
               name="totalUnitsNumber"
               control={control}
@@ -424,9 +552,11 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   {...register("totalUnitsNumber", {
                     valueAsNumber: true,
                   })}
+                  value={totalValue}
                 />
               )}
             />
+
             {errors.totalUnitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
             )}
