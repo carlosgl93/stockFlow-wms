@@ -7,6 +7,7 @@ export interface IEntry {
   description: string; // equivalent to nota
   createdAt?: string;
   updatedAt?: string;
+  entryDate: string;
 }
 
 export interface IProductEntry {
@@ -43,4 +44,5 @@ export interface IEntryForm {
   description: string; // equivalent to nota
   createdAt?: string;
   updatedAt?: string;
+  entryDate: string;
 }

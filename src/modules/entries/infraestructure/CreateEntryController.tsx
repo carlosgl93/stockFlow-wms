@@ -111,12 +111,13 @@ export const CreateEntryController = ({
   );
 
   const makeEntryFromForm = (data: IEntry) => {
-    const { id, supplierId, docNumber, transporterId, description } = data;
+    const { id, supplierId, docNumber, transporterId, entryDate } = data;
     return {
       id,
       supplierId,
       docNumber,
       transporterId,
+      entryDate,
       description: `${[
         ...new Set(
           addedToEntry.map((p) => products.find((up) => up.id === p.id)?.name)

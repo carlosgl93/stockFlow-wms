@@ -90,4 +90,5 @@ export const entries = {
   "Boxes to enter": "N de cajas a ingresar",
   "Units to enter": "N de unidades a ingresar",
   "Loose units to enter": "N de unidades sueltas a ingresar",
+  "Entry Date": "Fecha de ingreso",
 };

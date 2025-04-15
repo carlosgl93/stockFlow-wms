@@ -7,4 +7,5 @@ export interface EntryDTO {
   transporterId: string;
   description: string;
   productsToEnter: IProductEntry[];
+  entryDate: string;
 }

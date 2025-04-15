@@ -12,7 +12,6 @@ import {
   ModalCloseButton,
   ModalBody,
   Tooltip,
-  Text,
 } from "@chakra-ui/react";
 import { Controller } from "react-hook-form";
 import { IEntry, IEntryForm } from "../types";
@@ -35,7 +34,7 @@ import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
 import { InfoIcon } from "@chakra-ui/icons";
 import { useState } from "react";
-import { Logger } from "utils/logger";
+import dayjs from "dayjs";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const [showBoxTooltip, setShowBoxTooltip] = useState(false);
@@ -386,6 +385,19 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               render={({ field }) => <Input {...field} type="date" />}
             />
             {errors.expirityDate && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FormLabel my={3}>{t("Entry Date")}</FormLabel>
+            <Controller
+              name="entryDate"
+              control={control}
+              defaultValue={dayjs().format("DD-MM-YYYY")}
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} type="date" />}
+            />
+            {errors.entryDate && (
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>

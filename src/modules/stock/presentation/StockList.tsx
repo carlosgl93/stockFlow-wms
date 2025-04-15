@@ -1,5 +1,5 @@
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { IStock, ISuppsAndTrans } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
 import { useRedirect, useTranslate } from "utils";
@@ -189,6 +189,20 @@ export const StockList = ({
           rowCount={rows.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          slots={{
+            noRowsOverlay: () => (
+              <FlexBox
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  alignContent: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text>{t("Start by searching for a product or lot")}</Text>
+              </FlexBox>
+            ),
+          }}
         />
       </AppThemeProvider>
     </Box>

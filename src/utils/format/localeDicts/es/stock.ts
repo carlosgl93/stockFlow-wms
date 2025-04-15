@@ -24,4 +24,6 @@ export const stock = {
   "Whole Units:": "Unidades enteras",
   "Loose Units:": "Unidades sueltas",
   "Place:": "Ubicación",
+  "Start by searching for a product or lot":
+    "Empieza buscando un producto o lote",
 };
