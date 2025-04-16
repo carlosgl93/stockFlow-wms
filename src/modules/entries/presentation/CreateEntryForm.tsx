@@ -50,7 +50,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     isSearchingProduct,
     setIsSearchingProduct,
     searchResults,
-    addedProducts,
     isLoadingGetSuppliers,
     isLoadingGetTransporters,
     isFetching,
@@ -265,6 +264,19 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
+          <FormControl mb={4}>
+            <FormLabel my={3}>{t("Entry Date")}</FormLabel>
+            <Controller
+              name="entryDate"
+              control={control}
+              defaultValue={dayjs().format("DD-MM-YYYY")}
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} type="date" />}
+            />
+            {errors.entryDate && (
+              <Box color="red">{t("This field is required")}</Box>
+            )}
+          </FormControl>
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
@@ -385,19 +397,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               render={({ field }) => <Input {...field} type="date" />}
             />
             {errors.expirityDate && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
-          <FormControl mb={4}>
-            <FormLabel my={3}>{t("Entry Date")}</FormLabel>
-            <Controller
-              name="entryDate"
-              control={control}
-              defaultValue={dayjs().format("DD-MM-YYYY")}
-              rules={{ required: true }}
-              render={({ field }) => <Input {...field} type="date" />}
-            />
-            {errors.entryDate && (
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
@@ -600,19 +599,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             )}
           </FormControl>
         </Box>
-        {/* <FormControl mb={4}>
-          <FormLabel>{t("Description")}</FormLabel>
-          <Controller
-            name="description"
-            control={control}
-            defaultValue=""
-            rules={{}}
-            render={({ field }) => <Input {...field} />}
-          />
-          {errors.description && (
-            <Box color="red">{t("This field is required")}</Box>
-          )}
-        </FormControl> */}
         <Button onClick={handleAddProductToEntry} colorScheme="green">
           {t("Add product to the list")}
         </Button>

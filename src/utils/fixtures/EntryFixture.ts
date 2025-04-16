@@ -17,5 +17,5 @@ export const EntryFixture = createFixture<IEntryForm>({
   heightCMs: 150,
   widthCMs: 100,
   description: "Sample entry description",
-  entryDate: "2023-10-01",
+  entryDate: "2025-04-15",
 });

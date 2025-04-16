@@ -91,4 +91,7 @@ export const entries = {
   "Units to enter": "N de unidades a ingresar",
   "Loose units to enter": "N de unidades sueltas a ingresar",
   "Entry Date": "Fecha de ingreso",
+  "Total units number is required": "Se requiere el número total de unidades",
+  "Lot is required": "Se requiere el lote",
+  "Expiry date is required": "Se requiere la fecha de caducidad",
 };

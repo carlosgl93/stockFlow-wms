@@ -103,33 +103,41 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       dispatch.id = dispatchRef.id;
 
       // Add or update LotProduct entry
-      // for (const product of dispatch.products) {
-      //   const lotProductQuery = query(
-      //     collection(db, "lotProducts"),
-      //     where("productId", "==", product.id),
-      //     where("lotId", "==", product.lotId)
-      //   );
-      //   const lotProductSnapshot = await getDocs(lotProductQuery);
+      for (const product of dispatch.products) {
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", product.id),
+          where("lotId", "==", product.lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
 
-      //   if (!lotProductSnapshot.empty) {
-      //     const lotProductRef = doc(
-      //       db,
-      //       "lotProducts",
-      //       lotProductSnapshot.docs[0].id
-      //     );
-      //     const lotProductData = lotProductSnapshot.docs[0].data();
-      //     transaction.update(lotProductRef, {
-      //       unitsNumber:
-      //         (lotProductData.unitsNumber || 0) - product.unitsNumber,
-      //       looseUnitsNumber:
-      //         (lotProductData.looseUnitsNumber || 0) - product.looseUnitsNumber,
-      //     });
-      //   } else {
-      //     throw new ValidationError(
-      //       "LotProduct entry not found for the given product and lot."
-      //     );
-      //   }
-      // }
+        if (!lotProductSnapshot.empty) {
+          const lotProductRef = doc(
+            db,
+            "lotProducts",
+            lotProductSnapshot.docs[0].id
+          );
+          const lotProductData = lotProductSnapshot.docs[0].data();
+          transaction.update(lotProductRef, {
+            unitsNumber:
+              (lotProductData.unitsNumber || 0) - product.unitsNumber,
+            looseUnitsNumber:
+              (lotProductData.looseUnitsNumber || 0) - product.looseUnitsNumber,
+          });
+        } else {
+          throw new ValidationError(
+            "LotProduct entry not found for the given product and lot."
+          );
+        }
+      }
+
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "dispatch",
+        ...dispatch,
+        createdAt: now,
+      });
 
       dispatch.createdAt = now;
       dispatch.dispatchedStatus = DispatchedStatus.Pending;
@@ -232,6 +240,14 @@ export const updateDispatch = async ({
         updatedAt: dateVO.now(),
       });
 
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "dispatch",
+        data: { ...values, id: dispatchDoc.id },
+        createdAt: dateVO.now(),
+      });
+
       return { ...values, id: dispatchDoc.id };
     });
   } catch (error) {
@@ -300,6 +316,14 @@ export const removeDispatch = async (dispatchId: string): Promise<void> => {
           }
         }
       }
+
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "dispatch",
+        data: { id: dispatchDoc.id, ...dispatchData },
+        createdAt: dateVO.now(),
+      });
 
       // Delete the dispatch
       transaction.delete(dispatchDocRef);

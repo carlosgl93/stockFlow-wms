@@ -22,6 +22,7 @@ import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
+import { Logger } from "utils/logger";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -358,36 +359,47 @@ export const CreateEntryController = ({
     },
   ];
 
-  const handleAddProductToEntry = () => {
-    const newDataToEntry = getValues(); // making the new product entry to add
-    const {
-      totalUnitsNumber,
-      lotId,
-      placeId,
-      expirityDate,
-      palletNumber,
-      heightCMs,
-      widthCMs,
-    } = newDataToEntry;
-    if (
-      totalUnitsNumber === 0 ||
-      totalUnitsNumber === undefined ||
-      lotId === "" ||
-      placeId === "" ||
-      expirityDate === "" ||
-      palletNumber === "" ||
-      heightCMs === 0 ||
-      widthCMs === 0
-    ) {
+  const validateProductToEnter = (product: IEntryForm) => {
+    const { totalUnitsNumber, lotId, expirityDate } = product;
+    if (totalUnitsNumber === 0 || totalUnitsNumber === undefined) {
       toast({
         title: "Error",
-        description: t("Check the fields, some are missing"),
+        description: t("Total units number is required"),
         status: "error",
         duration: 5000,
         isClosable: true,
       });
-      return;
-    } else {
+      return false;
+    }
+    if (lotId === "") {
+      toast({
+        title: "Error",
+        description: t("Lot is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
+    if (expirityDate === "") {
+      toast({
+        title: "Error",
+        description: t("Expiry date is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddProductToEntry = () => {
+    const newDataToEntry = getValues();
+    const { totalUnitsNumber, lotId, placeId, expirityDate } = newDataToEntry;
+    Logger.info("data", newDataToEntry);
+
+    if (validateProductToEnter(newDataToEntry)) {
       const newProductToAdd: IProductEntry = {
         id: getValues("productId"),
         unitsNumber: getValues("unitsNumber"),

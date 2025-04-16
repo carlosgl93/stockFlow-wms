@@ -123,6 +123,14 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
         createdAt: now,
       });
 
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "entry",
+        ...entry,
+        createdAt: now,
+      });
+
       // Process each product in productsToEnter
       for (const product of entry.productsToEnter) {
         // Validate or generate lotId
@@ -294,6 +302,14 @@ export const updateEntry = async ({
         transporterId: values.transporterId,
         description: values.description,
         updatedAt: dateVO.now(),
+      });
+
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "entry",
+        data: values,
+        createdAt: dateVO.now(),
       });
 
       // Get existing products in the subcollection
@@ -655,6 +671,14 @@ export const removeEntry = async (entryId: string): Promise<void> => {
         );
         transaction.delete(productEntryRef);
       }
+
+      // Add to historicMovements collection
+      const historicMovementsRef = collection(db, "historicMovements");
+      await addDoc(historicMovementsRef, {
+        type: "entry",
+        data: entryData,
+        createdAt: dateVO.now(),
+      });
 
       // Delete the entry
       transaction.delete(entryDocRef);
