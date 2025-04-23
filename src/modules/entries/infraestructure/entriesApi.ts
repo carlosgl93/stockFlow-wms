@@ -121,6 +121,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
         transporterId: entry.transporterId,
         description: entry.description,
         createdAt: now,
+        productsIds: entry.productsToEnter.map((product) => product.id), // Add entryIds array
       });
 
       // Add to historicMovements collection
@@ -128,6 +129,8 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       await addDoc(historicMovementsRef, {
         type: "entry",
         ...entry,
+        products: entry.productsToEnter,
+        productsIds: entry.productsToEnter.map((product) => product.id),
         createdAt: now,
       });
 
@@ -302,13 +305,14 @@ export const updateEntry = async ({
         transporterId: values.transporterId,
         description: values.description,
         updatedAt: dateVO.now(),
+        entryIds: values.productsToEnter.map((product) => product.id), // Update entryIds array
       });
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
-        data: values,
+        data: { ...values, products: values.productsToEnter },
         createdAt: dateVO.now(),
       });
 
@@ -676,7 +680,7 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
-        data: entryData,
+        data: { ...entryData, products: entryData.productsToEnter },
         createdAt: dateVO.now(),
       });
 

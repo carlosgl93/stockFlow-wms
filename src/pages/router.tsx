@@ -110,6 +110,10 @@ export const router = createBrowserRouter([
         path: "/labeling",
         lazy: () => import("./Labeling"),
       },
+      {
+        path: "/historic",
+        lazy: () => import("./HistoricMovements"),
+      },
     ],
   },
 ]);

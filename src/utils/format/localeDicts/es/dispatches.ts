@@ -55,4 +55,6 @@ export const dispatches = {
   Confirm: "Confirmar",
   "Are you sure you want to remove this dispatch?":
     "¿Está seguro de que desea eliminar este despacho?",
+  dispatch: "despacho",
+  "Created At": "Fecha",
 };

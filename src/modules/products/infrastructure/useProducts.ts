@@ -12,6 +12,7 @@ import {
   getDocs,
   getCountFromServer,
   limit as queryLimit,
+  where,
 } from "firebase/firestore";
 import { db } from "shared/firebase";
 import { IProduct } from "../types";
@@ -19,7 +20,7 @@ import { IQueryParams } from "types";
 import { useMutation } from "@tanstack/react-query";
 import { saveProduct } from "./saveProduct";
 import { Logger } from "utils/logger";
-import { ValidationError } from "shared/Error";
+import { APIError, ValidationError } from "shared/Error";
 import { useToast } from "shared/Toast";
 const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
@@ -67,6 +68,18 @@ export const useProducts = (pageSize: number = 10, page: number = 1) => {
     },
   });
 
+  const searchProducts = async (name: string) => {
+    try {
+      const productsRef = collection(db, "products");
+      const q = query(productsRef, where("name", "==", name));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      Logger.error("Failed to search products", { error });
+      throw new APIError("Failed to search products", error);
+    }
+  };
+
   const {
     mutate: saveProductMutation,
     isLoading: saveProductIsLoading,
@@ -113,5 +126,6 @@ export const useProducts = (pageSize: number = 10, page: number = 1) => {
     isError,
     error,
     saveProductIsSuccess,
+    searchProducts,
   };
 };

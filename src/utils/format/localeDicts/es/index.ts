@@ -9,6 +9,7 @@ import { products } from "./products";
 import { dispatches } from "./dispatches";
 import { validation } from "./validation";
 import { transporters } from "./transporters";
+import { historicMovements } from "./historicMovements";
 
 export const es = {
   ...home,
@@ -22,5 +23,6 @@ export const es = {
   ...dispatches,
   ...validation,
   ...transporters,
+  ...historicMovements,
   "Field is required.": "Este campo es requirido.",
 };

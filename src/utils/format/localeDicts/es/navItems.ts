@@ -17,4 +17,6 @@ export const navItems = {
   "Rearrange products location": "Reorganizar ubicación de productos",
   Labeling: "Etiquetado",
   Cancel: "Cancelar",
+  "Historic Inventory": "Inventario Histórico",
+  "Check the inventory history": "Verificar el historial de inventario",
 };

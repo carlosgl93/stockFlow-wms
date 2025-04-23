@@ -99,7 +99,10 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       }
 
       delete dispatch.id;
-      const dispatchRef = await addDoc(dispatchesRef, dispatch);
+      const dispatchRef = await addDoc(dispatchesRef, {
+        ...dispatch,
+        productsIds: dispatch.products.map((product) => product.id), // Add dispatchIds array
+      });
       dispatch.id = dispatchRef.id;
 
       // Add or update LotProduct entry
@@ -136,6 +139,7 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       await addDoc(historicMovementsRef, {
         type: "dispatch",
         ...dispatch,
+        productsIds: dispatch.products.map((product) => product.id),
         createdAt: now,
       });
 
@@ -237,6 +241,7 @@ export const updateDispatch = async ({
       // Update dispatch
       transaction.update(dispatchDocRef, {
         ...values,
+        productsIds: values.products.map((product) => product.id), // Update dispatchIds array
         updatedAt: dateVO.now(),
       });
 
