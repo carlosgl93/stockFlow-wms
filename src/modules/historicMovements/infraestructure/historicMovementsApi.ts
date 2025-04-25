@@ -20,6 +20,7 @@ export interface IHistoricMovement {
   type: string;
   data: Array<IEntry | IDispatch>;
   createdAt: string;
+  [string: string]: string | number | Array<IEntry | IDispatch>;
 }
 
 export const fetchHistoricMovements = async (

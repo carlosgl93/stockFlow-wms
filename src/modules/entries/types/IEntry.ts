@@ -3,7 +3,7 @@ export interface IEntry {
   supplierId: string;
   docNumber: string;
   transporterId: string;
-  productsToEnter: IProductEntry[];
+  products: IProductEntry[];
   description: string; // equivalent to nota
   createdAt?: string;
   updatedAt?: string;

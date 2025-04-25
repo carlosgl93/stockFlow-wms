@@ -57,4 +57,7 @@ export const dispatches = {
     "¿Está seguro de que desea eliminar este despacho?",
   dispatch: "despacho",
   "Created At": "Fecha",
+  "Units Number": "N° Unidades",
+  "Loose Units Number": "N° Un. Sueltas",
+  "Total Units Number": "Un. Totales",
 };

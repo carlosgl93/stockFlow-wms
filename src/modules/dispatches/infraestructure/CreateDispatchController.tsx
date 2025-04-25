@@ -24,7 +24,6 @@ import { IProductEntry } from "modules/entries/types";
 import { getProductCompositeId } from "modules/entries/infraestructure";
 import { useNavigate } from "shared/Router";
 import { useQueryClient } from "@tanstack/react-query";
-import zIndex from "@mui/material/styles/zIndex";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -310,15 +309,15 @@ export const CreateDispatchController = ({
     { field: "intCode", headerName: t("Internal Code"), width: 150 },
     { field: "productName", headerName: t("Product Name"), width: 150 },
 
-    { field: "unitsNumber", headerName: "Units Number", width: 150 },
+    { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
     {
       field: "looseUnitsNumber",
-      headerName: "Loose Units Number",
+      headerName: t("Loose Units Number"),
       width: 150,
     },
     {
       field: "totalUnitsNumber",
-      headerName: "Total Units Number",
+      headerName: t("Total Units Number"),
       width: 150,
     },
   ];

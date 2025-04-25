@@ -6,11 +6,25 @@ import { AppThemeProvider } from "theme/materialTheme";
 import { IHistoricMovement } from "../infraestructure";
 import { capitalize, useTranslate } from "utils";
 import dayjs from "dayjs";
-import { IProductEntry } from "modules/entries/types";
+import { IEntry, IProductEntry } from "modules/entries/types";
 import * as XLSX from "xlsx";
+import { IDispatch } from "modules/dispatches/types";
 
-const exportToExcel = (data: IHistoricMovement[]) => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
+const exportToExcel = (data: IHistoricMovement[], columns: GridColDef[]) => {
+  const formattedData = data.map((row) => {
+    const formattedRow: Record<
+      string,
+      string | number | Array<IEntry | IDispatch>
+    > = {};
+    columns.forEach((column) => {
+      if (column.field && column.headerName) {
+        formattedRow[column.headerName] = row[column.field];
+      }
+    });
+    return formattedRow;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(formattedData);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Historic Movements");
   XLSX.writeFile(workbook, "HistoricMovements.xlsx");
@@ -107,7 +121,11 @@ export const HistoricMovementsList = ({
   return (
     <Box height={400} width="100%">
       <AppThemeProvider>
-        <Button onClick={() => exportToExcel(rows)} mb={4} colorScheme="blue">
+        <Button
+          onClick={() => exportToExcel(rows, columns)}
+          mb={4}
+          colorScheme="blue"
+        >
           Export to Excel
         </Button>
         <DataGrid

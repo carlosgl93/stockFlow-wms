@@ -77,14 +77,14 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       }
 
       // Prepare reads for products and places
-      const productRefs = entry.productsToEnter.map((product) =>
+      const productRefs = entry.products.map((product) =>
         doc(db, "products", product.id)
       );
       const productDocs = await Promise.all(
         productRefs.map((ref) => transaction.get(ref))
       );
 
-      const placeRefs = entry.productsToEnter
+      const placeRefs = entry.products
         .filter(
           (product) =>
             product.placeId !== "" &&
@@ -99,7 +99,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       productDocs.forEach((productDoc, index) => {
         if (!productDoc.exists()) {
           Logger.info("Product not found", {
-            productId: entry.productsToEnter[index].id,
+            productId: entry.products[index].id,
           });
           throw new ValidationError("Invalid productId.");
         }
@@ -108,7 +108,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       placeDocs.forEach((placeDoc, index) => {
         if (!placeDoc.exists()) {
           Logger.info("PlaceId not found", {
-            placeId: entry.productsToEnter[index].placeId,
+            placeId: entry.products[index].placeId,
           });
           throw new ValidationError("Invalid placeId.");
         }
@@ -121,7 +121,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
         transporterId: entry.transporterId,
         description: entry.description,
         createdAt: now,
-        productsIds: entry.productsToEnter.map((product) => product.id), // Add entryIds array
+        productsIds: entry.products.map((product) => product.id), // Add entryIds array
       });
 
       // Add to historicMovements collection
@@ -129,13 +129,13 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       await addDoc(historicMovementsRef, {
         type: "entry",
         ...entry,
-        products: entry.productsToEnter,
-        productsIds: entry.productsToEnter.map((product) => product.id),
+        products: entry.products,
+        productsIds: entry.products.map((product) => product.id),
         createdAt: now,
       });
 
       // Process each product in productsToEnter
-      for (const product of entry.productsToEnter) {
+      for (const product of entry.products) {
         // Validate or generate lotId
         let lotId = product.lotId || doc(collection(db, "lots")).id;
         if (!lotId) {
@@ -261,14 +261,14 @@ export const updateEntry = async ({
       const entryData = entryDoc.data() as IEntry;
 
       // Prepare reads for products and places
-      const productRefs = values.productsToEnter.map((product) =>
+      const productRefs = values.products.map((product) =>
         doc(db, "products", product.id)
       );
       const productDocs = await Promise.all(
         productRefs.map((ref) => transaction.get(ref))
       );
 
-      const placeRefs = values.productsToEnter
+      const placeRefs = values.products
         .filter(
           (product) =>
             product.placeId !== "" &&
@@ -283,7 +283,7 @@ export const updateEntry = async ({
       productDocs.forEach((productDoc, index) => {
         if (!productDoc.exists()) {
           Logger.info("Product not found", {
-            productId: values.productsToEnter[index].id,
+            productId: values.products[index].id,
           });
           throw new ValidationError("Invalid productId.");
         }
@@ -292,7 +292,7 @@ export const updateEntry = async ({
       placeDocs.forEach((placeDoc, index) => {
         if (!placeDoc.exists()) {
           Logger.info("PlaceId not found", {
-            placeId: values.productsToEnter[index].placeId,
+            placeId: values.products[index].placeId,
           });
           throw new ValidationError("Invalid placeId.");
         }
@@ -305,14 +305,14 @@ export const updateEntry = async ({
         transporterId: values.transporterId,
         description: values.description,
         updatedAt: dateVO.now(),
-        entryIds: values.productsToEnter.map((product) => product.id), // Update entryIds array
+        entryIds: values.products.map((product) => product.id), // Update entryIds array
       });
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
-        data: { ...values, products: values.productsToEnter },
+        data: { ...values, products: values.products },
         createdAt: dateVO.now(),
       });
 
@@ -327,7 +327,7 @@ export const updateEntry = async ({
       // Identify products to remove
       const productsToRemove = existingProducts.filter(
         (existingProduct) =>
-          !values.productsToEnter.some(
+          !values.products.some(
             (product) =>
               getProductCompositeId(product) ===
               getProductCompositeId(existingProduct)
@@ -393,7 +393,7 @@ export const updateEntry = async ({
       }
 
       // Process each product in productsToEnter
-      for (const product of values.productsToEnter) {
+      for (const product of values.products) {
         // Validate or generate lotId
         let lotId = product.lotId || doc(collection(db, "lots")).id;
         if (!lotId) {
@@ -528,9 +528,7 @@ export const updateEntry = async ({
       // Delete products that are no longer in the updated entry
       for (const existingProduct of existingProducts) {
         if (
-          !values.productsToEnter.some(
-            (product) => product.id === existingProduct.id
-          )
+          !values.products.some((product) => product.id === existingProduct.id)
         ) {
           const productEntryRef = doc(
             collection(db, "entries", entryDocRef.id, "products"),
@@ -680,7 +678,7 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
-        data: { ...entryData, products: entryData.productsToEnter },
+        data: { ...entryData, products: entryData.products },
         createdAt: dateVO.now(),
       });
 
@@ -710,7 +708,11 @@ export const getEntryById = async (entryId: string): Promise<IEntry> => {
       })
     ) as IProductEntry[];
 
-    return { id: entryDoc.id, ...(entryDoc.data() as IEntry), productsToEnter };
+    return {
+      id: entryDoc.id,
+      ...(entryDoc.data() as IEntry),
+      products: productsToEnter,
+    };
   } catch (error) {
     throw new APIError("Failed to get entry", error);
   }

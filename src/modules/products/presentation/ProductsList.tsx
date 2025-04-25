@@ -10,9 +10,10 @@ import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
 interface IProps {
   products: IProduct[];
   pageSize?: number;
+  isPreview?: boolean;
 }
 
-const ProductsList = ({ products }: IProps) => {
+const ProductsList = ({ products, isPreview }: IProps) => {
   const redirect = useRedirect();
   const { removeProductMutation, isLoadingRemoveProduct } = useCRUDProducts();
   const { t } = useTranslate();
@@ -76,22 +77,38 @@ const ProductsList = ({ products }: IProps) => {
     { field: "category", headerName: t("Category"), width: 100 },
   ];
 
-  const rows = products.map((product) => ({
-    id: product.id,
+  const rows = products.map((product, i) => ({
+    id: `${product.id}-${i}`,
     extCode: product.extCode,
     intCode: product.internalCode,
     name: product.name,
-    boxType: capitalize(t(product.selectionType)),
-    category: t(product.category),
+    boxType: capitalize(t(product.selectionType || "")),
+    category: t(product.category || ""),
     type: t(product.boxDetails?.type || ""),
     units: product.selectionType === "box" ? product.boxDetails?.units : 1,
-    quantity: product.boxDetails?.quantity,
+    quantity: `${product.boxDetails?.quantity} ${t(
+      product.boxDetails?.unitOfMeasure || ""
+    )}${(product.boxDetails?.quantity || 0) > 1 ? "s" : ""}
+    `,
     unitsPerSurface: product.boxDetails?.unitsPerSurface,
     container: product.boxDetails?.container,
   }));
 
   return (
     <Box height={400} width="100%">
+      {isPreview && (
+        <Box
+          bgColor={"orange.400"}
+          p={2}
+          mb={4}
+          display="flex"
+          justifyContent={"center"}
+        >
+          <Box fontSize={"lg"} fontWeight={"bold"}>
+            {t("Preview from Excel")}
+          </Box>
+        </Box>
+      )}
       <AppThemeProvider>
         <DataGrid rows={rows} columns={columns} rowCount={products?.length} />
       </AppThemeProvider>

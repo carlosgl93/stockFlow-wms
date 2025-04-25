@@ -125,12 +125,8 @@ export const CreateEntryController = ({
         ),
       ]
         .filter(Boolean)
-        .join(", ")} - ${
-        suppliers.find((s) => s.id === getValues("supplierId"))?.company
-      } - ${
-        transporters.find((t) => t.id === getValues("transporterId"))?.name
-      }`,
-      productsToEnter: addedToEntry,
+        .join(", ")}`,
+      products: addedToEntry,
     };
   };
 
@@ -187,7 +183,7 @@ export const CreateEntryController = ({
   useEffect(() => {
     if (entryToEdit) {
       (Object.keys(entryToEdit) as (keyof IEntry)[]).forEach((key) => {
-        if (key !== "productsToEnter") {
+        if (key !== "products") {
           setValue(key, entryToEdit[key]);
         }
       });
@@ -195,7 +191,7 @@ export const CreateEntryController = ({
     } else if (import.meta.env?.MODE === "development") {
       const entry = EntryFixture.toStructure();
       (Object.keys(entry) as (keyof IEntry)[]).forEach((key) => {
-        if (key !== "productsToEnter") {
+        if (key !== "products") {
           setValue(key, entry[key]);
         }
       });
@@ -254,8 +250,8 @@ export const CreateEntryController = ({
   }, [getPlacesData]);
 
   useEffect(() => {
-    if (entryToEdit?.productsToEnter) {
-      entryToEdit.productsToEnter.forEach((p) => {
+    if (entryToEdit?.products) {
+      entryToEdit.products.forEach((p) => {
         setAddedToEntry((prev) => {
           const existingEntry = prev.find(
             (entry) =>

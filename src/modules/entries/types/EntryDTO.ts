@@ -6,6 +6,6 @@ export interface EntryDTO {
   docNumber: string;
   transporterId: string;
   description: string;
-  productsToEnter: IProductEntry[];
+  products: IProductEntry[];
   entryDate: string;
 }

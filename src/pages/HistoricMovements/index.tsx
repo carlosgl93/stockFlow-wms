@@ -9,8 +9,6 @@ import { searchProduct } from "modules/products/infrastructure";
 import { useEffect, useState } from "react";
 import { IProduct } from "modules/products/types";
 import { Controller, useForm } from "react-hook-form";
-import { Logger } from "utils/logger";
-import { useHistoricMovements } from "modules/historicMovements/infraestructure/useHistoricMovements";
 
 const HistoricMovements = () => {
   const redirect = useRedirect();
@@ -135,7 +133,7 @@ const HistoricMovements = () => {
             <FormControl mb={4}>
               <FormLabel>{t("Type")}</FormLabel>
               <Select onChange={handleTypeChange} value={selectedType || ""}>
-                <option value="">{t("All Types")}</option>
+                <option value="">{t("All")}</option>
                 <option value="entry">{t("Entries")}</option>
                 <option value="dispatch">{t("Dispatches")}</option>
               </Select>

@@ -133,16 +133,16 @@ ERD:
 |                       | - address: string          |                 |
 |                       | - contact: IContact        |                 |
 
-| Transporter    | Entry                              |
-| -------------- | ---------------------------------- |
-| - id: string   | - id: string                       |
-| - name: string | - supplierId: string               |
-|                | - docNumber: string                |
-|                | - transporterId: string            |
-|                | - productsToEnter: IProductEntry[] |
-|                | - description: string              |
-|                | - createdAt?: string               |
-|                | - updatedAt?: string               |
+| Transporter    | Entry                       |
+| -------------- | --------------------------- |
+| - id: string   | - id: string                |
+| - name: string | - supplierId: string        |
+|                | - docNumber: string         |
+|                | - transporterId: string     |
+|                | - products: IProductEntry[] |
+|                | - description: string       |
+|                | - createdAt?: string        |
+|                | - updatedAt?: string        |
 
 | IProductEntry              |
 | -------------------------- |

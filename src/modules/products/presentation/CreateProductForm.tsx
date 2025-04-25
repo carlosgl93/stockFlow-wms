@@ -112,11 +112,11 @@ export const CreateProductForm = ({
     // Handle form submission logic here
     if (data.boxDetails) {
       data.boxDetails.unitsPerSurface = calculateUnitsPerSurface(
-        data.boxDetails.palletType,
+        data.boxDetails?.palletType || IPallet.Standard,
         {
-          width: data.boxDetails.width,
-          height: data.boxDetails.height,
-          depth: data.boxDetails.depth,
+          width: data.boxDetails.width || 1,
+          height: data.boxDetails.height || 1,
+          depth: data.boxDetails.depth || 1,
         }
       );
     }
@@ -499,9 +499,9 @@ export const CreateProductForm = ({
                   setValue(
                     "boxDetails.unitsPerSurface",
                     calculateUnitsPerSurface(watch("boxDetails.palletType"), {
-                      width: watch("boxDetails.width"),
-                      height: value,
-                      depth: watch("boxDetails.depth"),
+                      width: watch("boxDetails.width") || 1,
+                      height: value || 1,
+                      depth: watch("boxDetails.depth") || 1,
                     })
                   );
                 }}
@@ -524,8 +524,8 @@ export const CreateProductForm = ({
                     "boxDetails.unitsPerSurface",
                     calculateUnitsPerSurface(watch("boxDetails.palletType"), {
                       width: value,
-                      height: watch("boxDetails.height"),
-                      depth: watch("boxDetails.depth"),
+                      height: watch("boxDetails.height") || 1,
+                      depth: watch("boxDetails.depth") || 1,
                     })
                   );
                 }}
@@ -547,8 +547,8 @@ export const CreateProductForm = ({
                   setValue(
                     "boxDetails.unitsPerSurface",
                     calculateUnitsPerSurface(watch("boxDetails.palletType"), {
-                      width: watch("boxDetails.width"),
-                      height: watch("boxDetails.height"),
+                      width: watch("boxDetails.width") || 1,
+                      height: watch("boxDetails.height") || 1,
                       depth: value,
                     })
                   );
@@ -574,9 +574,9 @@ export const CreateProductForm = ({
                   setValue(
                     "boxDetails.unitsPerSurface",
                     calculateUnitsPerSurface(value, {
-                      width: watch("boxDetails.width"),
-                      height: watch("boxDetails.height"),
-                      depth: watch("boxDetails.depth"),
+                      width: watch("boxDetails.width") || 1,
+                      height: watch("boxDetails.height") || 1,
+                      depth: watch("boxDetails.depth") || 1,
                     })
                   );
                 }}

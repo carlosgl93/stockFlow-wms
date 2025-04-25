@@ -133,4 +133,6 @@ export const products = {
   "Units per box": "Unidades por caja",
   "by box": "por caja",
   "by unit": "por unidad",
+  "Preview from Excel": "Vista previa desde Excel",
+  Gram: "Gramo",
 };

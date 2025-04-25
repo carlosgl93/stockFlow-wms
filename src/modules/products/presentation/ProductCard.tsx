@@ -46,7 +46,7 @@ const ProductCard = ({
           >
             {title}
           </Text>
-          <Text>{moneyVO.format(price)}</Text>
+          <Text>{moneyVO.format(price || 0)}</Text>
         </HStack>
         <Text
           fontStyle="italic"

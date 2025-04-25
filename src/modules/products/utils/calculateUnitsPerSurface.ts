@@ -21,10 +21,10 @@ const palletSizes: Record<PalletType, PalletSize> = {
 };
 
 export function calculateUnitsPerSurface(
-  palletType: PalletType,
+  palletType: PalletType | undefined,
   boxDetails: BoxDetails
 ): number {
-  const pallet = palletSizes[palletType];
+  const pallet = palletSizes[palletType || PalletType.Standard];
   const unitsPerWidth = Math.floor(pallet.width / boxDetails.width);
   const unitsPerDepth = Math.floor(pallet.depth / boxDetails.depth);
   return unitsPerWidth * unitsPerDepth;

@@ -14,7 +14,7 @@ export const DispatchFixture = createFixture<IDispatchForm>({
   deliveryDate: "2023-10-11",
   palletNumber: "PALLET123",
   unitsNumber: 100,
-  looseUnitsNumber: 10,
+  looseUnitsNumber: 0,
   totalUnitsNumber: 110,
   heightCMs: 150,
   widthCMs: 100,

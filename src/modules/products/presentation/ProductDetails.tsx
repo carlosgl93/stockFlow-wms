@@ -62,7 +62,7 @@ const ProductDetails = ({ product, onBack }: IProps) => {
           />
           <HStack w="100%" height="24px" spacing={4}>
             <Text fontWeight="semibold" fontSize={{ base: "lg", md: "xl" }}>
-              {moneyVO.format(product.price)}
+              {moneyVO.format(product.price || 0)}
             </Text>
             <Divider orientation="vertical" />
           </HStack>

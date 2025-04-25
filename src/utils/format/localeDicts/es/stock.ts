@@ -26,4 +26,5 @@ export const stock = {
   "Place:": "Ubicación",
   "Start by searching for a product or lot":
     "Empieza buscando un producto o lote",
+  All: "Todos",
 };
