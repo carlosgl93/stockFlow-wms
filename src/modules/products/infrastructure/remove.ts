@@ -7,7 +7,6 @@
  */
 
 import { doc, deleteDoc } from "firebase/firestore";
-import { IProduct } from "../types";
 import { db } from "shared/firebase";
 import { ValidationError, APIError } from "shared/Error";
 

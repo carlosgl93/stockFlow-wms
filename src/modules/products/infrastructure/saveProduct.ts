@@ -1,11 +1,20 @@
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  setDoc,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { IProduct } from "../types";
 import { db, storage } from "shared/firebase";
 import { ValidationError } from "shared/Error";
 import { lowerAndTrim } from "utils";
 
-export const saveProduct = async (product: IProduct) => {
+export const saveProduct = async (product: IProduct, optionalId?: string) => {
   // Lowercase and trim the values
 
   const [name, internalCode, extCode] = lowerAndTrim([
@@ -47,6 +56,19 @@ export const saveProduct = async (product: IProduct) => {
     const storageRef = ref(storage, `safetyDocuments/${file.name}`);
     await uploadBytes(storageRef, file);
     safetyDocumentUrl = await getDownloadURL(storageRef);
+  }
+
+  if (optionalId) {
+    // Update existing product
+    const productRef = doc(db, "products", optionalId);
+    await setDoc(productRef, {
+      ...product,
+      name,
+      internalCode,
+      extCode,
+      safetyDocumentUrl: safetyDocumentUrl ? safetyDocumentUrl : null,
+    });
+    return { ...product, id: optionalId };
   }
 
   // Add product to Firestore

@@ -5,6 +5,7 @@ import {
   ExcelProductType,
   ExcelShortUnitType,
 } from "../types/IProduct";
+import { lowerAndTrim } from "utils";
 
 export const loadProductsFromExcel = async (
   file: File
@@ -27,18 +28,42 @@ export const loadProductsFromExcel = async (
       const rows: IProduct[] = uniqueProducts
         .map((product) => {
           if (!product["Item Code"]) return null;
+          const [
+            id,
+            extCode,
+            internalCode,
+            name,
+            category,
+            riskCategory,
+            container,
+            expirityDate,
+            lotId,
+          ] = lowerAndTrim([
+            product["Item Code"],
+            product["Item Code"],
+            product["Item Code"],
+            product["Item Desc"],
+            product["CATEGORIA PRODUCTO"],
+            product["CATEGORIA DE RIESGO"],
+            product.CONTENEDOR,
+            product["Lot Expiration Date"],
+            product["Lot Number"],
+          ]);
           return {
-            id: product["Item Code"],
-            extCode: product["Item Code"],
-            internalCode: product["Item Code"],
-            name: product["Item Desc"],
+            id,
+            extCode,
+            internalCode,
+            name,
             selectionType: "box",
-            category: product["CATEGORIA PRODUCTO"],
-            riskCategory: product[
-              "CATEGORIA DE RIESGO"
-            ] as IProduct["riskCategory"],
+            category,
+            riskCategory: riskCategory as IProduct["riskCategory"],
+            warehouseStock: product["STOCK BODEGA"],
+            qPerUnit: product["CANTIDAD X UNIDAD"],
+            lotId: lotId,
+            expirityDate: expirityDate,
+            palletNumber: product["PALLET"] || 0,
             boxDetails: {
-              container: product.CONTENEDOR as IContainer,
+              container: container as IContainer,
               unitOfMeasure: mapUnitType(
                 product["UNIDAD DE MEDIDA"]
                   ?.trim()

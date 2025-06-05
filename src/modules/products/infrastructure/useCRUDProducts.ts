@@ -16,17 +16,17 @@ export const useCRUDProducts = () => {
     useMutation(removeProduct, {
       onSuccess: async () => {
         toast({
-          title: t("Product updated"),
-          description: t("Product updated successfully"),
+          title: t("Product deleted"),
+          description: t("Product deleted successfully"),
           status: "success",
         });
         queryClient.invalidateQueries(["products"]);
       },
       onError: (error: ValidationError) => {
-        Logger.error("Error updating product", [error]);
+        Logger.error("Error deleting product", [error]);
         toast({
           title: "Error",
-          description: `${t("Error updating product")}, ${t(error.message)}`,
+          description: `${t("Error deleting product")}, ${t(error.message)}`,
           status: "error",
         });
       },

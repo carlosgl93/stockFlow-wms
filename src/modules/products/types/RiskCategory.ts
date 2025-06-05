@@ -1,4 +1,6 @@
 export enum RiskCategory {
+  NotDangerous = "Not Dangerous",
+  Dangerous = "Dangerous",
   Toxic = "Toxic",
   AutoFlammable = "Auto Flammable",
   NotFlammable = "Not Flammable",

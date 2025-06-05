@@ -10,11 +10,17 @@ export interface IProduct {
   internalCode: string;
   name: string;
   price?: number;
+  warehouseStock?: number;
   riskCategory: RiskCategory;
+  qPerUnit?: number;
   category: Category;
   safetyDocument?: FileList | null;
   selectionType: "box" | "unit";
   boxDetails?: IBoxDetails;
+  lotId?: string;
+  placeId?: string;
+  expirityDate?: string;
+  palletNumber?: number;
 }
 
 export type IBoxDetails = {

@@ -6,9 +6,11 @@ import { useNotImplementedYetToast } from "shared/Toast";
 import { ProductsList } from "modules/products/presentation";
 import { useRedirect, useTranslate } from "utils";
 import { useProducts } from "modules/products/infrastructure";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { loadProductsFromExcel } from "modules/products/utils/loadProductsFromExcel";
 import { IProduct } from "modules/products/types";
+import { Logger } from "utils/logger";
+import { ConfirmationModal } from "../../shared/ConfirmationModal";
 
 const ProductsPage = () => {
   const notImplemented = useNotImplementedYetToast();
@@ -17,9 +19,29 @@ const ProductsPage = () => {
   const [uploadedProducts, setUploadedProducts] = useState<IProduct[] | null>(
     null
   );
-  const { products: data, meta, params, isFetching } = useProducts();
-
   const [isPreviewFromExcelLoad, setIsPreviewFromExcelLoad] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    products: data,
+    meta,
+    params,
+    isFetching,
+    saveMultipleProductsMutation,
+    saveMultipleProductsIsLoading,
+  } = useProducts();
+
+  Logger.info("products", {
+    data,
+    uploadedProducts,
+  });
+
+  useEffect(() => {
+    if (uploadedProducts && !isPreviewFromExcelLoad) {
+      saveMultipleProductsMutation(uploadedProducts);
+    }
+  }, [uploadedProducts, isPreviewFromExcelLoad, saveMultipleProductsMutation]);
 
   if (!data) return null;
   const pages = Math.ceil(meta.total / params.limit);
@@ -38,7 +60,15 @@ const ProductsPage = () => {
     }
   };
 
-  if (isFetching) {
+  const handleConfirmUpload = () => {
+    if (uploadedProducts) {
+      saveMultipleProductsMutation(uploadedProducts);
+      setIsPreviewFromExcelLoad(false);
+      setUploadedProducts(null);
+    }
+  };
+
+  if (isFetching || saveMultipleProductsIsLoading || isLoading) {
     return <Loading />;
   }
   return (
@@ -71,14 +101,52 @@ const ProductsPage = () => {
           </label>
         </Box>
       </PageHeader>
-      {uploadedProducts ? (
+      {isPreviewFromExcelLoad && uploadedProducts && (
+        <Box>
+          <ProductsList
+            products={uploadedProducts}
+            isPreview={isPreviewFromExcelLoad}
+          />
+          <Box display="flex" justifyContent="center" mt={4} gap={4}>
+            <Button
+              colorScheme="green"
+              onClick={() => setIsConfirmationModalOpen(true)}
+            >
+              {t("Confirm Upload")}
+            </Button>
+            <Button
+              colorScheme="red"
+              onClick={() => {
+                setUploadedProducts(null);
+                setIsPreviewFromExcelLoad(false);
+              }}
+            >
+              {t("Cancel")}
+            </Button>
+          </Box>
+        </Box>
+      )}
+      {!isPreviewFromExcelLoad && (
         <ProductsList
-          products={uploadedProducts}
+          products={data}
+          isLoading={isFetching}
           isPreview={isPreviewFromExcelLoad}
         />
-      ) : (
-        <ProductsList products={data} />
       )}
+
+      <ConfirmationModal
+        isOpen={isConfirmationModalOpen}
+        onClose={() => {
+          setUploadedProducts(null);
+          setIsPreviewFromExcelLoad(false);
+          setIsConfirmationModalOpen(false);
+        }}
+        onConfirm={handleConfirmUpload}
+        title={t("Confirm Upload")}
+        description={t(
+          "Are you sure you want to upload these products? This will overwrite any existing products with its current STOCK"
+        )}
+      />
     </Page>
   );
 };

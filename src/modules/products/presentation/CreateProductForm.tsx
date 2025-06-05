@@ -41,6 +41,7 @@ export const CreateProductForm = ({
   const queryClient = useQueryClient();
   const redirect = useRedirect();
   const location = useLocation();
+  Logger.info("location", [location]);
 
   const { saveProductMutation, saveProductIsLoading, saveProductIsSuccess } =
     useProducts();
@@ -49,7 +50,7 @@ export const CreateProductForm = ({
     handleSubmit,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, defaultValues },
     reset,
     trigger,
     watch,
@@ -123,6 +124,7 @@ export const CreateProductForm = ({
     if (location.pathname.includes("edit")) {
       editProductMutation({ values: data, id: productToEdit?.id || "" });
     } else {
+      data!.boxDetails!.kilos = kilos;
       saveProductMutation(data, {
         onSuccess: (newProduct) => {
           if (onSuccess) onSuccess(newProduct);
@@ -140,6 +142,25 @@ export const CreateProductForm = ({
   };
 
   useEffect(() => {
+    if (productToEdit?.id && location.state.product) {
+      const product = location.state.product as IProduct;
+      Logger.info("Product to edit", [location.state.product && productToEdit]);
+      reset();
+      Object.keys(location.state.product).forEach((key) => {
+        Logger.info("key", [key, product[key as keyof IProduct]]);
+        setValue(key as keyof IProduct, product[key as keyof IProduct]);
+        if (key === "boxDetails" && product.boxDetails) {
+          Object.keys(product.boxDetails).forEach((boxKey) => {
+            setValue(
+              `boxDetails.${boxKey}` as keyof IProduct,
+              product.boxDetails?.[boxKey as keyof IBoxDetails]
+            );
+          });
+        }
+      });
+      trigger();
+      return;
+    }
     if (import.meta.env.MODE === "development" && !productToEdit) {
       const product = ProductFixture.toStructure();
       Object.keys(product).forEach((key) => {
@@ -148,28 +169,21 @@ export const CreateProductForm = ({
       trigger();
       return;
     }
-
-    if (productToEdit) {
-      Logger.info("Product to edit", [productToEdit]);
-      reset();
-      Object.keys(productToEdit).forEach((key) => {
-        setValue(key as keyof IProduct, productToEdit[key as keyof IProduct]);
-        if (key === "boxDetails" && productToEdit.boxDetails) {
-          Object.keys(productToEdit.boxDetails).forEach((boxKey) => {
-            setValue(
-              `boxDetails.${boxKey}` as keyof IProduct,
-              productToEdit.boxDetails?.[boxKey as keyof IBoxDetails]
-            );
-          });
-        }
-      });
-      trigger();
-      return;
-    }
   }, [setValue, productToEdit, trigger]);
 
   const selectionType = watch("selectionType");
   const unitOfMeasure = watch("boxDetails.unitOfMeasure");
+  const qPerUnit = watch("boxDetails.quantity") || 0;
+  const unitsPerBox = watch("boxDetails.units") || 0;
+  const kilos = watch("boxDetails.kilos") || 0;
+
+  useEffect(() => {
+    setValue("selectionType", "unit");
+  }, []);
+
+  useEffect(() => {
+    setValue("boxDetails.kilos", qPerUnit * unitsPerBox);
+  }, [qPerUnit, unitsPerBox]);
 
   if (saveProductIsLoading) {
     return <Loading size="md" />;
@@ -301,12 +315,12 @@ export const CreateProductForm = ({
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl> */}
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Unit Type")}</FormLabel>
           <Controller
             name="selectionType"
             control={control}
-            defaultValue="box"
+            defaultValue={"unit"}
             rules={{ required: true }}
             render={({ field }) => (
               <RadioGroup
@@ -322,7 +336,7 @@ export const CreateProductForm = ({
             )}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
-        </FormControl>
+        </FormControl> */}
       </Box>
       {/* END SAFETY DOC &  UNIT TYPE*/}
       {/* UNIT TYPE FIELDS */}
@@ -353,24 +367,10 @@ export const CreateProductForm = ({
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
-        {selectionType === "box" && (
-          <FormControl mb={4}>
-            <FormLabel>{t(`Units per box`)}</FormLabel>
-            <Controller
-              name="boxDetails.units"
-              control={control}
-              rules={{ required: watch("selectionType") === "box" }}
-              render={({ field }) => <Input {...field} />}
-            />
-            {errors.name && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
-        )}
 
         {selectionType === "unit" && (
           <FormControl mb={4}>
-            <FormLabel>{t(`${unitOfMeasure} per unit`)}</FormLabel>
+            <FormLabel>{t(`Quantity (${unitOfMeasure}) per unit`)}</FormLabel>
             <Controller
               name="boxDetails.quantity"
               control={control}
@@ -378,14 +378,14 @@ export const CreateProductForm = ({
               render={({ field }) => (
                 <Input
                   {...field}
-                  onChange={(e) => {
-                    setValue(
-                      "boxDetails.quantity",
-                      e.target.value ? parseInt(e.target.value) : 0
-                    );
-                    const newKilos = watch("boxDetails.quantity");
-                    setValue("boxDetails.kilos", newKilos);
-                  }}
+                  // onChange={(e) => {
+                  //   setValue(
+                  //     "boxDetails.quantity",
+                  //     e.target.value ? parseInt(e.target.value) : 0
+                  //   );
+                  //   const newKilos = watch("boxDetails.quantity");
+                  //   setValue("boxDetails.kilos", newKilos);
+                  // }}
                 />
               )}
             />
@@ -394,6 +394,30 @@ export const CreateProductForm = ({
             )}
           </FormControl>
         )}
+
+        <FormControl mb={4}>
+          <FormLabel>{t(`Units per box`)}</FormLabel>
+          <Controller
+            name="boxDetails.units"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => <Input {...field} />}
+          />
+          {errors.name && <Box color="red">{t("This field is required")}</Box>}
+        </FormControl>
+        <FormControl mb={4}>
+          <FormLabel>{`${t(watch("boxDetails.unitOfMeasure") || "Liter")}  ${t(
+            "by box"
+          )}`}</FormLabel>
+          <Controller
+            disabled
+            name="boxDetails.kilos"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => <Input {...field} />}
+          />
+          {errors.name && <Box color="red">{t("This field is required")}</Box>}
+        </FormControl>
         {selectionType === "box" && (
           <FormControl mb={4}>
             <FormLabel>
@@ -408,15 +432,15 @@ export const CreateProductForm = ({
               render={({ field }) => (
                 <Input
                   {...field}
-                  onChange={(e) => {
-                    setValue(
-                      "boxDetails.quantity",
-                      e.target.value ? parseInt(e.target.value) : 0
-                    );
-                    const newKilos =
-                      watch("boxDetails.quantity") * watch("boxDetails.units");
-                    setValue("boxDetails.kilos", newKilos);
-                  }}
+                  // onChange={(e) => {
+                  //   setValue(
+                  //     "boxDetails.quantity",
+                  //     e.target.value ? parseInt(e.target.value) : 0
+                  //   );
+                  //   const newKilos =
+                  //     watch("boxDetails.quantity") * watch("boxDetails.units");
+                  //   setValue("boxDetails.kilos", newKilos);
+                  // }}
                 />
               )}
             />
@@ -426,6 +450,7 @@ export const CreateProductForm = ({
           </FormControl>
         )}
       </Box>
+
       <Box display="flex" gap={16} justifyContent="space-around">
         <FormControl mb={4}>
           <FormLabel>{t("Container")}</FormLabel>
@@ -467,24 +492,8 @@ export const CreateProductForm = ({
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
-        {watch("selectionType") === "box" && (
-          <FormControl mb={4}>
-            <FormLabel>{`${t(watch("boxDetails.unitOfMeasure")) + "s"}  ${t(
-              "by box"
-            )}`}</FormLabel>
-            <Controller
-              name="boxDetails.kilos"
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => <Input {...field} />}
-            />
-            {errors.name && (
-              <Box color="red">{t("This field is required")}</Box>
-            )}
-          </FormControl>
-        )}
       </Box>
-      <Box display="flex" gap={16} justifyContent="space-around">
+      {/* <Box display="flex" gap={16} justifyContent="space-around">
         <FormControl mb={4}>
           <FormLabel>{t("Height")}</FormLabel>
           <Controller
@@ -599,7 +608,7 @@ export const CreateProductForm = ({
             render={({ field }) => <Input {...field} readOnly disabled />}
           />
         </FormControl>
-      </Box>
+      </Box> */}
       {/* END UNIT TYPE FIELDS */}
 
       <Button

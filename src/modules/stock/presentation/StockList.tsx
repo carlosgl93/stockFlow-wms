@@ -119,14 +119,14 @@ export const StockList = ({
     let looseUnitsTotal = 0;
     const rows = entries
       .filter((entry) =>
-        entry.products.some(
+        entry?.products?.some(
           (product) =>
             (!productId || product.id === productId) &&
             (!selectedLot || product.lotId === selectedLot)
         )
       )
       .map((entry) => {
-        const product = entry.products.find(
+        const product = entry?.products?.find(
           (product) =>
             (!productId || product.id === productId) &&
             (!selectedLot || product.lotId === selectedLot)

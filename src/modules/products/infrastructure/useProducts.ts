@@ -1,10 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
-import {
-  IProductsCollection,
-  getProductsQuery,
-  getProductsQueryKey,
-} from "./productsQuery";
+import { IProductsCollection } from "./productsQuery";
 import {
   collection,
   query,
@@ -13,6 +9,9 @@ import {
   getCountFromServer,
   limit as queryLimit,
   where,
+  updateDoc,
+  setDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "shared/firebase";
 import { IProduct } from "../types";
@@ -22,9 +21,12 @@ import { saveProduct } from "./saveProduct";
 import { Logger } from "utils/logger";
 import { APIError, ValidationError } from "shared/Error";
 import { useToast } from "shared/Toast";
+import { ExcelProductType } from "../types/IProduct";
+import { addEntry } from "modules/entries/infraestructure";
+import { EntryDTO, IProductEntry } from "modules/entries/types";
 const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
 
-export const useProducts = (pageSize: number = 10, page: number = 1) => {
+export const useProducts = (pageSize: number = 50, page: number = 1) => {
   const [params, setParams] = useState<IQueryParams>(defaultParams);
   const redirect = useRedirect();
   const toast = useToast();
@@ -115,6 +117,132 @@ export const useProducts = (pageSize: number = 10, page: number = 1) => {
     },
   });
 
+  const {
+    mutate: saveMultipleProductsMutation,
+    isLoading: saveMultipleProductsIsLoading,
+    isError: saveMultipleProductsIsError,
+    error: saveMultipleProductsError,
+    isSuccess: saveMultipleProductsIsSuccess,
+  } = useMutation(
+    async (products: IProduct[]) => {
+      const failedProducts: IProduct[] = [];
+
+      for (const product of products) {
+        try {
+          const productCreated = await saveProduct(product, product.id);
+          const stockQuery = query(
+            collection(db, "stock"),
+            where("productId", "==", productCreated.id)
+          );
+          const stockSnapshot = await getDocs(stockQuery);
+          const unitsNumber =
+            (product!.warehouseStock || 0) / (product!.qPerUnit || 0) || 0;
+          const remainder =
+            (product!.warehouseStock || 0) % (product!.qPerUnit || 0) || 0;
+
+          let stockId = "";
+
+          if (!stockSnapshot.empty) {
+            const stockRef = stockSnapshot.docs[0].ref;
+            await updateDoc(stockRef, {
+              unitsNumber: unitsNumber,
+              looseUnitsNumber: remainder,
+              updatedAt: new Date(),
+            });
+            stockId = stockRef.id;
+          } else {
+            const stockRef = doc(collection(db, "stock"));
+            await setDoc(stockRef, {
+              id: stockRef.id,
+              productId: product.id,
+              unitsNumber: unitsNumber || 0,
+              looseUnitsNumber: remainder || 0,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+            stockId = stockRef.id;
+          }
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            failedProducts.push(product);
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      if (failedProducts.length > 0) {
+        throw new ValidationError(
+          `Some products could not be created: ${failedProducts
+            .map((p) => p.name)
+            .join(", ")}`
+        );
+      }
+
+      // Create a big entry using addEntry
+      const entryProducts: IProductEntry[] = await Promise.all(
+        products.map(async (product) => {
+          const stockQuery = query(
+            collection(db, "stock"),
+            where("productId", "==", product.id)
+          );
+          const stockSnapshot = await getDocs(stockQuery);
+
+          let stockId;
+          if (!stockSnapshot.empty) {
+            stockId = stockSnapshot.docs[0].id;
+          } else {
+            const stockRef = doc(collection(db, "stock"));
+            stockId = stockRef.id;
+          }
+
+          return {
+            id: product.id,
+            unitsNumber: product.warehouseStock || 0,
+            looseUnitsNumber: product.qPerUnit || 0,
+            placeId: product.placeId || "",
+            lotId: product.lotId || "",
+            stockId: stockId, // Include the correct stockId
+            expirityDate: product.expirityDate || "",
+            totalUnitsNumber: product.warehouseStock || 0,
+            palletNumber: product.palletNumber || "",
+          };
+        })
+      );
+
+      const entry: EntryDTO = {
+        supplierId: "defaultSupplierId", // Replace with actual supplierId
+        docNumber: `DOC-${Date.now()}`,
+        transporterId: "defaultTransporterId", // Replace with actual transporterId
+        description: "Bulk entry for multiple products",
+        products: entryProducts,
+        entryDate: new Date().toISOString(),
+      };
+
+      await addEntry(entry);
+    },
+    {
+      onSuccess: () => {
+        toast({
+          title: t("Products created"),
+          description: t("All products were created successfully"),
+          status: "success",
+        });
+        queryClient.invalidateQueries(["products"]);
+      },
+      onError: (error: ValidationError) => {
+        Logger.error("Error creating multiple products", [error]);
+        toast({
+          title: t("Error"),
+          description: `${t("Error creating some products")}: ${t(
+            error.message
+          )}`,
+          status: "error",
+        });
+      },
+    }
+  );
+
   return {
     products: data?.products,
     isFetching,
@@ -127,5 +255,10 @@ export const useProducts = (pageSize: number = 10, page: number = 1) => {
     error,
     saveProductIsSuccess,
     searchProducts,
+    saveMultipleProductsMutation,
+    saveMultipleProductsIsLoading,
+    saveMultipleProductsIsError,
+    saveMultipleProductsError,
+    saveMultipleProductsIsSuccess,
   };
 };

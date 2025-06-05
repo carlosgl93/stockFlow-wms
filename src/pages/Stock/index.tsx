@@ -146,7 +146,9 @@ const StockPage = () => {
       const uniquePlacesIds = Array.from(
         new Set(
           productEntries
-            ?.map((entry) => entry.products.map((p) => p.placeId))
+            ?.map((entry) =>
+              (entry.products || entry.productsToEnter).map((p) => p.placeId)
+            )
             .flat()
         )
       );
