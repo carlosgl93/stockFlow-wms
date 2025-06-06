@@ -19,6 +19,7 @@ import {
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
 import { getProductCompositeId } from "./getProductCompositeId";
+import { FirebaseError } from "firebase/app";
 
 export const fetchEntries = async (
   page: number,
@@ -90,7 +91,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             product.placeId !== "" &&
             product.placeId !== "No especificaré un lugar"
         )
-        .map((product) => doc(db, "places", product.placeId || ""));
+        .map((product) => doc(db, "places", product?.placeId || ""));
       const placeDocs = await Promise.all(
         placeRefs.map((ref) => transaction.get(ref))
       );
@@ -596,6 +597,7 @@ export const updateEntry = async ({
 };
 
 export const removeEntry = async (entryId: string): Promise<void> => {
+  console.log("removeEntry", { entryId });
   try {
     return await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
@@ -676,9 +678,10 @@ export const removeEntry = async (entryId: string): Promise<void> => {
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
+      console.log({ entryData });
       await addDoc(historicMovementsRef, {
         type: "entry",
-        data: { ...entryData, products: entryData.products },
+        data: { ...entryData, products: entryData?.productsIds },
         createdAt: dateVO.now(),
       });
 
@@ -686,7 +689,15 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       transaction.delete(entryDocRef);
     });
   } catch (error) {
-    throw new APIError("Failed to remove entry", error);
+    Logger.error("Failed to remove entry", { error, entryId });
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    if (error instanceof FirebaseError)
+      throw new APIError(
+        error && error.message ? error.message : "Failed to remove entry",
+        error
+      );
   }
 };
 

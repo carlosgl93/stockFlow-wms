@@ -295,7 +295,7 @@ export const CreateEntryController = ({
         productName: products.find((pr) => pr.id === p.id)?.name || "",
         lot: p.lotId,
         place:
-          getPlacesData.places.find((pl) => pl.id === p.placeId)?.name ||
+          getPlacesData?.places.find((pl) => pl.id === p.placeId)?.name ||
           "No se especificó",
         palletNumber: p.palletNumber,
         expirityDate: p.expirityDate || "",

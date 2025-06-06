@@ -8,10 +8,12 @@ export interface IEntry {
   createdAt?: string;
   updatedAt?: string;
   entryDate: string;
+  productsToEnter?: IProductEntry[];
+  productsIds?: string[];
 }
 
 export interface IProductEntry {
-  id: string; // productId
+  id: string;
   unitsNumber: number;
   looseUnitsNumber: number;
   totalUnitsNumber: number;
@@ -20,8 +22,8 @@ export interface IProductEntry {
   placeId?: string;
   expirityDate?: string;
   palletNumber: string;
-  heightCMs: number;
-  widthCMs: number;
+  heightCMs?: number;
+  widthCMs?: number;
   description?: string;
 }
 
@@ -45,4 +47,5 @@ export interface IEntryForm {
   createdAt?: string;
   updatedAt?: string;
   entryDate: string;
+  productsToEnter?: IProductEntry[];
 }

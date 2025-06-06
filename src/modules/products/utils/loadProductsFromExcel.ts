@@ -61,7 +61,7 @@ export const loadProductsFromExcel = async (
             qPerUnit: product["CANTIDAD X UNIDAD"],
             lotId: lotId,
             expirityDate: expirityDate,
-            palletNumber: product["PALLET"] || 0,
+            palletNumber: product["PALLET"].toString(),
             boxDetails: {
               container: container as IContainer,
               unitOfMeasure: mapUnitType(

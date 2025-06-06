@@ -20,7 +20,7 @@ export interface IProduct {
   lotId?: string;
   placeId?: string;
   expirityDate?: string;
-  palletNumber?: number;
+  palletNumber?: string;
 }
 
 export type IBoxDetails = {

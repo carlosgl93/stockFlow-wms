@@ -197,7 +197,7 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
           }
 
           return {
-            id: product.id,
+            id: product.id!,
             unitsNumber: product.warehouseStock || 0,
             looseUnitsNumber: product.qPerUnit || 0,
             placeId: product.placeId || "",

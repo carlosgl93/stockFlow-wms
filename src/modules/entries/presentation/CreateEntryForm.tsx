@@ -512,8 +512,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               )}
             </FormControl>
           )}
-        </Box>
-        <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
             <FlexBox>
               <FormLabel>
@@ -572,7 +570,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               <Box color="red">{t("This field is required")}</Box>
             )}
           </FormControl>
-          <FormControl mb={4}>
+        </Box>
+        <Box display="flex" justifyContent="space-around" gap={16}>
+          {/* <FormControl mb={4}>
             <FormLabel>{t("Height (CMs)")}</FormLabel>
             <Controller
               name="heightCMs"
@@ -593,11 +593,11 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               defaultValue={0}
               rules={{}}
               render={({ field }) => <Input type="number" {...field} />}
-            />
-            {errors.widthCMs && (
+            /> */}
+          {/* {errors.widthCMs && (
               <Box color="red">{t("This field is required")}</Box>
             )}
-          </FormControl>
+          </FormControl> */}
         </Box>
         <Button onClick={handleAddProductToEntry} colorScheme="green">
           {t("Add product to the list")}
