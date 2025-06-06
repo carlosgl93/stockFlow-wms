@@ -117,8 +117,6 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     totalUnitsNumber: dispatch?.products.reduce((acc, curr) => {
       return acc + (curr?.totalUnitsNumber || 0);
     }, 0),
-    heightCMs: dispatch?.products[i]?.heightCMs,
-    widthCMs: dispatch?.products[i]?.widthCMs,
     description: dispatch?.description,
     dispatchStatus: t(dispatch?.dispatchedStatus || ""),
   }));

@@ -60,4 +60,11 @@ export const dispatches = {
   "Units Number": "N° Unidades",
   "Loose Units Number": "N° Un. Sueltas",
   "Total Units Number": "Un. Totales",
+  "Search for a customer name": "Buscar por nombre de cliente",
+  "No customers found for this term":
+    "No se encontraron clientes para este término",
+  "Search for a transporter name": "Buscar por nombre de transportista",
+  "No transporters found for this term":
+    "No se encontraron transportistas para este término",
+  "Edit Dispatch": "Editar Despacho",
 };

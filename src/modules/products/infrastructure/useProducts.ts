@@ -206,6 +206,9 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
             expirityDate: product.expirityDate || "",
             totalUnitsNumber: product.warehouseStock || 0,
             palletNumber: product.palletNumber || "",
+            unitOfMeasure: product?.boxDetails?.unitOfMeasure || "",
+            qPerUnit: product?.boxDetails?.quantity || 1,
+            unitsPerBox: product?.boxDetails?.units || 1,
           };
         })
       );

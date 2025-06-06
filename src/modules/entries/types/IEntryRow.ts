@@ -8,4 +8,5 @@ export type IEntryRow = {
   unitsNumber: number;
   looseUnitsNumber: number;
   totalUnitsNumber: number;
+  boxes: number;
 };

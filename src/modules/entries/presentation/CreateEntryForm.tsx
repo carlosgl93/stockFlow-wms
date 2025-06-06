@@ -96,25 +96,19 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     "of"
   )} ${selectedProduct?.boxDetails?.quantity}  ${t(
     selectedProduct?.boxDetails?.unitOfMeasure || ""
-  ).toLowerCase()}${
-    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
-  } ${t("per")} `;
+  ).toLowerCase()} ${t("per")}`;
 
   const unitsTooltipLabel = `${t(
     "Each unit is made up of"
   )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${
     selectedProduct?.boxDetails!.quantity
-  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}${
-    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
-  }`;
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
 
   const looseUnitsTooltipLabel = `${t(
     "Each unit is made up of"
   )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${t("of")} ${
     selectedProduct?.boxDetails!.quantity
-  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}${
-    (selectedProduct?.boxDetails?.quantity || 0) > 1 ? "s" : ""
-  }`;
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
 
   const totalValue =
     selectedProduct?.selectionType === "box"
@@ -515,25 +509,67 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
           <FormControl mb={4}>
             <FlexBox>
               <FormLabel>
-                {`${t("Total of")} ${t(
-                  selectedProduct?.boxDetails?.unitOfMeasure || ""
-                )}s`}{" "}
+                {`${t("Total of")} ${
+                  ["Gram", "ML", "C.C"].includes(
+                    selectedProduct?.boxDetails?.unitOfMeasure || ""
+                  )
+                    ? t(
+                        selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
+                          ? "Kilo"
+                          : selectedProduct?.boxDetails?.unitOfMeasure ===
+                              "ML" ||
+                            selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
+                          ? "Liter"
+                          : selectedProduct?.boxDetails?.unitOfMeasure || ""
+                      )
+                    : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
+                }`}
               </FormLabel>
               <Tooltip
                 label={
                   selectedProduct?.selectionType === "box"
                     ? `${t("Units per box")}: (${
                         selectedProduct?.boxDetails?.units
-                      }) * ${t("Boxes to enter")}  (${watch(
+                      }) * ${t("Boxes to enter")} (${watch(
                         "unitsNumber"
                       )}) + ${t("Loose units to enter")} (${watch(
                         "looseUnitsNumber"
-                      )}) = ${totalValue} ${t(
-                        selectedProduct.boxDetails?.unitOfMeasure || ""
-                      )}s`
+                      )}) = ${
+                        ["Gram", "ML", "C.C"].includes(
+                          selectedProduct?.boxDetails?.unitOfMeasure || ""
+                        )
+                          ? (totalValue / 1000).toLocaleString(undefined, {
+                              maximumFractionDigits: 3,
+                            })
+                          : totalValue
+                      } ${
+                        selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
+                          ? t("Kilo")
+                          : selectedProduct?.boxDetails?.unitOfMeasure ===
+                              "ML" ||
+                            selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
+                          ? t("Liter")
+                          : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
+                      }`
                     : `${selectedProduct?.boxDetails?.quantity} ${t(
                         selectedProduct?.boxDetails?.unitOfMeasure || ""
-                      )}s * ${watch("unitsNumber")}`
+                      )} * ${watch("unitsNumber")} = ${
+                        ["Gram", "ML", "C.C"].includes(
+                          selectedProduct?.boxDetails?.unitOfMeasure || ""
+                        )
+                          ? (totalValue / 1000).toLocaleString(undefined, {
+                              maximumFractionDigits: 3,
+                            })
+                          : totalValue
+                      } ${
+                        selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
+                          ? t("Kilo")
+                          : selectedProduct?.boxDetails?.unitOfMeasure ===
+                              "ML" ||
+                            selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
+                          ? t("Liter")
+                          : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
+                      }`
                 }
                 isOpen={showTotalTooltip}
                 placement="top"
@@ -554,16 +590,29 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="totalUnitsNumber"
               control={control}
               rules={{}}
-              render={({ field }) => (
-                <Input
-                  type="number"
-                  {...field}
-                  {...register("totalUnitsNumber", {
-                    valueAsNumber: true,
-                  })}
-                  value={totalValue}
-                />
-              )}
+              render={({ field }) => {
+                const isSpecialUnit = ["Gram", "ML", "C.C"].includes(
+                  selectedProduct?.boxDetails?.unitOfMeasure || ""
+                );
+                const displayValue = isSpecialUnit
+                  ? selectedProduct?.boxDetails?.quantity
+                    ? (selectedProduct?.boxDetails?.quantity *
+                        watch("unitsNumber")) /
+                      1000
+                    : 0
+                  : field.value;
+                return (
+                  <Input
+                    type="number"
+                    {...field}
+                    {...register("totalUnitsNumber", {
+                      valueAsNumber: true,
+                    })}
+                    value={displayValue}
+                    disabled
+                  />
+                );
+              }}
             />
 
             {errors.totalUnitsNumber && (

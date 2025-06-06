@@ -8,4 +8,5 @@ export type IDispatchRow = {
   unitsNumber: number;
   looseUnitsNumber: number;
   totalUnitsNumber: number;
+  boxes: number;
 };

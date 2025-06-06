@@ -23,6 +23,7 @@ import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
 import { Logger } from "utils/logger";
+import { useNavigate } from "react-router-dom";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -51,6 +52,7 @@ export const CreateEntryController = ({
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
+  const navigate = useNavigate();
 
   const {
     addEntryMutation,
@@ -289,6 +291,18 @@ export const CreateEntryController = ({
 
   let rows: IEntryRow[] = addedToEntry.reduce((acc, p) => {
     const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+    const unitOfMeasure = p.unitOfMeasure;
+    let totalUnitsnumber;
+    if (
+      unitOfMeasure === "ML" ||
+      unitOfMeasure === "Gram" ||
+      unitOfMeasure === "C.C"
+    ) {
+      totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
+    } else {
+      totalUnitsnumber = p.unitsNumber;
+    }
+
     if (!acc.find((row) => row.id === uniqueId)) {
       acc.push({
         id: uniqueId,
@@ -301,7 +315,8 @@ export const CreateEntryController = ({
         expirityDate: p.expirityDate || "",
         unitsNumber: p.unitsNumber,
         looseUnitsNumber: p.looseUnitsNumber,
-        totalUnitsNumber: p.totalUnitsNumber,
+        totalUnitsNumber: totalUnitsnumber,
+        boxes: p.unitsNumber / p.unitsPerBox! || 1,
       });
     }
     return acc;
@@ -344,13 +359,20 @@ export const CreateEntryController = ({
     { field: "palletNumber", headerName: t("Pallet Number"), width: 100 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 100 },
     {
-      field: "looseUnitsNumber",
-      headerName: t("Loose Units Number"),
-      width: 150,
-    },
-    {
       field: "totalUnitsNumber",
       headerName: t("Total Units Number"),
+      width: 150,
+      renderHeader() {
+        return (
+          <Box display="flex" justifyContent="center" width="100%">
+            {t("Total Liters / Kilos")}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "boxes",
+      headerName: t("Total Boxes"),
       width: 150,
     },
   ];
@@ -405,9 +427,10 @@ export const CreateEntryController = ({
         placeId: getValues("placeId"),
         expirityDate: getValues("expirityDate"),
         palletNumber: getValues("palletNumber"),
-        heightCMs: getValues("heightCMs"),
-        widthCMs: getValues("widthCMs"),
         description: "",
+        unitOfMeasure: selectedProduct?.boxDetails?.unitOfMeasure || "",
+        qPerUnit: selectedProduct?.boxDetails?.quantity || 1,
+        unitsPerBox: selectedProduct?.boxDetails?.units || 1,
       };
       const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
       if (

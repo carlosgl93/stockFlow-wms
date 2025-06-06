@@ -3,13 +3,13 @@ export interface IEntry {
   supplierId: string;
   docNumber: string;
   transporterId: string;
+  productsIds?: string[];
   products: IProductEntry[];
   description: string; // equivalent to nota
   createdAt?: string;
   updatedAt?: string;
   entryDate: string;
   productsToEnter?: IProductEntry[];
-  productsIds?: string[];
 }
 
 export interface IProductEntry {
@@ -22,9 +22,10 @@ export interface IProductEntry {
   placeId?: string;
   expirityDate?: string;
   palletNumber: string;
-  heightCMs?: number;
-  widthCMs?: number;
   description?: string;
+  unitOfMeasure?: string; // e.g., "kg", "liters", etc.
+  qPerUnit: number; // Quantity per unit, e.g., 500 ml or 1 kg or 2.5 Grams
+  unitsPerBox?: number; // Optional, used for bulk entries
 }
 
 export interface IEntryForm {
@@ -48,4 +49,5 @@ export interface IEntryForm {
   updatedAt?: string;
   entryDate: string;
   productsToEnter?: IProductEntry[];
+  productsIds?: string[]; // Optional, used for bulk entries
 }

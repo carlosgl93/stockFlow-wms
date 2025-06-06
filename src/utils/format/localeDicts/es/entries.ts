@@ -94,4 +94,7 @@ export const entries = {
   "Total units number is required": "Se requiere el número total de unidades",
   "Lot is required": "Se requiere el lote",
   "Expiry date is required": "Se requiere la fecha de caducidad",
+  "Edit your entry.": "Edita tu ingreso.",
+  "Total Liters / Kilos": "Total Litros o Kilos",
+  "Total Boxes": "Total Cajas",
 };

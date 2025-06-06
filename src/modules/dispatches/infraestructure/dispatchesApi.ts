@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
+import { FirebaseError } from "firebase/app";
 
 export const fetchDispatches = async (
   page: number,
@@ -257,6 +258,9 @@ export const updateDispatch = async ({
     });
   } catch (error) {
     Logger.error("Failed to update dispatch", { error });
+    if (error instanceof FirebaseError) {
+      throw new APIError("Firebase error occurred", error.message);
+    }
     throw new APIError("Failed to update dispatch", error);
   }
 };

@@ -157,4 +157,5 @@ export const products = {
   "Units Per Box": "U. x caja",
   "Quantity Per Unit": "Cant x unidad",
   "U. Of Measure": "U. de medida",
+  "Quantity (ML) per unit": "Cantidad (ML) por unidad",
 };

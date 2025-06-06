@@ -22,12 +22,13 @@ export async function searchTransporter(name: string): Promise<ITransporter[]> {
   }
 
   name = name.toLowerCase().trim();
+  Logger.info("Searching for transporter with name:", [name]);
 
   const collectionRef = collection(db, "transporters");
   const q = query(
     collectionRef,
-    where("company", ">=", name),
-    where("company", "<=", name + "\uf8ff")
+    where("name", ">=", name),
+    where("name", "<=", name + "\uf8ff")
   );
 
   try {

@@ -406,15 +406,27 @@ export const CreateProductForm = ({
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
         <FormControl mb={4}>
-          <FormLabel>{`${t(watch("boxDetails.unitOfMeasure") || "Liter")}  ${t(
-            "by box"
-          )}`}</FormLabel>
+          <FormLabel>{`${t(
+            (watch("boxDetails.unitOfMeasure") === "ML"
+              ? "Liter"
+              : watch("boxDetails.unitOfMeasure") === "Gram"
+              ? "Kilo"
+              : watch("boxDetails.unitOfMeasure") === "C.C"
+              ? "Liter"
+              : watch("boxDetails.unitOfMeasure")) || "Unit"
+          )}  ${t("by box")}`}</FormLabel>
           <Controller
-            disabled
             name="boxDetails.kilos"
             control={control}
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => {
+              const unit = watch("boxDetails.unitOfMeasure");
+              let value = field.value;
+              if (["ML", "Gram", "C.C"].includes(unit)) {
+                value = value ? value / 1000 : 0;
+              }
+              return <Input {...field} value={value} disabled />;
+            }}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>

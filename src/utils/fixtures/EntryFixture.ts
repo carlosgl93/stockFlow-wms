@@ -18,4 +18,5 @@ export const EntryFixture = createFixture<IEntryForm>({
   widthCMs: 100,
   description: "Sample entry description",
   entryDate: "2025-04-15",
+  productsToEnter: [],
 });

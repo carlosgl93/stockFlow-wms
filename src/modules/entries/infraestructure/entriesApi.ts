@@ -592,12 +592,18 @@ export const updateEntry = async ({
       return { ...values, id: entryDoc.id };
     });
   } catch (error) {
+    if (error instanceof FirebaseError) {
+      Logger.error("Failed to update entry", { error, entryId, values });
+      throw new APIError(
+        error && error.message ? error.message : "Failed to update entry",
+        error
+      );
+    }
     throw new APIError("Failed to update entry", error);
   }
 };
 
 export const removeEntry = async (entryId: string): Promise<void> => {
-  console.log("removeEntry", { entryId });
   try {
     return await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
@@ -678,7 +684,6 @@ export const removeEntry = async (entryId: string): Promise<void> => {
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
-      console.log({ entryData });
       await addDoc(historicMovementsRef, {
         type: "entry",
         data: { ...entryData, products: entryData?.productsIds },

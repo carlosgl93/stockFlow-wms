@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { useToast, useDisclosure, IconButton } from "@chakra-ui/react";
+import { useToast, useDisclosure, IconButton, Box } from "@chakra-ui/react";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { IDispatch, IDispatchForm, IDispatchRow } from "../types";
@@ -24,6 +24,7 @@ import { IProductEntry } from "modules/entries/types";
 import { getProductCompositeId } from "modules/entries/infraestructure";
 import { useNavigate } from "shared/Router";
 import { useQueryClient } from "@tanstack/react-query";
+import { removeDispatch } from "./dispatchesApi";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -37,7 +38,10 @@ export const CreateDispatchController = ({
   const [isSearchingLot, setIsSearchingLot] = useState(false);
   const [searchResults, setSearchedResults] = useState<
     null | (IProduct | ITransporter | ISupplier | IStock)[]
-  >(null);
+  >([]);
+  const [showBoxTooltip, setShowBoxTooltip] = useState(false);
+  const [showUnitsTooltip, setShowUnitsTooltip] = useState(false);
+  const [showTotalTooltip, setShowTotalTooltip] = useState(false);
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
   const [addedToDispatch, setAddedToDispatch] = useState<IProductEntry[]>([]);
   const [productId, setProductId] = useState("");
@@ -47,6 +51,7 @@ export const CreateDispatchController = ({
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
     limit: 5,
   });
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
   const { products: getProductsData, isFetching } = useProducts(5);
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
@@ -66,6 +71,7 @@ export const CreateDispatchController = ({
     watch,
     getValues,
     clearErrors,
+    register,
   } = useForm<IDispatchForm>();
 
   const {
@@ -181,8 +187,9 @@ export const CreateDispatchController = ({
         lotId: getValues("lotId"),
         placeId: getValues("placeId"),
         palletNumber: getValues("palletNumber"),
-        heightCMs: getValues("heightCMs"),
-        widthCMs: getValues("widthCMs"),
+        unitOfMeasure: selectedProduct?.boxDetails?.unitOfMeasure || "",
+        qPerUnit: selectedProduct?.boxDetails?.quantity || 1,
+        unitsPerBox: selectedProduct?.boxDetails?.units || 1,
       };
       const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
       if (
@@ -244,6 +251,42 @@ export const CreateDispatchController = ({
       if (dispatchToEdit) {
         if (!dispatchToEdit.id) {
           throw new ValidationError("Entry to edit has no id");
+        }
+        if (addedToDispatch.length === 0) {
+          if (
+            window.confirm(
+              t(
+                "You have removed all products from this dispatch. Do you want to delete the dispatch instead?"
+              )
+            )
+          ) {
+            try {
+              setIsLoading(true);
+              await removeDispatch(dispatchToEdit.id);
+              toast({
+                title: t("Dispatch deleted"),
+                description: t("The dispatch has been deleted successfully."),
+                status: "success",
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ["dispatches"],
+                exact: false,
+              });
+              navigate("/dispatches");
+            } catch (removeError) {
+              toast({
+                title: t("Error"),
+                description:
+                  removeError instanceof Error
+                    ? removeError.message
+                    : t("Failed to delete dispatch"),
+                status: "error",
+              });
+            } finally {
+              setIsLoading(false);
+            }
+          }
+          return;
         }
         await updateDispatchMutation(
           {
@@ -308,22 +351,40 @@ export const CreateDispatchController = ({
     { field: "extCode", headerName: t("External Code"), width: 150 },
     { field: "intCode", headerName: t("Internal Code"), width: 150 },
     { field: "productName", headerName: t("Product Name"), width: 150 },
-
     { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
-    {
-      field: "looseUnitsNumber",
-      headerName: t("Loose Units Number"),
-      width: 150,
-    },
     {
       field: "totalUnitsNumber",
       headerName: t("Total Units Number"),
+      width: 150,
+      renderHeader() {
+        return (
+          <Box display="flex" justifyContent="center" width="100%">
+            {t("Total Liters / Kilos")}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "boxes",
+      headerName: t("Total Boxes"),
       width: 150,
     },
   ];
 
   let rows: IDispatchRow[] = addedToDispatch.reduce((acc, p) => {
     const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+    const unitOfMeasure = p.unitOfMeasure;
+    let totalUnitsnumber;
+    if (
+      unitOfMeasure === "ML" ||
+      unitOfMeasure === "Gram" ||
+      unitOfMeasure === "C.C"
+    ) {
+      totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
+    } else {
+      totalUnitsnumber = p.unitsNumber;
+    }
+
     if (!acc.find((row) => row.id === uniqueId)) {
       const productInfo = products.find((pr) => pr.id === p.id);
       acc.push({
@@ -333,9 +394,10 @@ export const CreateDispatchController = ({
         productName: productInfo?.name || "",
         unitsNumber: p.unitsNumber,
         looseUnitsNumber: p.looseUnitsNumber,
-        totalUnitsNumber: p.totalUnitsNumber,
         lotId: p.lotId,
         palletNumber: p.palletNumber,
+        totalUnitsNumber: totalUnitsnumber,
+        boxes: p.unitsNumber / p.unitsPerBox! || 1,
       });
     }
     return acc;
@@ -381,6 +443,11 @@ export const CreateDispatchController = ({
 
   useEffect(() => {
     // USE EFFECT TO ONLY RENDER UNIQUE TRANSPORTERS AND DISCARD THE REPEATED ONES
+    Logger.info("setting transporters", [
+      searchResults,
+      getTransporters,
+      isOpenCreateTransporter,
+    ]);
     const uniqueTransporters = [
       ...((searchResults as ITransporter[]) || []),
       ...(getTransporters || []),
@@ -391,12 +458,7 @@ export const CreateDispatchController = ({
     setTransporters(uniqueTransporters);
     setValue("transporterId", uniqueTransporters[0]?.id || "");
     trigger();
-  }, [
-    searchResults,
-    getTransporters,
-    isOpenCreateProduct,
-    isOpenCreateTransporter,
-  ]);
+  }, [searchResults, getTransporters, isOpenCreateTransporter]);
 
   const uniqueProducts = useMemo(() => {
     return [
@@ -412,6 +474,7 @@ export const CreateDispatchController = ({
     // USE EFFECT TO ONLY RENDER UNIQUE PRODUCTS AND DISCARD THE REPEATED ONES
     setProducts(uniqueProducts);
     setProductId(uniqueProducts[0]?.id || "");
+    setSelectedProduct(uniqueProducts[0] || null);
     setValue("productId", uniqueProducts[0]?.id || "");
     trigger();
   }, [uniqueProducts, isOpenCreateProduct]);
@@ -424,7 +487,7 @@ export const CreateDispatchController = ({
     setLots(uniqueLots);
     setValue("lotId", uniqueLots[0]?.lotId || "");
     trigger();
-  }, [searchResults, getProductsData, isOpenCreateProduct]);
+  }, [searchResults, getProductsData]);
 
   useEffect(() => {
     // USE EFFECT TO SET THE VALUE OF THE PLACE SELECTOR TO THE FIRST OPTION OF THE DB
@@ -472,6 +535,18 @@ export const CreateDispatchController = ({
       );
     }
   }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
+
+  const unitsTooltipLabel = `${t(
+    "Each unit is made up of"
+  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${
+    selectedProduct?.boxDetails!.quantity
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
+
+  const looseUnitsTooltipLabel = `${t(
+    "Each unit is made up of"
+  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${t("of")} ${
+    selectedProduct?.boxDetails!.quantity
+  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
 
   return {
     isLoading,
@@ -536,5 +611,16 @@ export const CreateDispatchController = ({
     isLoadingTotalStockByLotAndProduct,
     isErrorTotalStockByLotAndProduct,
     productId,
+    showBoxTooltip,
+    setShowBoxTooltip,
+    showUnitsTooltip,
+    setShowUnitsTooltip,
+    showTotalTooltip,
+    setShowTotalTooltip,
+    unitsTooltipLabel,
+    looseUnitsTooltipLabel,
+    selectedProduct,
+    setSelectedProduct,
+    register,
   };
 };
