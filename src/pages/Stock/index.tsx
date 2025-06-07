@@ -13,12 +13,7 @@ import { StockList } from "modules/stock/presentation";
 import { useEffect, useState } from "react";
 import { Search } from "shared/Form";
 import { FlexBox, FlexColumn, Loading, Page, PageHeader } from "shared/Layout";
-import {
-  EmptyStateResult,
-  ErrorPageStrategy,
-  LetsBegin,
-  Result,
-} from "shared/Result";
+import { EmptyStateResult, ErrorPageStrategy, LetsBegin } from "shared/Result";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { Controller, useForm } from "react-hook-form";
@@ -41,7 +36,7 @@ const StockPage = () => {
   const [suppsAndTrans, setSuppsAndTrans] = useState<ISuppsAndTrans>([]);
   const [placesInfo, setPlacesInfo] = useState<IPlace[]>([]);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
   const [isFetchingEntriesByProductId, setIsFetchingEntriesByProductId] =
     useState(false);
@@ -50,39 +45,42 @@ const StockPage = () => {
 
   const { control } = useForm();
   const { stockData, isLoadingGetStock } = useStock();
+  console.log("stockData", stockData);
 
-  useEffect(() => {
-    const fetchProductEntries = async () => {
-      setIsFetchingEntries(true);
-      try {
-        const entries = await fetchEntriesByProductIdAndLotId(
-          searchedStockProduct,
-          lotSelected
-        );
-        setProductEntries(entries);
-      } catch (error) {
-        Logger.error("Failed to fetch entries", error as unknown as APIError);
-      } finally {
-        setIsFetchingEntries(false);
-      }
-    };
-    fetchProductEntries();
-  }, [searchedStockProduct, lotSelected]);
+  // useEffect(() => {
+  //   const fetchProductEntries = async () => {
+  //     setIsFetchingEntries(true);
+  //     try {
+  //       const entries = await fetchEntriesByProductIdAndLotId(
+  //         searchedStockProduct,
+  //         lotSelected
+  //       );
+  //       setProductEntries(entries);
+  //     } catch (error) {
+  //       Logger.error("Failed to fetch entries", error as unknown as APIError);
+  //     } finally {
+  //       setIsFetchingEntries(false);
+  //     }
+  //   };
+  //   fetchProductEntries();
+  // }, [searchedStockProduct, lotSelected]);
 
   // fetch stock based on the entries
   useEffect(() => {
     // if (!lotSelected && !searchedStockProduct) return;
-    if (searchedStockProduct) {
+    if (searchedStockProduct && !lotSelected) {
       const fetchStockByProductId = async () => {
         if (!searchedStockProduct) return;
         const productStock = await getStockByProdId(searchedStockProduct);
         setProductStock(productStock);
+        return;
       };
       fetchStockByProductId();
     } else if (lotSelected && !searchedStockProduct) {
       const fetchStockByLotId = async () => {
         const stock = await getStockByLotId(lotSelected);
         setProductStock(stock);
+        return;
       };
       fetchStockByLotId();
     } else {
@@ -92,6 +90,7 @@ const StockPage = () => {
           lotSelected
         );
         setProductStock(stock);
+        return;
       };
       fetchStockByProductIdAndLotId();
     }
@@ -154,12 +153,14 @@ const StockPage = () => {
       );
 
       // fetch places info
+
       const placesPromises = uniquePlacesIds.map((id) => {
+        if (!id) return Promise.resolve(null); // Skip if id is empty
         return getPlaceById(id!);
       });
 
       const placesInfo = await Promise.all(placesPromises);
-      setPlacesInfo(placesInfo);
+      setPlacesInfo(placesInfo.filter((place) => place !== null) as IPlace[]);
     };
     fetchPlacesInfo();
   }, [productEntries]);
@@ -224,19 +225,26 @@ const StockPage = () => {
     }
   };
 
-  const renderLoading = () => {
-    if (isLoadingGetStock || isFetchingEntries) {
-      return <Loading size="md" />;
-    }
-  };
+  // const renderLoading = () => {
+  //   if (
+  //     isLoadingGetStock ||
+  //     isFetchingEntries ||
+  //     isLoadingProductSearch ||
+  //     // isLoadingLotSearch ||
+  //     isFetchingEntriesByProductId ||
+  //     isFetchingEntries
+  //   ) {
+  //     return <Loading size="md" />;
+  //   }
+  // };
 
-  const renderLetsBegin = () => {
-    if (stockData?.length && !(setSearchedStockProduct || lotSelected)) {
-      return (
-        <LetsBegin headingText="Start by searching for a product AND/OR lot" />
-      );
-    }
-  };
+  // const renderLetsBegin = () => {
+  //   if (stockData?.length && !(setSearchedStockProduct || lotSelected)) {
+  //     return (
+  //       <LetsBegin headingText="Start by searching for a product AND/OR lot" />
+  //     );
+  //   }
+  // };
 
   return (
     <Page>
@@ -264,9 +272,9 @@ const StockPage = () => {
                     searchFunction={searchProduct}
                     setResults={setSearchedProductsResult}
                     notFoundText={t("No products found")}
-                    setIsLoading={setIsLoading}
+                    setIsLoading={setIsLoadingProductSearch}
                   />
-                  {isLoading && (
+                  {isLoadingProductSearch && (
                     <FlexBox justifyContent="center" w={"100%"}>
                       <Loading size="xs" />
                     </FlexBox>
@@ -295,7 +303,7 @@ const StockPage = () => {
               render={({ field }) => (
                 <FlexColumn gap={4}>
                   <Search<IStock>
-                    placeholderText={t("Search for a lot")}
+                    placeholderText={t("Search by lot")}
                     searchFunction={searchLot}
                     setResults={setLotsResults}
                     notFoundText={t("No lots found")}
@@ -325,8 +333,8 @@ const StockPage = () => {
           </FormControl>
         </Box>
       </PageHeader>
-      {renderLoading()}
-      {renderLetsBegin()}
+      {/* {renderLoading()} */}
+      {/* {renderLetsBegin()} */}
       {productEntries ? (
         <StockList
           entries={productEntries}
@@ -335,6 +343,14 @@ const StockPage = () => {
           selectedLot={lotSelected}
           suppsAndTrans={suppsAndTrans}
           placesInfo={placesInfo}
+          isLoading={
+            isLoadingGetStock ||
+            isFetchingEntries ||
+            isLoadingProductSearch ||
+            // isLoadingLotSearch ||
+            isFetchingEntriesByProductId ||
+            isFetchingEntries
+          }
         />
       ) : (
         <EmptyStateResult />

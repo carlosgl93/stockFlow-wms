@@ -158,4 +158,8 @@ export const products = {
   "Quantity Per Unit": "Cant x unidad",
   "U. Of Measure": "U. de medida",
   "Quantity (ML) per unit": "Cantidad (ML) por unidad",
+  "Quantity (Litros) per unit": "Cantidad (litros) por unidad",
+  "Product deleted": "Producto eliminado",
+  "Product deleted successfully": "Producto eliminado exitosamente",
+  "Bulk Create": "Creación Masiva",
 };

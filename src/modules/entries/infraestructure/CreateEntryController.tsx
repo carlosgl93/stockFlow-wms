@@ -18,7 +18,11 @@ import { useProducts } from "modules/products/infrastructure";
 import { ITransporter } from "modules/transporters/types";
 import { useTransporters } from "modules/transporters/infrastructure";
 import { ValidationError } from "shared/Error";
-import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridRenderCellParams,
+  GridRowParams,
+} from "@mui/x-data-grid";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
@@ -128,7 +132,10 @@ export const CreateEntryController = ({
       ]
         .filter(Boolean)
         .join(", ")}`,
-      products: addedToEntry,
+      products: addedToEntry.map((p) => ({
+        ...p,
+        lotId: p.lotId.toLowerCase(),
+      })),
     };
   };
 
@@ -179,6 +186,39 @@ export const CreateEntryController = ({
         description: errorMessage,
         status: "error",
       });
+    }
+  };
+
+  const handleRowClick = (params: GridRowParams) => {
+    const clickedRowId = params.row.id as string; // Assuming 'id' in your rows is the uniqueId like `${p.id}-${p.lotId}-${p.palletNumber}`
+
+    // Find the product in addedToEntry that corresponds to the clicked row
+    // The uniqueId for rows is created as `${p.id}-${p.lotId}-${p.palletNumber}`
+    const productEntry = addedToEntry.find(
+      (p) => `${p.id}-${p.lotId}-${p.palletNumber}` === clickedRowId
+    );
+
+    if (productEntry) {
+      setValue("productId", productEntry.id);
+      setValue("lotId", productEntry.lotId);
+      setValue("placeId", productEntry.placeId || "");
+      setValue(
+        "expirityDate",
+        productEntry.expirityDate || new Date().toISOString()
+      );
+      setValue("palletNumber", productEntry.palletNumber);
+      setValue("unitsNumber", productEntry.unitsNumber);
+      setValue("looseUnitsNumber", productEntry.looseUnitsNumber || 0);
+      // Recalculate or set totalUnitsNumber based on your logic
+      // For simplicity, directly setting it from productEntry, adjust as needed
+      setValue("totalUnitsNumber", productEntry.totalUnitsNumber || 0);
+
+      // Update selectedProduct state if necessary
+      const productDetails = products.find((p) => p.id === productEntry.id);
+      if (productDetails) {
+        setSelectedProduct(productDetails);
+      }
+      trigger(); // Optionally trigger validation or re-render
     }
   };
 
@@ -517,5 +557,6 @@ export const CreateEntryController = ({
     register,
     selectedProduct,
     setSelectedProduct,
+    handleRowClick,
   };
 };

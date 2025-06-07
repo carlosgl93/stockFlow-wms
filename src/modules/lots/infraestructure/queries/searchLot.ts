@@ -9,43 +9,71 @@ import {
   FirestoreError,
   collection,
   getDocs,
-  limit,
   orderBy,
   query,
-  where,
 } from "firebase/firestore";
 import { IStock } from "modules/stock/types";
 import { db } from "shared/firebase";
 import { Logger } from "utils/logger";
 
-export async function searchLot(name: string) {
-  Logger.info("searchLot", { name });
+export async function searchLot(name: string): Promise<IStock[]> {
+  Logger.info("searchLot request received", { name });
   if (typeof name !== "string" || name.trim() === "") {
-    Logger.error("Invalid lot name provided");
+    Logger.warn("Invalid or empty lot name provided to searchLot", { name });
     return [];
   }
 
-  name = name.trim().toLowerCase(); // Trim the name parameter
-
-  const collectionRef = collection(db, "stock");
-  const q = query(
-    collectionRef,
-    where("lotId", ">=", name),
-    where("lotId", "<=", name + "\uf8ff"),
-    orderBy("createdAt")
+  const searchTerm = name.trim().toLowerCase();
+  Logger.info(
+    `Searching for lots where lotId contains '${searchTerm}' (case-insensitive)`
   );
 
+  const collectionRef = collection(db, "stock");
+  // To achieve a "contains" (ILIKE '%name%') style search, we fetch documents
+  // and then filter them in the application code.
+  // WARNING: This can be inefficient and costly for large datasets.
+  // For better performance, consider data restructuring for search or a dedicated search service.
+  const q = query(collectionRef, orderBy("createdAt")); // Retain ordering; adjust if not needed.
+
   try {
-    const docs = await getDocs(q);
-    if (docs.empty) {
-      Logger.info("No matching lots found");
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      Logger.info(
+        "No documents found in 'stock' collection (or matched base query)."
+      );
       return [];
     }
-    return docs.docs.map((doc) => {
-      return { ...doc.data(), id: doc.id };
-    }) as IStock[];
+
+    const allStockItems = querySnapshot.docs.map((doc) => {
+      return { ...doc.data(), id: doc.id } as IStock;
+    });
+
+    const filteredLots = allStockItems.filter((item) => {
+      // Ensure item.lotId exists and is a string before calling toLowerCase()
+      if (item.lotId && typeof item.lotId === "string") {
+        return item.lotId.toLowerCase().includes(searchTerm);
+      }
+      return false;
+    });
+
+    if (filteredLots.length === 0) {
+      Logger.info(
+        `No lots found containing '${searchTerm}' after filtering ${allStockItems.length} items.`
+      );
+    } else {
+      Logger.info(
+        `Found ${filteredLots.length} lot(s) containing '${searchTerm}' after filtering ${allStockItems.length} items.`
+      );
+    }
+
+    return filteredLots;
   } catch (error) {
-    Logger.error("Error searching lots: ", error as FirestoreError);
-    return [];
+    const firestoreError = error as FirestoreError;
+    Logger.error("Error during searchLot execution", {
+      errorMessage: firestoreError.message,
+      errorCode: firestoreError.code,
+      details: firestoreError,
+    });
+    return []; // Return empty array on error
   }
 }

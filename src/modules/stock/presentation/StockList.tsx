@@ -18,6 +18,7 @@ interface IProps {
   selectedLot: string;
   suppsAndTrans: ISuppsAndTrans;
   placesInfo: IPlace[];
+  isLoading: boolean;
 }
 
 interface IRow {
@@ -39,6 +40,7 @@ export const StockList = ({
   selectedLot,
   suppsAndTrans,
   placesInfo,
+  isLoading,
 }: IProps) => {
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -112,11 +114,13 @@ export const StockList = ({
   ];
 
   const [rows, setRows] = useState<IRow[]>([]);
+  console.log("rows", rows);
 
   const generateRows = (): IRow[] => {
     let total = 0;
     let wholeUnitsTotal = 0;
     let looseUnitsTotal = 0;
+    console.log("Generating rows with entries:", entries);
     const rows = entries
       .filter((entry) =>
         entry?.products?.some(
@@ -177,7 +181,6 @@ export const StockList = ({
       </FlexBox>
       <AppThemeProvider>
         <DataGrid
-          loading={isFetching || isLoadingGetLots}
           slotProps={{
             loadingOverlay: {
               variant: "skeleton",
@@ -189,6 +192,7 @@ export const StockList = ({
           rowCount={rows.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          loading={isLoading}
           slots={{
             noRowsOverlay: () => (
               <FlexBox
@@ -199,7 +203,11 @@ export const StockList = ({
                   justifyContent: "center",
                 }}
               >
-                <Text>{t("Start by searching for a product or lot")}</Text>
+                <Text>
+                  {t(
+                    "Start by searching for a product or lot on the top right corner"
+                  )}
+                </Text>
               </FlexBox>
             ),
           }}

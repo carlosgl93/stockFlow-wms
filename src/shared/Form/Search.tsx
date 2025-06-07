@@ -1,9 +1,10 @@
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useMemo } from "react";
 import { Input, Box, Text } from "@chakra-ui/react";
 import { debounce } from "lodash-es";
 import { Logger } from "utils/logger";
 import { useTranslate } from "utils";
 import { useBrandColor } from "theme";
+import { FirebaseError } from "firebase/app";
 
 interface SearchProps<T> {
   setResults: Dispatch<SetStateAction<T[]>>;
@@ -25,28 +26,60 @@ export const Search = <T,>({
   const [displayFeedback, setDisplayFeedback] = useState(false);
   const { t } = useTranslate();
 
-  const handleSearch = debounce(async (name: string) => {
-    setIsLoading(true);
-    const results = await searchFunction(name);
-    Logger.info("results found: ", results);
-    if (results?.length) {
-      setResults(results);
-    } else {
-      setDisplayFeedback(true);
-      setTimeout(() => {
-        setDisplayFeedback(false);
-      }, 3000);
-    }
-    setIsLoading(false);
-  }, 1000);
+  const debouncedSearchFunction = useMemo(() => {
+    return debounce(async (name: string) => {
+      try {
+        const results = await searchFunction(name);
+        Logger.info("results found: ", results);
+        if (results?.length) {
+          setResults(results);
+          setDisplayFeedback(false);
+        } else {
+          setResults([]);
+          setDisplayFeedback(true);
+          setTimeout(() => {
+            setDisplayFeedback(false);
+          }, 3000);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          Logger.error("Search function error:", [error.message]);
+        }
+        if (error instanceof FirebaseError) {
+          Logger.error("Firebase error in search function:", [error.message]);
+        }
+        setResults([]);
+        setDisplayFeedback(true);
+        if (error instanceof Error) {
+          Logger.error("Search function error:", [error.message]);
+        }
+        if (error instanceof FirebaseError) {
+          Logger.error("Firebase error in search function:", [error.message]);
+        }
+        setTimeout(() => {
+          setDisplayFeedback(false);
+        }, 3000);
+      } finally {
+        setIsLoading(false); // Set loading to false after search completes or errors
+      }
+    }, 1000);
+  }, [searchFunction, setResults, setIsLoading, setDisplayFeedback]);
 
   useEffect(() => {
-    if (query.trim() !== "") {
-      handleSearch(query.toLowerCase());
+    const trimmedQuery = query.trim();
+    if (trimmedQuery !== "") {
+      setIsLoading(true); // Set loading to true when query changes and is not empty
+      debouncedSearchFunction(trimmedQuery.toLowerCase());
     } else {
       setResults([]);
+      setIsLoading(false); // Set loading to false if query is empty
+      debouncedSearchFunction.cancel(); // Cancel any pending debounced calls
     }
-  }, [query]);
+
+    return () => {
+      debouncedSearchFunction.cancel(); // Cleanup on unmount
+    };
+  }, [query, debouncedSearchFunction, setIsLoading, setResults]);
 
   return (
     <Box w={"100%"}>

@@ -59,6 +59,7 @@ export const useEntries = () => {
         duration: 5000,
         isClosable: true,
       });
+      redirect("/entries");
     },
     onError: (error: FirestoreError) => {
       toast({

@@ -41,7 +41,6 @@ export const CreateProductForm = ({
   const queryClient = useQueryClient();
   const redirect = useRedirect();
   const location = useLocation();
-  Logger.info("location", [location]);
 
   const { saveProductMutation, saveProductIsLoading, saveProductIsSuccess } =
     useProducts();
@@ -80,6 +79,7 @@ export const CreateProductForm = ({
         }
         return [data];
       });
+      queryClient.invalidateQueries(["products"]);
 
       redirect("/products");
     },
@@ -133,30 +133,37 @@ export const CreateProductForm = ({
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setSafetyDocument(files);
-      setValue("safetyDocument", files);
-    }
-  };
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files;
+  //   if (files) {
+  //     setSafetyDocument(files);
+  //     setValue("safetyDocument", files);
+  //   }
+  // };
 
   useEffect(() => {
-    if (productToEdit?.id && location.state.product) {
-      const product = location.state.product as IProduct;
-      Logger.info("Product to edit", [location.state.product && productToEdit]);
+    if (productToEdit?.id) {
+      // Map productToEdit fields to form fields
       reset();
-      Object.keys(location.state.product).forEach((key) => {
-        Logger.info("key", [key, product[key as keyof IProduct]]);
-        setValue(key as keyof IProduct, product[key as keyof IProduct]);
-        if (key === "boxDetails" && product.boxDetails) {
-          Object.keys(product.boxDetails).forEach((boxKey) => {
-            setValue(
-              `boxDetails.${boxKey}` as keyof IProduct,
-              product.boxDetails?.[boxKey as keyof IBoxDetails]
-            );
-          });
-        }
+      setValue("extCode", productToEdit.extCode || "");
+      setValue("internalCode", productToEdit.internalCode || "");
+      setValue("name", productToEdit.name || "");
+      setValue("warehouseStock", productToEdit.warehouseStock || 0);
+      setValue("riskCategory", productToEdit.riskCategory || "");
+      setValue("category", productToEdit.category || "");
+      setValue("selectionType", productToEdit.selectionType);
+      setValue(
+        "boxDetails.unitOfMeasure",
+        productToEdit.boxDetails.unitOfMeasure || IUnitOfMeasure.CC
+      );
+      setValue("boxDetails", {
+        unitOfMeasure: productToEdit.boxDetails.unitOfMeasure,
+        type: productToEdit.boxDetails.type,
+        units: productToEdit.boxDetails.units,
+        quantity: Number(productToEdit.boxDetails.quantity || ""),
+        unitsPerSurface: productToEdit.boxDetails.unitsPerSurface || 0,
+        container: productToEdit?.boxDetails.container as IContainer,
+        kilos: 0,
       });
       trigger();
       return;
@@ -169,7 +176,7 @@ export const CreateProductForm = ({
       trigger();
       return;
     }
-  }, [setValue, productToEdit, trigger]);
+  }, []);
 
   const selectionType = watch("selectionType");
   const unitOfMeasure = watch("boxDetails.unitOfMeasure");
@@ -185,7 +192,7 @@ export const CreateProductForm = ({
     setValue("boxDetails.kilos", qPerUnit * unitsPerBox);
   }, [qPerUnit, unitsPerBox]);
 
-  if (saveProductIsLoading) {
+  if (saveProductIsLoading || editIsLoading) {
     return <Loading size="md" />;
   }
 
@@ -401,7 +408,16 @@ export const CreateProductForm = ({
             name="boxDetails.units"
             control={control}
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                value={
+                  productToEdit?.boxDetails.units
+                    ? productToEdit?.boxDetails.units
+                    : field.value
+                }
+              />
+            )}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
@@ -422,7 +438,7 @@ export const CreateProductForm = ({
             render={({ field }) => {
               const unit = watch("boxDetails.unitOfMeasure");
               let value = field.value;
-              if (["ML", "Gram", "C.C"].includes(unit)) {
+              if (["ML", "Gram", "C.C"].includes(unit || "")) {
                 value = value ? value / 1000 : 0;
               }
               return <Input {...field} value={value} disabled />;
@@ -433,9 +449,9 @@ export const CreateProductForm = ({
         {selectionType === "box" && (
           <FormControl mb={4}>
             <FormLabel>
-              {`${t("Quantity")} ${t(watch("boxDetails.unitOfMeasure"))}s ${t(
-                "by unit"
-              )}`}
+              {`${t("Quantity")} ${t(
+                watch("boxDetails.unitOfMeasure") || ""
+              )}s ${t("by unit")}`}
             </FormLabel>
             <Controller
               name="boxDetails.quantity"

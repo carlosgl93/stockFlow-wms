@@ -89,7 +89,7 @@ const ProductsPage = () => {
             {t("Create")}
           </Button>
 
-          <input
+          {/* <input
             type="file"
             accept=".xlsx, .xls"
             onChange={handleFileUpload}
@@ -97,8 +97,8 @@ const ProductsPage = () => {
             id="file-upload"
           />
           <label htmlFor="file-upload">
-            <Button as="span">{t("Upload Excel")}</Button>
-          </label>
+            <Button as="span">{t("Bulk Create")}</Button>
+          </label> */}
         </Box>
       </PageHeader>
       {isPreviewFromExcelLoad && uploadedProducts && (

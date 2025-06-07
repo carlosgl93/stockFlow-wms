@@ -88,6 +88,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     selectedProduct,
     addedToEntry,
     setSelectedProduct,
+    handleRowClick,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
   const boxesTooltipLabel = `${t("Each box is made up of")} ${
@@ -656,6 +657,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             rows={rows || []}
             columns={columns}
             rowCount={rows?.length || 100}
+            onRowClick={handleRowClick}
           />
         </AppThemeProvider>
 

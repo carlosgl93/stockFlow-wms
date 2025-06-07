@@ -5,6 +5,7 @@ import {
   IContainer,
   IUnitOfMeasure,
   IPallet,
+  IMaterialType,
 } from "modules/products/types";
 import { createFixture } from "./createFixture";
 
@@ -22,7 +23,7 @@ export const ProductFixture = createFixture<IProduct>({
     quantity: 100,
     unitOfMeasure: IUnitOfMeasure.Liter,
     container: IContainer.Bidon,
-    type: "Plastic",
+    type: IMaterialType.Plastic,
     kilos: 5,
     height: 30,
     width: 20,

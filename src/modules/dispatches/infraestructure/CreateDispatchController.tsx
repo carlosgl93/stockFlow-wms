@@ -250,7 +250,7 @@ export const CreateDispatchController = ({
       Logger.info("data", [data]);
       if (dispatchToEdit) {
         if (!dispatchToEdit.id) {
-          throw new ValidationError("Entry to edit has no id");
+          throw new ValidationError("Invalid entry! No id found");
         }
         if (addedToDispatch.length === 0) {
           if (

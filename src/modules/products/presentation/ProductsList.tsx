@@ -5,7 +5,7 @@ import { AppThemeProvider } from "theme/materialTheme";
 import { capitalize, useRedirect, useTranslate } from "utils";
 import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { ExcelProductType } from "../types/IProduct";
 
 interface IProps {
@@ -105,7 +105,7 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
     unitsPerBox: product.boxDetails?.units,
     quantity: `${product.boxDetails?.quantity} ${t(
       product.boxDetails?.unitOfMeasure || ""
-    )}${(product.boxDetails?.quantity || 0) > 1 ? "s" : ""}
+    )}
     `,
     unitsPerSurface: product.boxDetails?.unitsPerSurface,
     container: product.boxDetails?.container,

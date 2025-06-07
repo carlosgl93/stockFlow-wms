@@ -55,7 +55,7 @@ export const fetchStock = async (
         : null;
       return { ...stock, product: productData as IProduct };
     });
-
+    console.log("Fetched stock with products:", stockWithProducts);
     return stockWithProducts;
   } catch (error) {
     throw new APIError("Failed to fetch stock", error);
@@ -161,6 +161,7 @@ export const getStockById = async (stockId: string): Promise<IStock> => {
 };
 
 export const getStockByProdId = async (prodId: string): Promise<IStock[]> => {
+  console.log("getStockByProdId called with prodId:", prodId);
   try {
     const stockRef = collection(db, "stock");
     const q = query(

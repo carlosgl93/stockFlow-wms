@@ -784,14 +784,17 @@ export const fetchEntriesByProductIdAndLotId = async (
       const productsRef = collection(db, "entries", entry.id!, "products");
       let q;
       if (productId && lotId) {
+        Logger.info("Both productId and lotId provided", [productId, lotId]);
         q = query(
           productsRef,
           where("id", "==", productId),
           where("lotId", "==", lotId)
         );
       } else if (productId) {
+        Logger.info("productId provided", [productId]);
         q = query(productsRef, where("id", "==", productId));
       } else if (lotId) {
+        Logger.info("lotid provided", [lotId]);
         q = query(productsRef, where("lotId", "==", lotId));
       } else {
         continue;

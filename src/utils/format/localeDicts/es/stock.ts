@@ -26,5 +26,9 @@ export const stock = {
   "Place:": "Ubicación",
   "Start by searching for a product or lot":
     "Empieza buscando un producto o lote",
+  "Start by searching for a product or lot on the top right corner":
+    "Empieza buscando un producto o lote en la esquina superior derecha",
   All: "Todos",
+  "Search by lot": "Buscar por lote",
+  "No lots found": "No se encontraron lotes",
 };
