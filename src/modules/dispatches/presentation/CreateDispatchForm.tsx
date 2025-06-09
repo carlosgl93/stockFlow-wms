@@ -14,6 +14,7 @@ import {
   RadioGroup,
   Radio,
   Tooltip,
+  Text,
 } from "@chakra-ui/react";
 import { Controller } from "react-hook-form";
 import { FlexBox, FlexColumn, Loading } from "shared/Layout";
@@ -351,8 +352,8 @@ export const CreateDispatchForm = ({
               name="lotId"
               control={control}
               defaultValue=""
-              rules={{ required: dispatchToEdit ? false : true }}
-              render={({ field }) => (
+              rules={{ required: true }}
+              render={({ field, fieldState }) => (
                 <>
                   {isSearchingLot && (
                     <Search<IStock>
@@ -376,6 +377,7 @@ export const CreateDispatchForm = ({
                       setLotId(e.target.value);
                     }}
                   >
+                    {/* <option>{fieldState.error?.message || ""}</option> */}
                     {getProductLotsData?.lots?.map((lot) => (
                       <option key={lot.id} value={lot.lotId}>
                         {lot.lotId}
@@ -694,6 +696,20 @@ export const CreateDispatchForm = ({
             rows={rows || []}
             columns={columns}
             rowCount={rows?.length || 100}
+            slots={{
+              noRowsOverlay: () => (
+                <FlexBox
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    alignContent: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text>{t("Start by a product to dispatch")}</Text>
+                </FlexBox>
+              ),
+            }}
           />
         </AppThemeProvider>
         <Button

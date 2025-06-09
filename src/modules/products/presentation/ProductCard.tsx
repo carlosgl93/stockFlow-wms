@@ -5,8 +5,6 @@ import { moneyVO } from "utils";
 
 import { useNavigate } from "shared/Router";
 
-import { AddToCartButton } from "modules/carts/presentation";
-
 import { Category, IProduct } from "../types";
 import { useCategoryLabel } from "./useCategoryLabel";
 

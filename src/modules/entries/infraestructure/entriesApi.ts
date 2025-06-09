@@ -64,8 +64,21 @@ export const fetchEntries = async (
 };
 
 export const addEntry = async (entry: EntryDTO): Promise<void> => {
+  // Normalize string values to uppercase
+  entry.docNumber = entry.docNumber?.toUpperCase();
+  entry.description = entry.description?.toUpperCase();
+
+  entry.products = entry.products.map((product) => ({
+    ...product,
+    lotId: product.lotId?.toUpperCase(), // Uppercase if provided, else remains undefined
+    // placeId: product.placeId?.toUpperCase(), // Uppercase if provided, else remains undefined
+    // expirityDate is a date string and should not be uppercased
+    // palletNumber normalization can be added here if it's part of ProductInEntryDTO and needs it
+    palletNumber: product.palletNumber?.toUpperCase(),
+  }));
+
   delete entry.id;
-  Logger.info("creating entry from data:", entry);
+  Logger.info("creating entry from data (normalized):", entry);
   try {
     const now = dateVO.now();
     return await runTransaction(db, async (transaction) => {
@@ -89,7 +102,8 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
         .filter(
           (product) =>
             product.placeId !== "" &&
-            product.placeId !== "No especificaré un lugar"
+            product.placeId !== "No especificaré un lugar" &&
+            product.placeId !== "NO ESPECIFICARÉ UN LUGAR"
         )
         .map((product) => doc(db, "places", product?.placeId || ""));
       const placeDocs = await Promise.all(
@@ -164,6 +178,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
               stockData.looseUnitsNumber + product.looseUnitsNumber,
             updatedAt: now,
             placeId: product?.placeId,
+            expirityDate: product?.expirityDate || stockData.expirityDate,
           });
         } else {
           // Create new stock entry
@@ -177,6 +192,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             createdAt: now,
             updatedAt: now,
             placeId: product?.placeId,
+            expirityDate: product?.expirityDate,
           });
         }
 
@@ -216,6 +232,8 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             looseUnitsNumber:
               (lotProductData.looseUnitsNumber || 0) + product.looseUnitsNumber,
             placeId: product?.placeId,
+            expirationDate:
+              product?.expirityDate || lotProductData.expirityDate,
           });
         } else {
           const lotProductRef = doc(collection(db, "lotProducts"));
@@ -226,6 +244,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             unitsNumber: product.unitsNumber,
             looseUnitsNumber: product.looseUnitsNumber,
             placeId: product?.placeId,
+            expirationDate: product?.expirityDate,
           });
         }
       }
@@ -249,7 +268,20 @@ export const updateEntry = async ({
   entryId: string;
   values: EntryDTO;
 }): Promise<IEntry> => {
-  Logger.info("values", values);
+  // Normalize string values to uppercase
+  values.docNumber = values.docNumber?.toUpperCase();
+  values.description = values.description?.toUpperCase();
+
+  values.products = values.products.map((product) => ({
+    ...product,
+    lotId: product.lotId?.toUpperCase(), // Uppercase if provided, else remains undefined
+    // placeId: product.placeId?.toUpperCase(), // Uppercase if provided, else remains undefined
+    // expirityDate is a date string and should not be uppercased
+    // palletNumber normalization can be added here if it's part of ProductInEntryDTO and needs it
+    palletNumber: product.palletNumber?.toUpperCase(),
+  }));
+
+  Logger.info("values for update (normalized)", values);
   try {
     return await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
@@ -273,7 +305,8 @@ export const updateEntry = async ({
         .filter(
           (product) =>
             product.placeId !== "" &&
-            product.placeId !== "No especificaré un lugar"
+            product.placeId !== "No especificaré un lugar" &&
+            product.placeId !== "NO ESPECIFICARÉ UN LUGAR"
         )
         .map((product) => doc(db, "places", product.placeId || ""));
       const placeDocs = await Promise.all(
@@ -427,6 +460,7 @@ export const updateEntry = async ({
             looseUnitsNumber: 0,
             createdAt: dateVO.now(),
             updatedAt: dateVO.now(),
+            expirityDate: product?.expirityDate || "",
           };
           transaction.set(stockRef, stockData);
         }
@@ -522,6 +556,7 @@ export const updateEntry = async ({
             productId: product.id,
             unitsNumber: product.unitsNumber,
             looseUnitsNumber: product.looseUnitsNumber,
+            expirationDate: product?.expirityDate || "",
           });
         }
       }

@@ -67,4 +67,5 @@ export const dispatches = {
   "No transporters found for this term":
     "No se encontraron transportistas para este término",
   "Edit Dispatch": "Editar Despacho",
+  "Start by a product to dispatch": "Comience por un producto a despachar",
 };

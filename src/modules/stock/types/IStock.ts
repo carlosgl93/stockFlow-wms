@@ -13,6 +13,7 @@ export interface IStock {
   updatedAt: string;
   placeId?: string;
   places?: IPlace[];
+  expirityDate: string;
 }
 
 export interface IRenderStock extends IStock {

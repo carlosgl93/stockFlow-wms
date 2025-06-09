@@ -23,7 +23,6 @@ export const fetchStock = async (
   pageSize: number,
   lastVisible: string | null
 ): Promise<IRenderStock[]> => {
-  Logger.info("fetchStock", { page, pageSize, lastVisible });
   try {
     const stockRef = collection(db, "stock");
     let q = query(stockRef, orderBy("createdAt"), limit(pageSize));
@@ -55,12 +54,12 @@ export const fetchStock = async (
         : null;
       return { ...stock, product: productData as IProduct };
     });
-    console.log("Fetched stock with products:", stockWithProducts);
     return stockWithProducts;
   } catch (error) {
     throw new APIError("Failed to fetch stock", error);
   }
 };
+
 export const addStock = async (stock: IStock): Promise<IStock> => {
   try {
     const now = dateVO.now();
@@ -161,7 +160,6 @@ export const getStockById = async (stockId: string): Promise<IStock> => {
 };
 
 export const getStockByProdId = async (prodId: string): Promise<IStock[]> => {
-  console.log("getStockByProdId called with prodId:", prodId);
   try {
     const stockRef = collection(db, "stock");
     const q = query(

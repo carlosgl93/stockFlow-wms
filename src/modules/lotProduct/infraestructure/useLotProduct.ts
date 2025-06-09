@@ -10,7 +10,19 @@ import { useQuery, useTranslate } from "utils";
 import { useParams } from "shared/Router";
 import { getLotProducts } from "./queries/getLotProducts";
 
-export const useLotProduct = () => {
+type useLotsProductProps = {
+  lotId?: string;
+  productId?: string;
+  pageSize?: number;
+  lastVisible?: string;
+};
+
+export const useLotProduct = ({
+  lotId,
+  productId,
+  pageSize = 25,
+  lastVisible,
+}: useLotsProductProps) => {
   const toast = useToast();
   const { t } = useTranslate();
 
@@ -82,8 +94,20 @@ export const useLotProduct = () => {
     isLoading: isLoadingGetLotProducts,
     isError: isErrorGetLotProducts,
   } = useQuery({
-    queryKey: ["getLotProducts", params?.lotProductId],
-    queryFn: () => getLotProducts(params.lotProductId, params.productId),
+    queryKey: [
+      "getLotProducts",
+      params.productId ? params.productId : productId,
+      params?.lotProductId ? params.lotProductId : lotId,
+      pageSize,
+      lastVisible,
+    ],
+    queryFn: () =>
+      getLotProducts(
+        params?.lotProductId ? params.lotProductId : lotId,
+        params.productId ? params.productId : productId,
+        pageSize,
+        lastVisible
+      ),
   });
 
   return {

@@ -1,15 +1,15 @@
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { IStock, ISuppsAndTrans } from "../types";
+import { Box, Text } from "@chakra-ui/react";
+import { IRenderStock, IStock, ISuppsAndTrans } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
-import { useRedirect, useTranslate } from "utils";
-import { useStock } from "../infraestructure";
+import { capitalize, useTranslate } from "utils";
 import { useEffect, useState } from "react";
-import { useProducts } from "modules/products/infrastructure";
-import { useLots } from "modules/lots/infraestructure";
 import { IEntry } from "modules/entries/types";
 import { FlexBox } from "shared/Layout";
 import { IPlace } from "modules/places/infra";
+import { Logger } from "utils/logger";
+import { IProduct } from "modules/products/types";
+import { ILotProductWithProduct } from "modules/lotProduct/infraestructure/queries";
 
 interface IProps {
   entries: IEntry[];
@@ -19,164 +19,191 @@ interface IProps {
   suppsAndTrans: ISuppsAndTrans;
   placesInfo: IPlace[];
   isLoading: boolean;
+  stockData: IRenderStock[];
+  lotProducts: ILotProductWithProduct[];
 }
 
 interface IRow {
   id: string;
-  docNumber: string;
+  productName: string;
   lotId: string | undefined;
-  expiryDate: string | undefined;
-  supplier: string;
-  transporter: string;
-  palletNumber: string | undefined;
-  unitsNumber: number | undefined;
-  looseUnitsNumber: number | undefined;
+  placeId: string | undefined;
+  totalUnits: string; // e.g., "500 Liters"
+  unitsNumber: number | undefined; // Keep for individual calculation if needed elsewhere
+  looseUnitsNumber: number | undefined; // Keep for individual calculation if needed elsewhere
+  // Add other fields from stockData if they are needed directly in the row
+  // For example, if expiryDate, supplier, transporter, palletNumber are still needed from stockData
+  // expiryDate: string | undefined;
+  // supplier: string;
+  // transporter: string;
+  // palletNumber: string | undefined;
+  // docNumber: string; // If needed from stockData or related data
 }
 
 export const StockList = ({
-  entries,
-  stock,
+  entries, // This prop might become unused or be used for other purposes
+  stock, // This prop might become unused or be used for other purposes
   productId,
   selectedLot,
-  suppsAndTrans,
+  suppsAndTrans, // This prop might become unused or be used for other purposes
   placesInfo,
   isLoading,
+  stockData,
+  lotProducts,
 }: IProps) => {
+  Logger.info("StockList rendered with props:", {
+    entries,
+    stock,
+    productId,
+    selectedLot,
+    suppsAndTrans,
+    placesInfo,
+    isLoading,
+    stockData,
+    lotProducts,
+  });
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
-  const { removeStockMutation, isLoadingRemoveStock } = useStock();
   const { t } = useTranslate();
-  const { products, isFetching } = useProducts();
-  const { getLotsData, isLoadingGetLots } = useLots({
-    productId,
-    pageSize: 10,
-  });
-  const [productNames, setProductNames] = useState<{ [key: string]: string }>(
-    {}
-  );
-  const [lotNames, setLotNames] = useState<{ [key: string]: string }>({});
   const [totalUnits, setTotalUnits] = useState<number>(0);
-  const [wholeUnitsTotal, setWholeUnitsTotal] = useState<number>(0);
-  const [looseUnitsTotal, setLooseUnitsTotal] = useState<number>(0);
+  const [totalBoxes, setTotalBoxes] = useState<number>(0);
+  const [matchedProduct, setMatchedProduct] = useState<IProduct | null>(null);
+  const [rows, setRows] = useState<IRow[]>([]);
 
   const columns: GridColDef[] = [
-    // {
-    //   field: "actions",
-    //   headerName: t("Actions"),
-    //   width: 100,
-    //   renderCell: (params: GridRenderCellParams<IStock>) => (
-    //     <Box
-    //       display="flex"
-    //       gap={2}
-    //       justifyContent={"center"}
-    //       alignContent={"center"}
-    //       h={"100%"}
-    //     >
-    //       <IconButton
-    //         aria-label="Edit Stock"
-    //         icon={<EditIcon />}
-    //         onClick={() => redirect(`/stock/edit/${params.row.id}`)}
-    //       />
-    //       {!isLoadingRemoveStock ? (
-    //         <IconButton
-    //           aria-label="Remove Stock"
-    //           icon={<DeleteIcon />}
-    //           onClick={() => removeStockMutation(params.row.id || "")}
-    //         />
-    //       ) : (
-    //         <IconButton
-    //           aria-label="Remove Stock"
-    //           icon={<TimeIcon />}
-    //           onClick={() => removeStockMutation(params.row.id || "")}
-    //         />
-    //       )}
-    //     </Box>
-    //   ),
-    // },
-    { field: "docNumber", headerName: t("Doc Number"), width: 150 },
+    { field: "productName", headerName: t("Product Name"), width: 200 },
     { field: "lotId", headerName: t("Lot"), width: 150 },
-    { field: "palletNumber", headerName: t("Pallet Number"), width: 150 },
-    { field: "placeId", headerName: t("Place"), width: 150 },
-
-    { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
     {
-      field: "looseUnitsNumber",
-      headerName: t("Loose Units Number"),
+      field: "placeId",
+      headerName: t("Place"),
       width: 150,
+      renderCell: (params) => {
+        if (
+          params.formattedValue === "NO ESPECIFICARÉ UN LUGAR" ||
+          !params.formattedValue ||
+          params.formattedValue === "N/A"
+        ) {
+          return <Text color="red.500">{t("No Place Specified")}</Text>;
+        }
+      },
     },
-    { field: "expiryDate", headerName: t("Expiry Date"), width: 150 },
-    { field: "documentType", headerName: t("Document Type"), width: 150 },
-    { field: "supplier", headerName: t("Supplier"), width: 150 },
-    { field: "transporter", headerName: t("Transporter"), width: 150 },
+    { field: "unitsNumber", headerName: t("Total Units"), width: 150 },
+    {
+      field: "expirityDate",
+      headerName: t("Expiry Date"),
+      width: 150,
+      renderCell: (params) => {
+        return <Text>{params.formattedValue || t("N/A")}</Text>;
+      },
+    },
+    // { field: "docNumber", headerName: t("Doc Number"), width: 150 }, // Remove or adapt if not in stockData
+    // { field: "palletNumber", headerName: t("Pallet Number"), width: 150 }, // Remove or adapt
+    // { field: "unitsNumber", headerName: t("Units Number"), width: 150 }, // Remove or adapt
+    // {
+    //   field: "looseUnitsNumber",
+    //   headerName: t("Loose Units Number"), // Remove or adapt
+    //   width: 150,
+    // },
+    // { field: "expiryDate", headerName: t("Expiry Date"), width: 150 }, // Remove or adapt
+    // { field: "documentType", headerName: t("Document Type"), width: 150 }, // Remove or adapt
+    // { field: "supplier", headerName: t("Supplier"), width: 150 }, // Remove or adapt
+    // { field: "transporter", headerName: t("Transporter"), width: 150 }, // Remove or adapt
   ];
 
-  const [rows, setRows] = useState<IRow[]>([]);
-  console.log("rows", rows);
-
   const generateRows = (): IRow[] => {
-    let total = 0;
-    let wholeUnitsTotal = 0;
-    let looseUnitsTotal = 0;
-    console.log("Generating rows with entries:", entries);
-    const rows = entries
-      .filter((entry) =>
-        entry?.products?.some(
-          (product) =>
-            (!productId || product.id === productId) &&
-            (!selectedLot || product.lotId === selectedLot)
-        )
-      )
-      .map((entry) => {
-        const product = entry?.products?.find(
-          (product) =>
-            (!productId || product.id === productId) &&
-            (!selectedLot || product.lotId === selectedLot)
+    let calculatedTotalUnits = 0;
+    let calculatedWholeUnitsTotal = 0;
+    let calculatedLooseUnitsTotal = 0;
+
+    Logger.info("Generating rows with lotPRoducts:", {
+      lotProducts,
+      rows,
+    });
+
+    const newRows = lotProducts
+      ?.filter((item) => {
+        const productMatch = !productId || item.productId === productId;
+        const lotMatch = !selectedLot || item.lotId === selectedLot;
+        return productMatch && lotMatch;
+      })
+      .map((item) => {
+        Logger.info("Processing item in generateRows:", {
+          item,
+        });
+        const units = item.unitsNumber || 0;
+        const looseUnits = item.looseUnitsNumber || 0;
+        const currentTotal = units + looseUnits;
+        calculatedTotalUnits += currentTotal;
+        calculatedWholeUnitsTotal += units;
+        calculatedLooseUnitsTotal += looseUnits;
+        const placeName =
+          placesInfo.find((p) => p.id === item.placeId)?.name ||
+          item.placeId ||
+          t("N/A");
+        const unitOfMeasure = item.product?.boxDetails?.unitOfMeasure || "";
+        // Ensure quantity is treated as a string for parseFloat
+        const quantityString = String(
+          item.product?.boxDetails?.quantity || "0"
         );
-        total += product?.totalUnitsNumber || 0;
-        wholeUnitsTotal += product?.unitsNumber || 0;
-        looseUnitsTotal += product?.looseUnitsNumber || 0;
-        const suppAndTransData = suppsAndTrans.find(
-          (s) => s.entryId === entry.id
-        );
+        const quantityPerUnit = parseFloat(quantityString);
+        const totalQuantity = currentTotal * quantityPerUnit;
+
         return {
-          id: entry.id!,
-          docNumber: entry.docNumber,
-          lotId: product?.lotId,
-          placeId: placesInfo.find((place) => place.id === product?.placeId)
-            ?.name,
-          expiryDate: product?.expirityDate,
-          supplier: suppAndTransData?.supplier.company || "",
-          transporter: suppAndTransData?.transporter.name || "",
-          palletNumber: product?.palletNumber,
-          unitsNumber: product?.unitsNumber,
-          looseUnitsNumber: product?.looseUnitsNumber,
+          id: item.id!,
+          productName: item.product?.name || t("N/A"),
+          lotId: item.lotId,
+          placeId: placeName,
+          totalUnits: `${totalQuantity} ${unitOfMeasure}`,
+          unitsNumber: units,
+          looseUnitsNumber: looseUnits,
+          expirityDate: item.expirationDate || t("N/A"),
         };
       });
-    setTotalUnits(total);
-    setWholeUnitsTotal(wholeUnitsTotal);
-    setLooseUnitsTotal(looseUnitsTotal);
-    return rows;
+
+    setTotalUnits(calculatedWholeUnitsTotal);
+    const matchProduct = lotProducts?.find((i) => i.productId === productId);
+    setMatchedProduct(matchProduct?.product || null);
+    const unitsPerBox = matchProduct?.product?.boxDetails?.units;
+    if (lotProducts && unitsPerBox && calculatedWholeUnitsTotal > 0) {
+      setTotalBoxes(calculatedWholeUnitsTotal / unitsPerBox);
+    }
+    return newRows;
   };
 
   useEffect(() => {
-    const rows = generateRows();
-    setRows(rows);
-  }, [entries, stock, selectedLot, productId, suppsAndTrans]);
+    if (stockData) {
+      // Ensure stockData is available
+      const newRows = generateRows();
+      setRows(newRows);
+    }
+  }, [stockData, productId, selectedLot, placesInfo, suppsAndTrans]);
 
   return (
     <Box height={400} width="100%">
       <FlexBox mt={2} gap={2} justifyContent={"space-around"}>
         <Text>
-          {t("Total Units:")} {totalUnits}
+          {!productId &&
+            !selectedLot &&
+            `${t("Grand Total Units:")} ${totalUnits}`}
+          {productId &&
+            !selectedLot &&
+            `${t("Total Units for Product")} ${capitalize(
+              matchedProduct?.name || ""
+            )}: ${totalUnits}`}
+          {!productId &&
+            selectedLot &&
+            `${t("Total Units for Lot")} ${selectedLot}: ${totalUnits}`}
+          {productId &&
+            selectedLot &&
+            `${t("Total Units for Product")} ${capitalize(
+              matchedProduct?.name || ""
+            )} ${t("in Lot")} ${selectedLot}: ${totalUnits}`}
         </Text>
         <Text>
-          {t("Whole Units:")} {wholeUnitsTotal}
-        </Text>
-        <Text>
-          {t("Loose Units:")} {looseUnitsTotal}
+          {t("Total Boxes:")} {totalBoxes.toFixed(2)}
         </Text>
       </FlexBox>
       <AppThemeProvider>
@@ -189,7 +216,7 @@ export const StockList = ({
           }}
           rows={rows}
           columns={columns}
-          rowCount={rows.length}
+          rowCount={rows?.length}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}

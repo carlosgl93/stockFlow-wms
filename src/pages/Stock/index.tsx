@@ -19,10 +19,8 @@ import { Logger } from "utils/logger";
 import { Controller, useForm } from "react-hook-form";
 import { IStock, ISuppsAndTrans } from "modules/stock/types";
 import { searchLot } from "modules/lots/infraestructure";
-import { getTransporterById } from "modules/transporters/infrastructure";
-import { getSupplierById } from "modules/suppliers";
-import { APIError } from "shared/Error";
 import { getPlaceById, IPlace } from "modules/places/infra";
+import { useLotProduct } from "modules/lotProduct/infraestructure";
 
 const StockPage = () => {
   const [productEntries, setProductEntries] = useState<IEntry[]>([]);
@@ -38,32 +36,16 @@ const StockPage = () => {
 
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
-  const [isFetchingEntriesByProductId, setIsFetchingEntriesByProductId] =
-    useState(false);
-  const [isFetchingEntries, setIsFetchingEntries] = useState(false);
+  const { getLotProductsData, isLoadingGetLotProducts } = useLotProduct({
+    lotId: lotSelected,
+    productId: searchedStockProduct,
+    pageSize: 10,
+    lastVisible: "",
+  });
   const { t } = useTranslate();
 
   const { control } = useForm();
   const { stockData, isLoadingGetStock } = useStock();
-  console.log("stockData", stockData);
-
-  // useEffect(() => {
-  //   const fetchProductEntries = async () => {
-  //     setIsFetchingEntries(true);
-  //     try {
-  //       const entries = await fetchEntriesByProductIdAndLotId(
-  //         searchedStockProduct,
-  //         lotSelected
-  //       );
-  //       setProductEntries(entries);
-  //     } catch (error) {
-  //       Logger.error("Failed to fetch entries", error as unknown as APIError);
-  //     } finally {
-  //       setIsFetchingEntries(false);
-  //     }
-  //   };
-  //   fetchProductEntries();
-  // }, [searchedStockProduct, lotSelected]);
 
   // fetch stock based on the entries
   useEffect(() => {
@@ -96,66 +78,16 @@ const StockPage = () => {
     }
   }, [searchedStockProduct, lotSelected]);
 
-  // fetch transporter and supplier by id
-  useEffect(() => {
-    const fetchSupplierAndTransporter = async () => {
-      if (!productEntries?.length) return;
-
-      const uniqueSupplierIds = Array.from(
-        new Set(productEntries?.map((entry) => entry.supplierId))
-      );
-      const uniqueTransporterIds = Array.from(
-        new Set(productEntries?.map((entry) => entry.transporterId))
-      );
-
-      const supplierPromises = uniqueSupplierIds.map((id) => {
-        return getSupplierById(id);
-      });
-      const transporterPromises = uniqueTransporterIds.map((id) => {
-        return getTransporterById(id);
-      });
-
-      try {
-        const suppliers = await Promise.all(supplierPromises);
-        const transporters = await Promise.all(transporterPromises);
-
-        const suppsAndTrans = productEntries.map((entry) => ({
-          entryId: entry.id,
-          supplier: suppliers.find((supp) => supp.id === entry.supplierId),
-          transporter: transporters.find(
-            (trans) => trans.id === entry.transporterId
-          ),
-        })) as ISuppsAndTrans;
-        Logger.info("supps and trans", suppsAndTrans);
-
-        setSuppsAndTrans(suppsAndTrans);
-      } catch (error) {
-        Logger.error(
-          "Failed to fetch suppliers and transporters",
-          error as APIError
-        );
-      }
-    };
-    fetchSupplierAndTransporter();
-  }, [productEntries]);
-
   useEffect(() => {
     const fetchPlacesInfo = async () => {
       // filter to get unique placesIDs
       const uniquePlacesIds = Array.from(
-        new Set(
-          productEntries
-            ?.map((entry) =>
-              (entry.products || entry.productsToEnter).map((p) => p.placeId)
-            )
-            .flat()
-        )
+        new Set(stockData?.map((stock) => stock?.placeId))
       );
 
-      // fetch places info
-
       const placesPromises = uniquePlacesIds.map((id) => {
-        if (!id) return Promise.resolve(null); // Skip if id is empty
+        if (!id || id === "NO ESPECIFICARÉ UN LUGAR" || id === "")
+          return Promise.resolve(null); // Skip if id is empty
         return getPlaceById(id!);
       });
 
@@ -163,7 +95,7 @@ const StockPage = () => {
       setPlacesInfo(placesInfo.filter((place) => place !== null) as IPlace[]);
     };
     fetchPlacesInfo();
-  }, [productEntries]);
+  }, [stockData]);
 
   const renderProductsOptions = () => {
     const uniqueProducts = Array.from(
@@ -335,21 +267,23 @@ const StockPage = () => {
       </PageHeader>
       {/* {renderLoading()} */}
       {/* {renderLetsBegin()} */}
-      {productEntries ? (
+      {/* {(isLoadingGetLotProducts ||
+        isLoadingProductSearch ||
+        isLoadingLotSearch) && <Loading size="sm" />} */}
+      {getLotProductsData?.lotProducts ? (
         <StockList
           entries={productEntries}
           stock={productStock}
+          stockData={stockData}
           productId={searchedStockProduct}
           selectedLot={lotSelected}
           suppsAndTrans={suppsAndTrans}
           placesInfo={placesInfo}
+          lotProducts={getLotProductsData?.lotProducts}
           isLoading={
             isLoadingGetStock ||
-            isFetchingEntries ||
             isLoadingProductSearch ||
-            // isLoadingLotSearch ||
-            isFetchingEntriesByProductId ||
-            isFetchingEntries
+            isLoadingGetLotProducts
           }
         />
       ) : (

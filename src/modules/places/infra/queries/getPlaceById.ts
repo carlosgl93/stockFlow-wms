@@ -13,8 +13,6 @@ import { Logger } from "utils/logger";
  * @throws {APIError} - If there is an error retrieving the document.
  */
 export const getPlaceById = async (placeId: string): Promise<IPlace> => {
-  Logger.info(`getPlaceById called with placeId: ${placeId}`);
-
   if (!placeId) {
     Logger.error("Invalid placeId");
     throw new ValidationError("Invalid placeId");
@@ -23,7 +21,6 @@ export const getPlaceById = async (placeId: string): Promise<IPlace> => {
   const placeRef = doc(collection(db, "places"), placeId);
 
   try {
-    Logger.info("Executing query to fetch place by ID");
     const placeDoc = await getDoc(placeRef);
 
     if (!placeDoc.exists()) {
@@ -31,7 +28,6 @@ export const getPlaceById = async (placeId: string): Promise<IPlace> => {
       throw new APIError("Place not found", "", 404);
     }
 
-    Logger.info(`Query successful, fetched place with ID: ${placeDoc.id}`);
     return { id: placeDoc.id, ...placeDoc.data() } as IPlace;
   } catch (error) {
     Logger.error("Failed to retrieve Place", [error]);

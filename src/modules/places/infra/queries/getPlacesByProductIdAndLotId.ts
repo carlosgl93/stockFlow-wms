@@ -44,7 +44,6 @@ export const getPlacesByProductIdAndLotId = async (
         } as IPlace)
     );
 
-    Logger.info(`Query successful, fetched ${places.length} places`);
     return places;
   } catch (error) {
     Logger.error("Failed to retrieve places by productId and lotId", [error]);
