@@ -27,11 +27,11 @@ export const NAV_ITEMS: Array<INavItem> = [
         subLabel: "Check the inventory history",
         href: "/historic",
       },
-      {
-        label: "Move products",
-        subLabel: "Rearrange products location",
-        href: "/stock/move",
-      },
+      // {
+      //   label: "Move products",
+      //   subLabel: "Rearrange products location",
+      //   href: "/stock/move",
+      // },
     ],
   },
   {
@@ -55,8 +55,8 @@ export const NAV_ITEMS: Array<INavItem> = [
     ],
   },
 
-  {
-    label: "Labeling",
-    href: "/labeling",
-  },
+  // {
+  //   label: "Labeling",
+  //   href: "/labeling",
+  // },
 ];
