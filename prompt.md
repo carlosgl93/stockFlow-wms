@@ -247,5 +247,3 @@ This document serves as a guide to ensure AI-assisted code generation aligns wit
 - A transporter **must have a registered `name`** before being assigned to deliveries.
 
 ---
-
-These rules help maintain **data integrity, prevent inconsistencies, and ensure smooth warehouse operations**.

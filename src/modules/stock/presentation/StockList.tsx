@@ -203,7 +203,7 @@ export const StockList = ({
             )} ${t("in Lot")} ${selectedLot}: ${totalUnits}`}
         </Text>
         <Text>
-          {t("Total Boxes:")} {totalBoxes.toFixed(2)}
+          {t("Total Boxes:")} {totalBoxes.toFixed(0)}
         </Text>
       </FlexBox>
       <AppThemeProvider>
@@ -230,11 +230,19 @@ export const StockList = ({
                   justifyContent: "center",
                 }}
               >
-                <Text>
-                  {t(
-                    "Start by searching for a product or lot on the top right corner"
-                  )}
-                </Text>
+                {productId || selectedLot ? (
+                  <Text>
+                    {t(
+                      "There is no stock for this product or lot, try another search"
+                    )}
+                  </Text>
+                ) : (
+                  <Text>
+                    {t(
+                      "Start by searching for a product or lot on the top right corner"
+                    )}
+                  </Text>
+                )}
               </FlexBox>
             ),
           }}

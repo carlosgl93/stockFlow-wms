@@ -1,4 +1,99 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "stock",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "lotId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "stock",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lotId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "lotProduct",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lotId", "order": "ASCENDING" },
+        { "fieldPath": "productId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "lotProduct",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "lotId", "order": "ASCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "movement",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "fromLotId", "order": "ASCENDING" },
+        { "fieldPath": "toLotId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "movement",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "productId", "order": "ASCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "tag",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "lotId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tag",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "expirationDate", "order": "ASCENDING" },
+        { "fieldPath": "productId", "order": "ASCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "productHistory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "productId", "order": "ASCENDING" },
+        { "fieldPath": "entryDate", "order": "ASCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "entry",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "supplierId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "entry",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "transporterId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

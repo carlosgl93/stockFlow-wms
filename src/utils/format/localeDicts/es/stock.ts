@@ -42,4 +42,6 @@ export const stock = {
   "Total Units for Lot:": "Total de Unidades por Lote:",
   "Total Units for Product and Lot": "Total de Unidades por Lote y Producto",
   "in Lot": "en Lote",
+  "There is no stock for this product or lot, try another search":
+    "No hay stock para este producto o lote, intenta otra búsqueda",
 };
