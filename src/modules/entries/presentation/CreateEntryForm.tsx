@@ -615,7 +615,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                 );
               }}
             />
-
             {errors.totalUnitsNumber && (
               <Box color="red">{t("This field is required")}</Box>
             )}

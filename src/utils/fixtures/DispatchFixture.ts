@@ -8,7 +8,7 @@ export const DispatchFixture = createFixture<IDispatchForm>({
   transporterId: "transporter-1",
   productId: "product-1",
   lotId: "lot-1",
-  placeId: "place-1",
+  // placeId: "place-1",
   stockId: "stock-1",
   dispatchDate: "2023-10-01",
   deliveryDate: "2023-10-11",

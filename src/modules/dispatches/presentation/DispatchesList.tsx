@@ -85,8 +85,8 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     // { field: "supplierId", headerName: "Supplier ID", width: 150 },
     // { field: "transporterId", headerName: "Transporter ID", width: 150 },
     // { field: "productId", headerName: t("Product ID"), width: 150 },
-    { field: "lotId", headerName: t("Lot ID"), width: 150 },
-    { field: "palletNumber", headerName: t("Pallet Number"), width: 150 },
+    { field: "lotId", headerName: t("Lot"), width: 150 },
+    // { field: "palletNumber", headerName: t("Pallet Number"), width: 150 },
     {
       field: "totalUnitsNumber",
       headerName: t("Total Units Number"),

@@ -18,9 +18,6 @@ const firebaseConfig = {
   projectId: "stockflow-wms",
 };
 
-const email = "user@admin.com";
-const password = "123456";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -41,7 +38,7 @@ const places = [
 
 async function main() {
   // Authenticate as test user
-  await signInWithEmailAndPassword(auth, email, password);
+  await signInWithEmailAndPassword(auth, "admin@gmail.com", "123456");
 
   for (const place of places) {
     await addDoc(collection(db, "places"), place);

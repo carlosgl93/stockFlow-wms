@@ -18,9 +18,6 @@ const firebaseConfig = {
   projectId: "stockflow-wms",
 };
 
-const email = "user@admin.com";
-const password = "123456";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -65,7 +62,7 @@ const products = [
     boxDetails: {
       units: 5,
       quantity: 500,
-      unitOfMeasure: "GR",
+      unitOfMeasure: "Gram",
       container: "Bolsa",
       type: "Paper",
       kilos: 2.5,
@@ -80,7 +77,7 @@ const products = [
 
 async function main() {
   // Authenticate as test user
-  await signInWithEmailAndPassword(auth, email, password);
+  await signInWithEmailAndPassword(auth, "admin@gmail.com", "123456");
 
   for (const product of products) {
     await addDoc(collection(db, "products"), product);

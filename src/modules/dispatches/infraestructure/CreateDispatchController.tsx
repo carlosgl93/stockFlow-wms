@@ -66,7 +66,7 @@ export const CreateDispatchController = ({
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors, isValid, dirtyFields },
     trigger,
     watch,
     getValues,
@@ -141,8 +141,10 @@ export const CreateDispatchController = ({
     [setValue, onCloseCreateProduct]
   );
 
-  const handleAddProductToDispatch = () => {
-    if (!isValid) {
+  const handleAddProductToDispatch = async () => {
+    const validation = await trigger();
+    Logger.info("validation", [validation]);
+    if (!validation) {
       toast({
         title: "Error",
         description: `${t("Please fill/check all the fields")} ${t(
@@ -164,11 +166,7 @@ export const CreateDispatchController = ({
     if (
       totalUnitsNumber === 0 ||
       totalUnitsNumber === undefined ||
-      lotId === "" ||
-      placeId === "" ||
-      palletNumber === "" ||
-      heightCMs === 0 ||
-      widthCMs === 0
+      lotId === ""
     ) {
       toast({
         title: "Error",
@@ -239,15 +237,10 @@ export const CreateDispatchController = ({
             (p) => uniqueProducts.find((up) => up.id === p.id)?.name
           )
         ),
-      ]
-        .filter(Boolean)
-        .join(", ")} - ${
-        suppliers.find((s) => s.id === data.supplierId)?.company
-      } - ${transporters.find((t) => t.id === data.transporterId)?.name}`,
+      ]}`,
     };
 
     try {
-      Logger.info("data", [data]);
       if (dispatchToEdit) {
         if (!dispatchToEdit.id) {
           throw new ValidationError("Invalid entry! No id found");
@@ -348,7 +341,6 @@ export const CreateDispatchController = ({
         </FlexBox>
       ),
     },
-    { field: "extCode", headerName: t("External Code"), width: 150 },
     { field: "intCode", headerName: t("Internal Code"), width: 150 },
     { field: "productName", headerName: t("Product Name"), width: 150 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
@@ -443,11 +435,6 @@ export const CreateDispatchController = ({
 
   useEffect(() => {
     // USE EFFECT TO ONLY RENDER UNIQUE TRANSPORTERS AND DISCARD THE REPEATED ONES
-    Logger.info("setting transporters", [
-      searchResults,
-      getTransporters,
-      isOpenCreateTransporter,
-    ]);
     const uniqueTransporters = [
       ...((searchResults as ITransporter[]) || []),
       ...(getTransporters || []),

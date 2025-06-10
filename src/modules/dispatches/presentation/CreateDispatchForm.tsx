@@ -38,6 +38,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
 import { InfoIcon } from "@chakra-ui/icons";
+import { useEffect } from "react";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
@@ -151,7 +152,7 @@ export const CreateDispatchForm = ({
           </FormControl>
         </FlexBox>
         <Box display="flex" justifyContent="space-around" gap={16}>
-          <FormControl mb={4}>
+          <FormControl mb={4} isInvalid={!!errors.docNumber}>
             <FormLabel>{t("Document Number")}</FormLabel>
             <Controller
               name="docNumber"
@@ -161,7 +162,9 @@ export const CreateDispatchForm = ({
               render={({ field }) => <Input {...field} mt={4} />}
             />
             {errors.docNumber && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Document number is required.")}
+              </Text>
             )}
           </FormControl>
           <FormControl mb={4}>
@@ -218,7 +221,9 @@ export const CreateDispatchForm = ({
               />
             </FlexColumn>
             {errors.supplierId && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Customer selection is required.")}
+              </Text>
             )}
           </FormControl>
           <FormControl mb={4}>
@@ -275,7 +280,37 @@ export const CreateDispatchForm = ({
               />
             </FlexColumn>
             {errors.transporterId && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Transporter selection is required.")}
+              </Text>
+            )}
+          </FormControl>
+          <FormControl mb={4}>
+            <FlexBox mb={2}>
+              <FormLabel>{t("Dispatch Date")}</FormLabel>
+            </FlexBox>
+            <FlexColumn gap={2} alignItems={"start"}>
+              <Controller
+                name="dispatchDate"
+                control={control}
+                defaultValue={new Date().toISOString().split("T")[0]}
+                rules={{ required: dispatchToEdit ? false : true }}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="date"
+                    size="md"
+                    variant="outline"
+                    width="auto"
+                    defaultValue={new Date().toISOString().split("T")[0]}
+                  />
+                )}
+              />
+            </FlexColumn>
+            {errors.dispatchDate && (
+              <Text color="red.500" fontSize="sm">
+                {t("Dispatch date is required.")}
+              </Text>
             )}
           </FormControl>
         </Box>
@@ -336,10 +371,12 @@ export const CreateDispatchForm = ({
               )}
             />
             {errors.productId && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Product selection is required.")}
+              </Text>
             )}
           </FormControl>
-          <FormControl mb={0}>
+          <FormControl mb={0} isInvalid={!!errors.lotId}>
             <FlexBox mb={0}>
               <FormLabel my={3}>{t("Lot")}</FormLabel>
               <FlexBox gap={2}>
@@ -388,29 +425,30 @@ export const CreateDispatchForm = ({
               )}
             />
             {errors.lotId && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Lot selection is required.")}
+              </Text>
             )}
           </FormControl>
-          <FormControl mb={4}>
+          <FormControl mb={4} isInvalid={!!errors.placeId}>
             <FormLabel my={3}>{t("Place")}</FormLabel>
 
             <Controller
               name="placeId"
               control={control}
-              defaultValue=""
+              defaultValue={undefined}
+              rules={{ required: true }}
               render={({ field }) =>
                 isLoadingGetPlaces || isLoadingTotalStockByLotAndProduct ? (
                   <FlexBox justifyContent="center" w={"100%"}>
                     <Loading size="xs" />
                   </FlexBox>
                 ) : (
-                  <Select {...field}>
-                    {getPlacesData?.places?.length === 0 ? (
+                  <Select {...field} value={field.value ?? undefined}>
+                    {getPlacesData?.places?.length === 0 && (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
                       </option>
-                    ) : (
-                      <option value="">{t("Select the place")}</option>
                     )}
                     <option value={undefined}>
                       {t("I will not specify a place")}
@@ -430,13 +468,15 @@ export const CreateDispatchForm = ({
                 )
               }
             />
-            {errors.lotId && (
-              <Box color="red">{t("This field is required")}</Box>
+            {errors.placeId && (
+              <Text color="red.500" fontSize="sm">
+                {t("Place selection is required.")}
+              </Text>
             )}
           </FormControl>
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
-          <FormControl mb={4}>
+          <FormControl mb={4} isInvalid={!!errors.palletNumber}>
             <FormLabel>{t("Pallet Number")}</FormLabel>
             <Controller
               name="palletNumber"
@@ -446,35 +486,44 @@ export const CreateDispatchForm = ({
               render={({ field }) => <Input {...field} />}
             />
             {errors.palletNumber && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Pallet number is required.")}
+              </Text>
             )}
           </FormControl>
-          <FormControl mb={4}>
+          <FormControl mb={4} isInvalid={!!errors.unitsNumber}>
             <FormLabel
               display="flex"
               justifyContent="space-between"
               width={"100%"}
             >
-              <span>{t("Units Number")} </span>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                justifyContent={"space-between"}
+              >
+                <span>{t("Units Number")} </span>
+                <Tooltip
+                  label={unitsTooltipLabel}
+                  isOpen={showUnitsTooltip}
+                  placement="top"
+                  hasArrow
+                >
+                  <InfoIcon
+                    onMouseOver={() => {
+                      setShowUnitsTooltip(true);
+                    }}
+                    onMouseOut={() => {
+                      setShowUnitsTooltip(false);
+                    }}
+                  />
+                </Tooltip>
+              </Box>
               <span style={{ color: "red" }}>
                 {t("In stock")} {totalStockByLotAndProduct?.unitsNumber}
               </span>
             </FormLabel>
-            <Tooltip
-              label={unitsTooltipLabel}
-              isOpen={showUnitsTooltip}
-              placement="top"
-              hasArrow
-            >
-              <InfoIcon
-                onMouseOver={() => {
-                  setShowUnitsTooltip(true);
-                }}
-                onMouseOut={() => {
-                  setShowUnitsTooltip(false);
-                }}
-              />
-            </Tooltip>
             <Controller
               name="unitsNumber"
               control={control}
@@ -500,7 +549,9 @@ export const CreateDispatchForm = ({
               )}
             />
             {errors.unitsNumber && (
-              <Box color="red">{errors.unitsNumber.message}</Box>
+              <Text color="red.500" fontSize="sm">
+                {errors.unitsNumber.message || t("Units number is required.")}
+              </Text>
             )}
           </FormControl>
           {products.find((p) => p.id === productId)?.selectionType ===
@@ -542,11 +593,14 @@ export const CreateDispatchForm = ({
                 )}
               />
               {errors.looseUnitsNumber && (
-                <Box color="red">{errors.looseUnitsNumber.message}</Box>
+                <Text color="red.500" fontSize="sm">
+                  {errors.looseUnitsNumber.message ||
+                    t("Loose units number is required.")}
+                </Text>
               )}
             </FormControl>
           )}
-          <FormControl mb={4}>
+          <FormControl mb={4} isInvalid={!!errors.totalUnitsNumber}>
             <FormLabel
               display="flex"
               justifyContent="space-between"
@@ -566,69 +620,73 @@ export const CreateDispatchForm = ({
                     )
                   : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
               }`}
-              <span
+              {/* <span
                 style={{
                   color: "red",
                 }}
               >
                 {t("Total in stock")} {totalStockByLotAndProduct?.totalUnits}
-              </span>
+              </span> */}
+              <Tooltip
+                label={
+                  selectedProduct?.selectionType === "box"
+                    ? `${t("Units per box")}: (${
+                        selectedProduct?.boxDetails?.units
+                      }) * ${t("Boxes to enter")} (${watch(
+                        "unitsNumber"
+                      )}) + ${t("Loose units to enter")} (${watch(
+                        "looseUnitsNumber"
+                      )}) = ${
+                        ["Gram", "ML", "C.C"].includes(
+                          selectedProduct?.boxDetails?.unitOfMeasure || ""
+                        )
+                          ? (totalValue / 1000).toLocaleString(undefined, {
+                              maximumFractionDigits: 3,
+                            })
+                          : totalValue
+                      } ${
+                        selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
+                          ? t("Kilo")
+                          : selectedProduct?.boxDetails?.unitOfMeasure ===
+                              "ML" ||
+                            selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
+                          ? t("Liter")
+                          : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
+                      }`
+                    : `${selectedProduct?.boxDetails?.quantity} ${t(
+                        selectedProduct?.boxDetails?.unitOfMeasure || ""
+                      )} * ${watch("unitsNumber")} = ${
+                        ["Gram", "ML", "C.C"].includes(
+                          selectedProduct?.boxDetails?.unitOfMeasure || ""
+                        )
+                          ? (totalValue / 1000).toLocaleString(undefined, {
+                              maximumFractionDigits: 3,
+                            })
+                          : totalValue
+                      } ${
+                        selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
+                          ? t("Kilo")
+                          : selectedProduct?.boxDetails?.unitOfMeasure ===
+                              "ML" ||
+                            selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
+                          ? t("Liter")
+                          : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
+                      }`
+                }
+                isOpen={showTotalTooltip}
+                placement="top"
+                hasArrow
+              >
+                <InfoIcon
+                  onMouseOver={() => {
+                    setShowTotalTooltip(true);
+                  }}
+                  onMouseOut={() => {
+                    setShowTotalTooltip(false);
+                  }}
+                />
+              </Tooltip>
             </FormLabel>
-            <Tooltip
-              label={
-                selectedProduct?.selectionType === "box"
-                  ? `${t("Units per box")}: (${
-                      selectedProduct?.boxDetails?.units
-                    }) * ${t("Boxes to enter")} (${watch("unitsNumber")}) + ${t(
-                      "Loose units to enter"
-                    )} (${watch("looseUnitsNumber")}) = ${
-                      ["Gram", "ML", "C.C"].includes(
-                        selectedProduct?.boxDetails?.unitOfMeasure || ""
-                      )
-                        ? (totalValue / 1000).toLocaleString(undefined, {
-                            maximumFractionDigits: 3,
-                          })
-                        : totalValue
-                    } ${
-                      selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
-                        ? t("Kilo")
-                        : selectedProduct?.boxDetails?.unitOfMeasure === "ML" ||
-                          selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
-                        ? t("Liter")
-                        : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
-                    }`
-                  : `${selectedProduct?.boxDetails?.quantity} ${t(
-                      selectedProduct?.boxDetails?.unitOfMeasure || ""
-                    )} * ${watch("unitsNumber")} = ${
-                      ["Gram", "ML", "C.C"].includes(
-                        selectedProduct?.boxDetails?.unitOfMeasure || ""
-                      )
-                        ? (totalValue / 1000).toLocaleString(undefined, {
-                            maximumFractionDigits: 3,
-                          })
-                        : totalValue
-                    } ${
-                      selectedProduct?.boxDetails?.unitOfMeasure === "Gram"
-                        ? t("Kilo")
-                        : selectedProduct?.boxDetails?.unitOfMeasure === "ML" ||
-                          selectedProduct?.boxDetails?.unitOfMeasure === "C.C"
-                        ? t("Liter")
-                        : t(selectedProduct?.boxDetails?.unitOfMeasure || "")
-                    }`
-              }
-              isOpen={showTotalTooltip}
-              placement="top"
-              hasArrow
-            >
-              <InfoIcon
-                onMouseOver={() => {
-                  setShowTotalTooltip(true);
-                }}
-                onMouseOut={() => {
-                  setShowTotalTooltip(false);
-                }}
-              />
-            </Tooltip>
 
             <Controller
               name="totalUnitsNumber"
@@ -659,7 +717,9 @@ export const CreateDispatchForm = ({
               }}
             />
             {errors.totalUnitsNumber && (
-              <Box color="red">{t("This field is required")}</Box>
+              <Text color="red.500" fontSize="sm">
+                {t("Total units number is required.")}
+              </Text>
             )}
           </FormControl>
         </Box>
@@ -685,7 +745,9 @@ export const CreateDispatchForm = ({
             )}
           />
           {errors.dispatchedStatus && (
-            <Box color="red">{t("This field is required")}</Box>
+            <Text color="red.500" fontSize="sm">
+              {t("Dispatch status is required.")}
+            </Text>
           )}
         </FormControl>
         <Button onClick={handleAddProductToDispatch} colorScheme="green">

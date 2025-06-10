@@ -1,7 +1,7 @@
 const url =
   "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key";
-const email = "admin@gmail.com";
-const password = "123456";
+export const email = "admin@gmail.com";
+export const password = "123456";
 
 fetch(url, {
   method: "POST",
