@@ -5,7 +5,6 @@ import {
   Link,
   Button,
   Heading,
-  Text,
   useColorModeValue,
   VStack,
   FormControl,
@@ -21,6 +20,9 @@ import { useSignInNotifications } from "./useSignInNotifications";
 import { useTranslate } from "utils";
 import { useMutation } from "@tanstack/react-query";
 import { ValidationError } from "shared/Error";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { useState } from "react";
+import { FirebaseError } from "firebase/app";
 
 interface IProps {
   initialEmail?: string;
@@ -33,16 +35,15 @@ interface SignInFormValues {
 }
 
 export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
-  const secondaryColor = useSecondaryTextColor();
   const {
     handleSubmit,
     control,
     formState: { errors },
   } = useForm<SignInFormValues>();
-  const [notifySuccess, notifyFailure] = useSignInNotifications();
   const login = useAuthStore((store) => store.login);
   const { t } = useTranslate();
   const toast = useToast();
+  const [isResetting, setIsResetting] = useState(false);
 
   const loginMutation = useMutation(["login"], login, {
     onError: (error: ValidationError) => {
@@ -66,17 +67,72 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
     loginMutation.mutate({ email: data.email, password: data.password });
   };
 
+  const handleForgotPassword = async () => {
+    const email = control._formValues.email || initialEmail || "";
+    if (!email) {
+      toast({
+        title: t("Please enter your email to reset your password."),
+        status: "warning",
+        isClosable: true,
+      });
+      return;
+    }
+    setIsResetting(true);
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: t("Password reset email sent!"),
+        description: t("Check your inbox for instructions."),
+        status: "success",
+        isClosable: true,
+      });
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        let description = error.message;
+        switch (error.code) {
+          case "auth/user-not-found":
+            description = t("No user found with this email address.");
+            break;
+          case "auth/invalid-email":
+            description = t("The email address is not valid.");
+            break;
+          case "auth/missing-email":
+            description = t("Please enter your email address.");
+            break;
+          default:
+            description = error.message || t("Please try again later.");
+        }
+        toast({
+          title: t("Failed to send password reset email."),
+          description,
+          status: "error",
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: t("Failed to send password reset email."),
+          description: t("An unknown error occurred. Please try again later."),
+          status: "error",
+          isClosable: true,
+        });
+      }
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <VStack align="stretch" spacing={8} w="100%" maxW="lg">
       <VStack textAlign="center">
         <Heading fontSize={{ base: "2xl", md: "4xl" }}>
           {t("Sign in to your account")}
         </Heading>
-        <Text fontSize={{ base: "md", md: "lg" }} color={secondaryColor}>
+        {/* <Text fontSize={{ base: "md", md: "lg" }} color={secondaryColor}>
           {t("to enjoy all of our cool {link} ✌️", {
             link: <Link color={"blue.400"}>{t("features")}</Link>,
           })}
-        </Text>
+        </Text> */}
       </VStack>
       <Box
         rounded="lg"
@@ -90,7 +146,6 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
             <Controller
               name="email"
               control={control}
-              defaultValue={initialEmail || ""}
               rules={{
                 required: t("Email is required"),
               }}
@@ -108,7 +163,6 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
             <Controller
               name="password"
               control={control}
-              defaultValue={initialPassword || ""}
               rules={{
                 required: t("Password is required"),
               }}
@@ -134,9 +188,23 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
               justify="space-between"
             >
               <Checkbox>{t("Remember me")}</Checkbox>
-              <Link color="blue.400">{t("Forgot password?")}</Link>
+              <Link
+                color="blue.400"
+                onClick={handleForgotPassword}
+                style={{
+                  cursor: isResetting ? "not-allowed" : "pointer",
+                  pointerEvents: isResetting ? "none" : "auto",
+                }}
+              >
+                {t("Forgot password?")}
+              </Link>
             </Stack>
-            <Button type="submit" colorScheme="blue" w="100%">
+            <Button
+              type="submit"
+              colorScheme="orange"
+              w="100%"
+              disabled={loginMutation.isLoading}
+            >
               {t("Sign in")}
             </Button>
           </VStack>

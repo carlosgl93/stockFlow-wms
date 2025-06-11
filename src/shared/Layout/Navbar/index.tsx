@@ -22,6 +22,7 @@ import { LoaderBar } from "./LoaderBar";
 import { MobileNav } from "./MobileNav";
 import LocaleSelector from "../LocaleSelector";
 import { t } from "utils";
+import { Logo } from "../Footer/Logo";
 
 export const Navbar = () => {
   const { isOpen, onToggle } = useDisclosure();
@@ -54,14 +55,9 @@ export const Navbar = () => {
           />
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
-          <Text
-            as={Link}
-            to="/"
-            textAlign={useBreakpointValue({ base: "center", md: "left" })}
-            fontWeight="extrabold"
-          >
-            Transagro
-          </Text>
+          <Box as={Link} to="/" mr={2}>
+            <Logo />
+          </Box>
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
             <DesktopNav />
           </Flex>
@@ -69,7 +65,7 @@ export const Navbar = () => {
         <HStack direction={"row"} spacing={4}>
           <LocaleSelector />
           <SignInButton />
-          <SignUpButton />
+          {/* <SignUpButton /> */}
           <LogoutButton />
           <ToggleModeButton />
         </HStack>
@@ -90,7 +86,13 @@ const SignInButton = () => {
   }
 
   return (
-    <Button fontWeight={400} variant="link" as={Link} to="/sign-in">
+    <Button
+      // fontWeight={400}
+      // variant="link"
+      as={Link}
+      to="/sign-in"
+      colorScheme="orange"
+    >
       {t("Sign In")}
     </Button>
   );

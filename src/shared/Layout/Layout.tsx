@@ -9,7 +9,13 @@ export const Layout = () => {
   return (
     <chakra.main>
       <Navbar />
-      <chakra.div pt={{ base: 20, md: 24 }} pb={{ base: 4, md: 6 }}>
+      <chakra.div
+        pt={{ base: 20, md: 24 }}
+        pb={{ base: 4, md: 6 }}
+        display="flex"
+        flexDirection="column"
+        minHeight="75vh"
+      >
         <Outlet />
       </chakra.div>
       <Footer />

@@ -18,4 +18,17 @@ export const auth = {
   Logout: "Cerrar sesión",
   "Company name": "Empresa",
   "Sign in successful": "Inicio de sesión exitoso",
+  "No user found with this email address.":
+    "No se encontró ningún usuario con este correo electrónico.",
+  "The email address is not valid.":
+    "La dirección de correo electrónico no es válida.",
+  "Please enter your email address.":
+    "Por favor, ingresa tu dirección de correo electrónico.",
+  "Please try again later.": "Por favor, inténtalo de nuevo más tarde.",
+  "Failed to send password reset email.":
+    "Error al enviar el correo electrónico de restablecimiento de contraseña.",
+  "Check your inbox for instructions.":
+    "Revisa tu bandeja de entrada para obtener instrucciones.",
+  "Password reset email sent!":
+    "¡Correo electrónico de restablecimiento de contraseña enviado!",
 };

@@ -9,7 +9,7 @@ export const Logo = () => {
     <HStack>
       <ArrowRightIcon color={color} />
       <Text color={color} fontSize="lg" fontWeight="extrabold" m={0}>
-        Logoipsum
+        Transagro
       </Text>
     </HStack>
   );

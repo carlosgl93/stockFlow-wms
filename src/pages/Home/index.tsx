@@ -1,11 +1,7 @@
 import { Page } from "shared/Layout";
 import { InternalErrorResult } from "shared/Result";
 import { useRouteError } from "shared/Router";
-import {
-  HeroSection,
-  FeatureSection,
-  PricingSection,
-} from "modules/marketing/presentation";
+import { HeroSection } from "modules/marketing/presentation";
 import { t } from "utils";
 
 interface IProps {}
@@ -19,10 +15,10 @@ const HomePage = ({}: IProps) => {
           "The ultimate Warehouse Management System for your business"
         )}
         description={t(
-          "Manage your inventory, track shipments, and optimize your warehouse operations with StockFlow SaaS multi-tenant app."
+          "Manage your inventory, track shipments, and optimize your warehouse operations with StockFlow."
         )}
       />
-      <FeatureSection
+      {/* <FeatureSection
         features={[
           {
             title: t("Inventory Management"),
@@ -37,8 +33,8 @@ const HomePage = ({}: IProps) => {
             description: t("Gain insights into your warehouse operations."),
           },
         ]}
-      />
-      <PricingSection
+      /> */}
+      {/* <PricingSection
         plans={[
           {
             name: t("Basic"),
@@ -61,7 +57,7 @@ const HomePage = ({}: IProps) => {
             ],
           },
         ]}
-      />
+      /> */}
     </Page>
   );
 };

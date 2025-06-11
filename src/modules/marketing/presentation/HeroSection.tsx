@@ -10,7 +10,10 @@ import {
   useColorModeValue,
   createIcon,
 } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
+
 import { useBrandColor, useSecondaryTextColor } from "theme";
+import { useTranslate } from "utils";
 
 interface IProps {
   title: string;
@@ -19,8 +22,8 @@ interface IProps {
 }
 
 const HeroSection = ({ title, subtitle, description }: IProps) => {
-  const brandColor = useBrandColor();
   const textColor = useSecondaryTextColor();
+  const { t } = useTranslate();
 
   return (
     <Container maxW="3xl">
@@ -49,14 +52,20 @@ const HeroSection = ({ title, subtitle, description }: IProps) => {
           alignSelf="center"
           position="relative"
         >
-          <Button colorScheme="orange" rounded="full" px={6}>
-            Get Started
+          <Button
+            as={RouterLink}
+            to="/sign-in"
+            colorScheme="orange"
+            rounded="full"
+            px={6}
+          >
+            {t("Get Started")}
           </Button>
-          <Button variant="link" colorScheme="blue" size={"sm"}>
+          {/* <Button variant="link" colorScheme="blue" size={"sm"}>
             Learn more
-          </Button>
+          </Button> */}
           <Box>
-            <Icon
+            {/* <Icon
               as={Arrow}
               color={useColorModeValue("gray.800", "gray.300")}
               w={71}
@@ -72,7 +81,7 @@ const HeroSection = ({ title, subtitle, description }: IProps) => {
               transform="rotate(10deg)"
             >
               Starting at $79/mo
-            </Text>
+            </Text> */}
           </Box>
         </VStack>
       </Stack>
