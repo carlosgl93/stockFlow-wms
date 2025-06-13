@@ -5,11 +5,9 @@ import {
   FormLabel,
   Input,
   Select,
-  RadioGroup,
-  Radio,
 } from "@chakra-ui/react";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { Controller } from "react-hook-form";
+import { useEffect } from "react";
 import { Logger } from "utils/logger";
 import {
   Category,
@@ -19,15 +17,11 @@ import {
   IPallet,
   IUnitOfMeasure,
   IMaterialType,
-  IBoxDetails,
 } from "../types";
 import { useToast } from "shared/Toast";
-import { ProductFixture } from "utils/fixtures";
-import { useRedirect, useTranslate } from "utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ValidationError } from "shared/Error";
+import { useTranslate } from "utils";
 import { useLocation } from "shared/Router";
-import { editProduct, useProducts } from "../infrastructure";
+import { useProducts } from "../infrastructure";
 import { Loading } from "shared/Layout";
 import { calculateUnitsPerSurface } from "../utils";
 
@@ -38,60 +32,24 @@ export const CreateProductForm = ({
   productToEdit?: IProduct;
   onSuccess?: (product: IProduct) => void;
 }) => {
-  const queryClient = useQueryClient();
-  const redirect = useRedirect();
   const location = useLocation();
-
-  const { saveProductMutation, saveProductIsLoading, saveProductIsSuccess } =
-    useProducts();
-
-  const {
-    handleSubmit,
-    control,
-    setValue,
-    formState: { errors, defaultValues },
-    reset,
-    trigger,
-    watch,
-  } = useForm<IProduct>();
-  const [safetyDocument, setSafetyDocument] = useState<FileList | null>(null);
   const toast = useToast();
   const { t } = useTranslate();
 
   const {
-    mutate: editProductMutation,
-    isLoading: editIsLoading,
-    isError: editIsError,
-    error: editError,
-    isSuccess: editIsSuccess,
-  } = useMutation(editProduct, {
-    onSuccess: async (data) => {
-      toast({
-        title: t("Product updated"),
-        description: t("Product updated successfully"),
-        status: "success",
-      });
-      reset();
-      Logger.info("setting query data", [data]);
-      queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
-        if (old) {
-          return [...old, data];
-        }
-        return [data];
-      });
-      queryClient.invalidateQueries(["products"]);
-
-      redirect("/products");
-    },
-    onError: (error: ValidationError) => {
-      Logger.error("Error updating product", [error]);
-      toast({
-        title: "Error",
-        description: `${t("Error updating product")}, ${t(error.message)}`,
-        status: "error",
-      });
-    },
-  });
+    isProductLoading,
+    saveProductMutation,
+    saveProductIsLoading,
+    saveProductIsSuccess,
+    control,
+    editIsLoading,
+    editProductMutation,
+    trigger,
+    watch,
+    setValue,
+    errors,
+    handleSubmit,
+  } = useProducts();
 
   const onSubmit = async (data: IProduct) => {
     const validation = await trigger();
@@ -141,42 +99,42 @@ export const CreateProductForm = ({
   //   }
   // };
 
-  useEffect(() => {
-    if (productToEdit?.id) {
-      // Map productToEdit fields to form fields
-      reset();
-      setValue("extCode", productToEdit.extCode || "");
-      setValue("internalCode", productToEdit.internalCode || "");
-      setValue("name", productToEdit.name || "");
-      setValue("warehouseStock", productToEdit.warehouseStock || 0);
-      setValue("riskCategory", productToEdit.riskCategory || "");
-      setValue("category", productToEdit.category || "");
-      setValue("selectionType", productToEdit.selectionType);
-      setValue(
-        "boxDetails.unitOfMeasure",
-        productToEdit.boxDetails.unitOfMeasure || IUnitOfMeasure.CC
-      );
-      setValue("boxDetails", {
-        unitOfMeasure: productToEdit.boxDetails.unitOfMeasure,
-        type: productToEdit.boxDetails.type,
-        units: productToEdit.boxDetails.units,
-        quantity: Number(productToEdit.boxDetails.quantity || ""),
-        unitsPerSurface: productToEdit.boxDetails.unitsPerSurface || 0,
-        container: productToEdit?.boxDetails.container as IContainer,
-        kilos: 0,
-      });
-      trigger();
-      return;
-    }
-    if (import.meta.env.MODE === "development" && !productToEdit) {
-      const product = ProductFixture.toStructure();
-      Object.keys(product).forEach((key) => {
-        setValue(key as keyof IProduct, product[key as keyof IProduct]);
-      });
-      trigger();
-      return;
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (productToEdit?.id) {
+  //     // Map productToEdit fields to form fields
+  //     reset();
+  //     setValue("extCode", productToEdit.extCode || "");
+  //     setValue("internalCode", productToEdit.internalCode || "");
+  //     setValue("name", productToEdit.name || "");
+  //     setValue("warehouseStock", productToEdit.warehouseStock || 0);
+  //     setValue("riskCategory", productToEdit.riskCategory || "");
+  //     setValue("category", productToEdit.category || "");
+  //     setValue("selectionType", productToEdit.selectionType);
+  //     setValue(
+  //       "boxDetails.unitOfMeasure",
+  //       productToEdit.boxDetails.unitOfMeasure || IUnitOfMeasure.CC
+  //     );
+  //     setValue("boxDetails", {
+  //       unitOfMeasure: productToEdit.boxDetails.unitOfMeasure,
+  //       type: productToEdit.boxDetails.type,
+  //       units: productToEdit.boxDetails.units,
+  //       quantity: Number(productToEdit.boxDetails.quantity || ""),
+  //       unitsPerSurface: productToEdit.boxDetails.unitsPerSurface || 0,
+  //       container: productToEdit?.boxDetails.container as IContainer,
+  //       kilos: 0,
+  //     });
+  //     trigger();
+  //     return;
+  //   }
+  //   if (import.meta.env.MODE === "development" && !productToEdit) {
+  //     const product = ProductFixture.toStructure();
+  //     Object.keys(product).forEach((key) => {
+  //       setValue(key as keyof IProduct, product[key as keyof IProduct]);
+  //     });
+  //     trigger();
+  //     return;
+  //   }
+  // }, [productToEdit?.name, productToEdit?.id, reset, setValue, trigger]);
 
   const selectionType = watch("selectionType");
   const unitOfMeasure = watch("boxDetails.unitOfMeasure");
@@ -192,7 +150,7 @@ export const CreateProductForm = ({
     setValue("boxDetails.kilos", qPerUnit * unitsPerBox);
   }, [qPerUnit, unitsPerBox]);
 
-  if (saveProductIsLoading || editIsLoading) {
+  if (saveProductIsLoading || editIsLoading || isProductLoading) {
     return <Loading size="md" />;
   }
 

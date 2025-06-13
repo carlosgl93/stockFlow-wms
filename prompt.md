@@ -47,21 +47,12 @@ StockFlow is a multitenant **Warehouse Management System (WMS)** designed to eff
 3. **Tracking by Lot**
 
    - Monitor entry, departure, and movement history for a product
-   - **CRUD operations for Lots**
-     - Create new lots
-     - Read lot details
-     - Update existing lots
-     - Delete lots
 
 4. **Tag/Label Management**
 
    - Assign lot locations and expiration dates to products
 
-5. **Movements Module**
-
-   - Move products between warehouse locations
-
-6. **Product History**
+5. **Product History**
    - View all entries and departures of a product within a date range
 
 ## **Development Guidelines**

@@ -12,25 +12,40 @@ import {
   updateDoc,
   setDoc,
   doc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "shared/firebase";
-import { IProduct } from "../types";
+import {
+  Category,
+  IBoxDetails,
+  IContainer,
+  IMaterialType,
+  IProduct,
+  IUnitOfMeasure,
+  RiskCategory,
+} from "../types";
 import { IQueryParams } from "types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { saveProduct } from "./saveProduct";
 import { Logger } from "utils/logger";
 import { APIError, ValidationError } from "shared/Error";
 import { useToast } from "shared/Toast";
-import { ExcelProductType } from "../types/IProduct";
 import { addEntry } from "modules/entries/infraestructure";
 import { EntryDTO, IProductEntry } from "modules/entries/types";
-const defaultParams: IQueryParams = { limit: 50, sort: "asc" };
+import { useParams } from "react-router-dom";
+import { getProductById } from "./getProductById";
+import { editProduct } from "./editProduct";
+import { useForm } from "react-hook-form";
+
+const defaultParams: IQueryParams = { limit: 50, sort: "asc", id: "" };
 
 export const useProducts = (pageSize: number = 50, page: number = 1) => {
   const [params, setParams] = useState<IQueryParams>(defaultParams);
   const redirect = useRedirect();
   const toast = useToast();
   const { t } = useTranslate();
+  const { productId } = useParams<{ productId: string }>();
+  const queryClient = useQueryClient();
 
   const { data, isFetching } = useQuery({
     queryKey: ["products", page, pageSize],
@@ -70,6 +85,12 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
     },
   });
 
+  const { data: productData, isLoading: isProductLoading } = useQuery({
+    queryKey: ["product", productId],
+    queryFn: () => getProductById(productId!),
+    enabled: !!productId,
+  });
+
   const searchProducts = async (name: string) => {
     try {
       const productsRef = collection(db, "products");
@@ -96,12 +117,6 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
         status: "success",
       });
       Logger.info("setting query data", [data]);
-      // queryClient.setQueryData(["products"], (old: IProduct[] | undefined) => {
-      //   if (old) {
-      //     return [...old, data];
-      //   }
-      //   return [data];
-      // });
       queryClient.invalidateQueries(["products"]);
       if (location.pathname.includes("products")) {
         redirect("/products");
@@ -245,6 +260,66 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
       },
     }
   );
+  const {
+    mutate: editProductMutation,
+    isLoading: editIsLoading,
+    isError: editIsError,
+    error: editError,
+    isSuccess: editIsSuccess,
+  } = useMutation(editProduct, {
+    onSuccess: async (data) => {
+      toast({
+        title: t("Product updated"),
+        description: t("Product updated successfully"),
+        status: "success",
+      });
+      reset();
+      Logger.info("setting query data", [data]);
+      await queryClient.invalidateQueries(["products"]);
+      redirect("/products");
+    },
+    onError: (error: ValidationError) => {
+      Logger.error("Error updating product", [error]);
+      toast({
+        title: "Error",
+        description: `${t("Error updating product")}, ${t(error.message)}`,
+        status: "error",
+      });
+    },
+  });
+
+  const {
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors, defaultValues },
+    reset,
+    trigger,
+    watch,
+  } = useForm<IProduct>({
+    defaultValues: productData
+      ? {
+          ...productData,
+        }
+      : {
+          extCode: "",
+          internalCode: "",
+          name: "",
+          warehouseStock: 0,
+          riskCategory: RiskCategory.Toxic,
+          category: Category.Herbicide,
+          selectionType: "unit",
+          boxDetails: {
+            unitOfMeasure: IUnitOfMeasure.CC,
+            type: IMaterialType.Plastic,
+            units: 0,
+            quantity: 0,
+            unitsPerSurface: 0,
+            container: IContainer.Bidon,
+            kilos: 0,
+          } as IBoxDetails,
+        },
+  });
 
   return {
     products: data?.products,
@@ -263,5 +338,20 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
     saveMultipleProductsIsError,
     saveMultipleProductsError,
     saveMultipleProductsIsSuccess,
+    productData,
+    isProductLoading,
+    editProductMutation,
+    editIsLoading,
+    editIsError,
+    editError,
+    editIsSuccess,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors, defaultValues },
+    reset,
+    trigger,
+    watch,
+    errors,
   };
 };

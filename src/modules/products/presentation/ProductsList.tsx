@@ -1,6 +1,6 @@
 import { IProduct } from "../types";
 import { EmptyStateResult } from "shared/Result";
-import { Box, CircularProgress, IconButton } from "@chakra-ui/react";
+import { Box, CircularProgress, IconButton, Tooltip } from "@chakra-ui/react";
 import { AppThemeProvider } from "theme/materialTheme";
 import { capitalize, useRedirect, useTranslate } from "utils";
 import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
@@ -37,26 +37,49 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={() => redirect(`/products/${params.row.id}`)}
-          /> */}
-          <IconButton
-            aria-label="Edit Product"
-            icon={<EditIcon />}
-            onClick={() =>
-              redirect(`/products/edit/${params.row.id}`, {
-                product: params.row,
-              })
-            }
-          />
-          {!isLoadingRemoveProduct ? (
+          <Tooltip
+            label={t("Edit product")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "blue.500",
+              ...commonTooltipStyles,
+            }}
+          >
             <IconButton
-              aria-label="Remove Product"
-              icon={<DeleteIcon />}
-              onClick={() => removeProductMutation(params.row.id || "")}
+              aria-label="Edit Product"
+              icon={<EditIcon />}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
+              onClick={() =>
+                redirect(`/products/edit/${params.row.id}`, {
+                  product: params.row,
+                })
+              }
             />
+          </Tooltip>
+          {!isLoadingRemoveProduct ? (
+            <Tooltip
+              label={t("Remove product")}
+              placement="right"
+              hasArrow
+              sx={{
+                bgColor: "red.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Remove Product"
+                icon={<DeleteIcon />}
+                onClick={() => removeProductMutation(params.row.id || "")}
+                sx={{
+                  fontSize: "1.2rem",
+                  p: 2,
+                }}
+              />
+            </Tooltip>
           ) : (
             <CircularProgress size={"small"} />
           )}
@@ -147,3 +170,12 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
 };
 
 export { ProductsList };
+
+const commonTooltipStyles = {
+  padding: 2,
+  color: "white",
+  fontWeight: "bold",
+  fontSize: "0.8rem",
+  borderRadius: "md",
+  boxShadow: "md",
+};

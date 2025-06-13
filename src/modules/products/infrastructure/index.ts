@@ -13,3 +13,4 @@ export { editProduct } from "./editProduct";
 export { useCRUDProducts } from "./useCRUDProducts";
 export * from "./searchProduct";
 export * from "./useProducts";
+export * from "./getProductById";

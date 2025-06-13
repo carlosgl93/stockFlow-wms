@@ -67,7 +67,7 @@ export const products = {
   Container: "Contenedor",
   "Select Container": "Seleccionar Contenedor",
   Bidon: "Bidónes",
-  Bolsa: "Bolsas / Satchets",
+  Bolsa: "Bolsa",
   Sobre: "Sobres",
   Botella: "Botellas",
   Caja: "Cajas",

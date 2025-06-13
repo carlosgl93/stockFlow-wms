@@ -8,7 +8,6 @@ import {
   Collapse,
   HStack,
   useColorModeValue,
-  useBreakpointValue,
   useDisclosure,
 } from "@chakra-ui/react";
 
