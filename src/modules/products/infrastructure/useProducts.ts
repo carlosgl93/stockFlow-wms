@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
+import { useQuery, useRedirect, useTranslate } from "utils";
 import { IProductsCollection } from "./productsQuery";
 import {
   collection,
@@ -85,7 +85,7 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
     },
   });
 
-  const { data: productData, isLoading: isProductLoading } = useQuery({
+  const { data: productData, isFetching: isProductLoading } = useQuery({
     queryKey: ["product", productId],
     queryFn: () => getProductById(productId!),
     enabled: !!productId,

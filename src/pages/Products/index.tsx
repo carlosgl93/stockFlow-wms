@@ -81,24 +81,9 @@ const ProductsPage = () => {
           <Text>
             {t("Total registers: ")} {total} {t("Pages:")} {pages}
           </Text>
-          <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
-            {t("Search")}
-          </Button>
-
           <Button leftIcon={<AddIcon />} onClick={handleCreate}>
             {t("Create")}
           </Button>
-
-          {/* <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-            id="file-upload"
-          />
-          <label htmlFor="file-upload">
-            <Button as="span">{t("Bulk Create")}</Button>
-          </label> */}
         </Box>
       </PageHeader>
       {isPreviewFromExcelLoad && uploadedProducts && (

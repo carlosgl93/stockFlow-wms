@@ -4,9 +4,16 @@ import { Box, CircularProgress, IconButton, Tooltip } from "@chakra-ui/react";
 import { AppThemeProvider } from "theme/materialTheme";
 import { capitalize, useRedirect, useTranslate } from "utils";
 import { useCRUDProducts } from "../infrastructure/useCRUDProducts";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridLogicOperator,
+  GridRenderCellParams,
+  GridToolbar,
+} from "@mui/x-data-grid";
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { ExcelProductType } from "../types/IProduct";
+import { Logger } from "utils/logger";
 
 interface IProps {
   products: IProduct[];
@@ -87,7 +94,22 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
       ),
     },
     { field: "extCode", headerName: t("Codigo Ext"), width: 100 },
-    { field: "name", headerName: t("Name"), width: 200 },
+    {
+      field: "name",
+      headerName: t("Name"),
+      width: 200,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          Logger.info("Applying quick filter for name:", {
+            value,
+            params,
+          });
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
     // {
     //   field: "warehouseStock",
     //   headerName: t("Warehouse Stock"),
@@ -155,11 +177,35 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
           columns={columns}
           pageSizeOptions={[5, 10, 25, 50, 100]}
           loading={isLoading}
+          slots={{ toolbar: GridToolbar }}
+          slotProps={{
+            toolbar: {
+              csvOptions: {
+                fileName: `products-${new Date().toISOString()}.csv`,
+                utf8WithBom: true,
+              },
+              contentEditable: false,
+              showQuickFilter: true,
+              quickFilterProps: {
+                debounceMs: 500,
+                placeholder: t("Search by name..."),
+              },
+            },
+          }}
+          disableColumnFilter
+          disableColumnSelector
+          disableDensitySelector
           initialState={{
             pagination: {
               paginationModel: {
                 pageSize: 10,
                 page: 0,
+              },
+            },
+            filter: {
+              filterModel: {
+                items: [],
+                quickFilterLogicOperator: GridLogicOperator.And,
               },
             },
           }}

@@ -91,51 +91,6 @@ export const CreateProductForm = ({
     }
   };
 
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = event.target.files;
-  //   if (files) {
-  //     setSafetyDocument(files);
-  //     setValue("safetyDocument", files);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (productToEdit?.id) {
-  //     // Map productToEdit fields to form fields
-  //     reset();
-  //     setValue("extCode", productToEdit.extCode || "");
-  //     setValue("internalCode", productToEdit.internalCode || "");
-  //     setValue("name", productToEdit.name || "");
-  //     setValue("warehouseStock", productToEdit.warehouseStock || 0);
-  //     setValue("riskCategory", productToEdit.riskCategory || "");
-  //     setValue("category", productToEdit.category || "");
-  //     setValue("selectionType", productToEdit.selectionType);
-  //     setValue(
-  //       "boxDetails.unitOfMeasure",
-  //       productToEdit.boxDetails.unitOfMeasure || IUnitOfMeasure.CC
-  //     );
-  //     setValue("boxDetails", {
-  //       unitOfMeasure: productToEdit.boxDetails.unitOfMeasure,
-  //       type: productToEdit.boxDetails.type,
-  //       units: productToEdit.boxDetails.units,
-  //       quantity: Number(productToEdit.boxDetails.quantity || ""),
-  //       unitsPerSurface: productToEdit.boxDetails.unitsPerSurface || 0,
-  //       container: productToEdit?.boxDetails.container as IContainer,
-  //       kilos: 0,
-  //     });
-  //     trigger();
-  //     return;
-  //   }
-  //   if (import.meta.env.MODE === "development" && !productToEdit) {
-  //     const product = ProductFixture.toStructure();
-  //     Object.keys(product).forEach((key) => {
-  //       setValue(key as keyof IProduct, product[key as keyof IProduct]);
-  //     });
-  //     trigger();
-  //     return;
-  //   }
-  // }, [productToEdit?.name, productToEdit?.id, reset, setValue, trigger]);
-
   const selectionType = watch("selectionType");
   const unitOfMeasure = watch("boxDetails.unitOfMeasure");
   const qPerUnit = watch("boxDetails.quantity") || 0;
@@ -177,18 +132,19 @@ export const CreateProductForm = ({
             <Box color="red">{t("This field is required")}</Box>
           )}
         </FormControl>
-        <FormControl mb={4}>
+        {/* <FormControl mb={4}>
           <FormLabel>{t("Internal Code")}</FormLabel>
           <Controller
             name="internalCode"
             control={control}
+            rules={{ required: false}}
             defaultValue="int123"
             render={({ field }) => <Input {...field} />}
           />
           {errors.internalCode && (
             <Box color="red">{t("This field is required")}</Box>
           )}
-        </FormControl>
+        </FormControl> */}
         <FormControl mb={4}>
           <FormLabel>{t("Name")}</FormLabel>
           <Controller

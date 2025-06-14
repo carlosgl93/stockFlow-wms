@@ -163,4 +163,6 @@ export const products = {
   "Product deleted successfully": "Producto eliminado exitosamente",
   "Bulk Create": "Creación Masiva",
   NonToxic: "No Tóxico",
+  "Search by name...": "Buscar por nombre de producto...",
+  "Create your product.": "Crea tu producto.",
 };

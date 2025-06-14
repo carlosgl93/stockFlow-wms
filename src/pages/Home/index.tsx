@@ -2,11 +2,22 @@ import { Page } from "shared/Layout";
 import { InternalErrorResult } from "shared/Result";
 import { useRouteError } from "shared/Router";
 import { HeroSection } from "modules/marketing/presentation";
-import { t } from "utils";
+import { t, useRedirect } from "utils";
+import { useAuthStore } from "modules/auth/application";
+import { useEffect } from "react";
 
 interface IProps {}
 
 const HomePage = ({}: IProps) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const redirect = useRedirect();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      redirect("/products");
+    }
+  }, [isAuthenticated]);
+
   return (
     <Page maxW="container.xl" spacing={{ base: 8, lg: 20 }}>
       <HeroSection
