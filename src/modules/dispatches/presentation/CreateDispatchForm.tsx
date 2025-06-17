@@ -750,7 +750,14 @@ export const CreateDispatchForm = ({
             </Text>
           )}
         </FormControl>
-        <Button onClick={handleAddProductToDispatch} colorScheme="green">
+        <Button
+          onClick={handleAddProductToDispatch}
+          colorScheme="green"
+          disabled={
+            totalStockByLotAndProduct?.unitsNumber === 0 ||
+            (totalStockByLotAndProduct?.unitsNumber || 0) < 0
+          }
+        >
           {t("Add product to the list")}
         </Button>
         <AppThemeProvider>

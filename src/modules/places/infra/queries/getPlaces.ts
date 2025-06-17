@@ -32,22 +32,22 @@ export const getPlaces = async (
   const placeProductRef = collection(db, "places");
   let q = query(placeProductRef, limit(pageSize));
 
-  if (lastVisible) {
-    Logger.info(`Fetching last visible document with ID: ${lastVisible}`);
-    const lastVisibleDoc = await getDocs(
-      query(placeProductRef, where("id", "==", lastVisible))
-    );
-    if (!lastVisibleDoc.empty) {
-      Logger.info(`Last visible document found: ${lastVisibleDoc.docs[0].id}`);
-      q = query(
-        placeProductRef,
-        startAfter(lastVisibleDoc.docs[0]),
-        limit(pageSize)
-      );
-    } else {
-      Logger.warn(`No document found with ID: ${lastVisible}`);
-    }
-  }
+  // if (lastVisible) {
+  //   Logger.info(`Fetching last visible document with ID: ${lastVisible}`);
+  //   const lastVisibleDoc = await getDocs(
+  //     query(placeProductRef, where("id", "==", lastVisible))
+  //   );
+  //   if (!lastVisibleDoc.empty) {
+  //     Logger.info(`Last visible document found: ${lastVisibleDoc.docs[0].id}`);
+  //     q = query(
+  //       placeProductRef,
+  //       startAfter(lastVisibleDoc.docs[0]),
+  //       limit(pageSize)
+  //     );
+  //   } else {
+  //     Logger.warn(`No document found with ID: ${lastVisible}`);
+  //   }
+  // }
 
   try {
     const querySnapshot = await getDocs(q);

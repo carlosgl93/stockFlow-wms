@@ -1,16 +1,16 @@
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Box, IconButton, Button } from "@chakra-ui/react";
 import {
-  SearchIcon,
-  DeleteIcon,
-  EditIcon,
-  TimeIcon,
-  AddIcon,
-} from "@chakra-ui/icons";
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridToolbar,
+} from "@mui/x-data-grid";
+import { Box, IconButton, Tooltip } from "@chakra-ui/react";
+import { DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { AppThemeProvider } from "theme/materialTheme";
 import { useRedirect, useTranslate } from "utils";
 import { IPlace, usePlaces } from "../infra";
+import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 interface IProps {
   places: IPlace[];
@@ -20,7 +20,7 @@ interface IProps {
 const PlacesList = ({ places }: IProps) => {
   const redirect = useRedirect();
   const { removePlaceMutation, isLoadingRemovePlace } = usePlaces();
-  const { t } = useTranslate();
+  const { t, dataGridLocaleText } = useTranslate();
 
   if (places?.length === 0) {
     return <EmptyStateResult />;
@@ -39,36 +39,60 @@ const PlacesList = ({ places }: IProps) => {
           alignContent={"center"}
           h={"100%"}
         >
-          <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={() => redirect(`/places/${params.row.id}`)}
-          />
-          <IconButton
-            aria-label="Edit Place"
-            icon={<EditIcon />}
-            onClick={() => redirect(`/places/edit/${params.row.id}`)}
-          />
-          {!isLoadingRemovePlace ? (
+          <Tooltip
+            label={t("Edit Place")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "blue.500",
+              ...commonTooltipStyles,
+            }}
+          >
             <IconButton
-              aria-label="Remove Place"
-              icon={<DeleteIcon />}
-              onClick={() => removePlaceMutation(params.row.id || "")}
+              aria-label="Edit Place"
+              icon={<EditIcon />}
+              onClick={() => redirect(`/places/edit/${params.row.id}`)}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
             />
+          </Tooltip>
+          {!isLoadingRemovePlace ? (
+            <Tooltip
+              label={t("Remove Entry")}
+              placement="left"
+              hasArrow
+              sx={{
+                bgColor: "red.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Remove Place"
+                icon={<DeleteIcon />}
+                onClick={() => removePlaceMutation(params.row.id || "")}
+                sx={{
+                  fontSize: "1.2rem",
+                  p: 2,
+                }}
+              />
+            </Tooltip>
           ) : (
             <IconButton
               aria-label="Remove Place"
               icon={<TimeIcon />}
-              onClick={() => removePlaceMutation(params.row.id || "")}
+              // onClick={() => removePlaceMutation(params.row.id || "")}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
             />
           )}
         </Box>
       ),
     },
-    { field: "name", headerName: "Name", width: 150 },
-    // { field: "entryDate", headerName: "Entry Date", width: 150 },
-    // { field: "departureDate", headerName: "Departure Date", width: 150 },
-    // { field: "movementHistory", headerName: "Movement History", width: 200 },
+    { field: "name", headerName: t("Name"), width: 150 },
   ];
 
   const rows = places?.map((place) => ({
@@ -86,7 +110,32 @@ const PlacesList = ({ places }: IProps) => {
   return (
     <Box height={400} width="100%">
       <AppThemeProvider>
-        <DataGrid rows={rows} columns={columns} rowCount={places?.length} />
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          rowCount={places?.length}
+          slots={{ toolbar: GridToolbar }}
+          loading={isLoadingRemovePlace}
+          slotProps={{
+            toolbar: {
+              csvOptions: {
+                fileName: `lugares-${new Date().toISOString()}.csv`,
+                utf8WithBom: true,
+              },
+              contentEditable: false,
+              showQuickFilter: true,
+              quickFilterProps: {
+                debounceMs: 500,
+                placeholder: t("Search by place name..."),
+                sx: { width: "400px" },
+              },
+            },
+          }}
+          localeText={dataGridLocaleText}
+          disableColumnFilter
+          disableColumnSelector
+          disableDensitySelector
+        />
       </AppThemeProvider>
     </Box>
   );

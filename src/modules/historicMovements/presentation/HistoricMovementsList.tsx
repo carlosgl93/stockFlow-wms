@@ -59,7 +59,7 @@ export const HistoricMovementsList = ({
       headerName: t("Type"),
       width: 150,
       renderCell: (params) => {
-        return <Box>{capitalize(t(params.row.type))}</Box>;
+        return <Box>{capitalize(t(params.row.type || ""))}</Box>;
       },
     },
     {
@@ -67,7 +67,7 @@ export const HistoricMovementsList = ({
       headerName: t("Document Number"),
       width: 150,
       renderCell: (params) => {
-        return <Box>{capitalize(t(params.row.docNumber))}</Box>;
+        return <Box>{capitalize(t(params.row.docNumber || ""))}</Box>;
       },
     },
     {
@@ -75,7 +75,7 @@ export const HistoricMovementsList = ({
       headerName: t("Description"),
       width: 350,
       renderCell: (params) => {
-        return <Box>{capitalize(params.row.description)}</Box>;
+        return <Box>{capitalize(params.row.description || "")}</Box>;
       },
     },
     {

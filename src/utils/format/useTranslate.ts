@@ -32,5 +32,12 @@ export const useTranslate = () => {
     ) as string;
   };
 
-  return { t };
+  const dataGridLocaleText = {
+    toolbarExportCSV: t("Export to CSV"),
+    toolbarExportPrint: t("Print"),
+    toolbarExportLabel: t("Export"),
+    toolbarExportExcel: t("Export to Excel"),
+  };
+
+  return { t, dataGridLocaleText };
 };

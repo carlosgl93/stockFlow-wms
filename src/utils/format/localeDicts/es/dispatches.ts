@@ -69,4 +69,7 @@ export const dispatches = {
   "Edit Dispatch": "Editar Despacho",
   "Start by a product to dispatch": "Comience por un producto a despachar",
   "Dispatch Date": "Fecha de Despacho",
+  "Search by date, doc number, lot id or produt name...":
+    "Buscar por fecha, número de documento, id de lote o nombre del producto...",
+  "Remove Dispatch": "Eliminar Despacho",
 };

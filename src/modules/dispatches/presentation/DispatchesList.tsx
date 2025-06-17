@@ -1,14 +1,20 @@
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Box, IconButton, useDisclosure } from "@chakra-ui/react";
-import { SearchIcon, DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridToolbar,
+} from "@mui/x-data-grid";
+import { Box, IconButton, Tooltip, useDisclosure } from "@chakra-ui/react";
+import { DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IDispatch } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
 import { useRedirect, useTranslate } from "utils";
 import { useDispatches } from "../infraestructure";
-import { Logger } from "utils/logger";
 import { ConfirmationModal } from "shared/ConfirmationModal";
 import { useState } from "react";
+import dayjs from "dayjs";
+import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 interface IProps {
   dispatches: IDispatch[];
@@ -17,8 +23,13 @@ interface IProps {
 
 export const DispatchesList = ({ dispatches }: IProps) => {
   const redirect = useRedirect();
-  const { removeDispatchMutation, isLoadingRemoveDispatch } = useDispatches();
-  const { t } = useTranslate();
+  const {
+    isLoadingGetDispatches,
+    removeDispatchMutation,
+    isLoadingRemoveDispatch,
+  } = useDispatches();
+
+  const { t, dataGridLocaleText } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDispatchId, setSelectedDispatchId] = useState<string | null>(
     null
@@ -54,22 +65,45 @@ export const DispatchesList = ({ dispatches }: IProps) => {
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={() => redirect(`/dispatches/${params.row.id}`)}
-          /> */}
-          <IconButton
-            aria-label="Edit Dispatch"
-            icon={<EditIcon />}
-            onClick={() => redirect(`/dispatches/edit/${params.row.id}`)}
-          />
-          {!isLoadingRemoveDispatch ? (
+          <Tooltip
+            label={t("Edit Dispatch")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "blue.500",
+              ...commonTooltipStyles,
+            }}
+          >
             <IconButton
-              aria-label="Remove Dispatch"
-              icon={<DeleteIcon />}
-              onClick={() => handleRemoveClick(params.row.id || "")}
+              aria-label="Edit Dispatch"
+              icon={<EditIcon />}
+              onClick={() => redirect(`/dispatches/edit/${params.row.id}`)}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
             />
+          </Tooltip>
+          {!isLoadingRemoveDispatch ? (
+            <Tooltip
+              label={t("Remove Dispatch")}
+              placement="left"
+              hasArrow
+              sx={{
+                bgColor: "red.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Remove Dispatch"
+                icon={<DeleteIcon />}
+                onClick={() => handleRemoveClick(params.row.id || "")}
+                sx={{
+                  fontSize: "1.2rem",
+                  p: 2,
+                }}
+              />
+            </Tooltip>
           ) : (
             <IconButton
               aria-label="Remove Dispatch"
@@ -80,24 +114,59 @@ export const DispatchesList = ({ dispatches }: IProps) => {
         </Box>
       ),
     },
-    { field: "docNumber", headerName: t("Document Number"), width: 150 },
-    { field: "description", headerName: t("Description"), width: 450 },
-    // { field: "supplierId", headerName: "Supplier ID", width: 150 },
-    // { field: "transporterId", headerName: "Transporter ID", width: 150 },
-    // { field: "productId", headerName: t("Product ID"), width: 150 },
-    { field: "lotId", headerName: t("Lot"), width: 150 },
-    // { field: "palletNumber", headerName: t("Pallet Number"), width: 150 },
+    {
+      field: "dispatchDate",
+      headerName: t("Dispatch Date"),
+      width: 150,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
+    {
+      field: "docNumber",
+      headerName: t("Document Number"),
+      width: 150,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
+    {
+      field: "description",
+      headerName: t("Description"),
+      width: 450,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
+    {
+      field: "lotId",
+      headerName: t("Lot"),
+      width: 150,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
     {
       field: "totalUnitsNumber",
       headerName: t("Total Units Number"),
       width: 150,
     },
-    { field: "dispatchDate", headerName: t("Dispatch Date"), width: 150 },
-    { field: "deliveryDate", headerName: t("Delivery Date"), width: 150 },
-    // { field: "unitsNumber", headerName: "Units Number", width: 150 },
-    // { field: "looseUnitsNumber", headerName: "Loose Units Number", width: 150 },
-    // { field: "heightCMs", headerName: "Height (CMs)", width: 150 },
-    // { field: "widthCMs", headerName: "Width (CMs)", width: 150 },
     { field: "dispatchStatus", headerName: t("Dispatch Status"), width: 150 },
   ];
   const rows = dispatches?.map((dispatch, i) => ({
@@ -109,7 +178,7 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     lotId: [...new Set(dispatch?.products.map((p) => p.lotId))]
       .filter(Boolean)
       .join(", "),
-    dispatchDate: dispatch?.dispatchDate,
+    dispatchDate: dayjs(dispatch?.dispatchDate).format("DD-MM-YYYY"),
     deliveryDate: dispatch?.deliveryDate,
     palletNumber: dispatch?.products[i]?.palletNumber,
     unitsNumber: dispatch?.products[i]?.unitsNumber,
@@ -124,7 +193,34 @@ export const DispatchesList = ({ dispatches }: IProps) => {
   return (
     <Box height={400} width="100%">
       <AppThemeProvider>
-        <DataGrid rows={rows} columns={columns} rowCount={dispatches?.length} />
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          rowCount={dispatches?.length}
+          slots={{ toolbar: GridToolbar }}
+          loading={isLoadingGetDispatches || isLoadingRemoveDispatch}
+          slotProps={{
+            toolbar: {
+              csvOptions: {
+                fileName: `despachos-${new Date().toISOString()}.csv`,
+                utf8WithBom: true,
+              },
+              contentEditable: false,
+              showQuickFilter: true,
+              quickFilterProps: {
+                debounceMs: 500,
+                placeholder: t(
+                  "Search by date, doc number, lot id or produt name..."
+                ),
+                sx: { width: "400px" },
+              },
+            },
+          }}
+          localeText={dataGridLocaleText}
+          disableColumnFilter
+          disableColumnSelector
+          disableDensitySelector
+        />
       </AppThemeProvider>
       <ConfirmationModal
         isOpen={isOpen}

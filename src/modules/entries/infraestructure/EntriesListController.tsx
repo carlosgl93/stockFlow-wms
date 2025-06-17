@@ -1,5 +1,5 @@
 import { SearchIcon, EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
-import { Box, IconButton } from "@chakra-ui/react";
+import { Box, IconButton, Tooltip } from "@chakra-ui/react";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { useRedirect, useTranslate } from "utils";
 import { IEntry } from "../types";
@@ -8,6 +8,8 @@ import { Logger } from "utils/logger";
 import { useEffect, useState } from "react";
 import { getSupplierById } from "modules/suppliers";
 import { getTransporterById } from "modules/transporters/infrastructure";
+import { commonTooltipStyles } from "../../products/presentation/ProductsList";
+import dayjs from "dayjs";
 
 export const EntriesListController = () => {
   const [rows, setRows] = useState<IEntry[]>([]);
@@ -20,7 +22,7 @@ export const EntriesListController = () => {
     entriesData,
     isLoadingGetEntries,
   } = useEntries();
-  const { t } = useTranslate();
+  const { t, dataGridLocaleText } = useTranslate();
   const columns: GridColDef[] = [
     {
       field: "actions",
@@ -34,33 +36,90 @@ export const EntriesListController = () => {
           alignContent={"center"}
           h={"100%"}
         >
-          {/* <IconButton
-            aria-label="View Details"
-            icon={<SearchIcon />}
-            onClick={() => redirect(`/entries/${params.row.id}`)}
-          /> */}
-          <IconButton
-            aria-label="Edit Entry"
-            icon={<EditIcon />}
-            onClick={() => redirect(`/entries/edit/${params.row.id}`)}
-          />
-          <IconButton
-            aria-label="Remove Entry"
-            icon={<DeleteIcon />}
-            onClick={() => {
-              setSelectedEntryId(params.row.id || null);
-              setIsModalOpen(true);
+          <Tooltip
+            label={t("Edit Entry")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "blue.500",
+              ...commonTooltipStyles,
             }}
-          />
+          >
+            <IconButton
+              aria-label="Edit Entry"
+              icon={<EditIcon />}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
+              onClick={() => redirect(`/entries/edit/${params.row.id}`)}
+            />
+          </Tooltip>
+          <Tooltip
+            label={t("Remove Entry")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "red.500",
+              ...commonTooltipStyles,
+            }}
+          >
+            <IconButton
+              aria-label="Remove Entry"
+              icon={<DeleteIcon />}
+              sx={{
+                fontSize: "1.2rem",
+                p: 2,
+              }}
+              onClick={() => {
+                setSelectedEntryId(params.row.id || null);
+                setIsModalOpen(true);
+              }}
+            />
+          </Tooltip>
         </Box>
       ),
     },
-    { field: "docNumber", headerName: t("Document Number"), width: 150 },
+    {
+      field: "entryDate",
+      headerName: t("Entry Date"),
+      width: 150,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
+    {
+      field: "docNumber",
+      headerName: t("Document Number"),
+      width: 150,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
+    {
+      field: "description",
+      headerName: t("Description"),
+      width: 400,
+      getApplyQuickFilterFn: (value) => {
+        const searchTerm = value.toLowerCase();
+        return (params: string) => {
+          const name = params.toLowerCase();
+          return name.includes(searchTerm);
+        };
+      },
+    },
     { field: "supplierName", headerName: t("Supplier"), width: 150 },
     { field: "transporterId", headerName: t("Transporter"), width: 150 },
-    { field: "description", headerName: t("Description"), width: 400 },
   ];
-
+  Logger.info("rows", rows);
   useEffect(() => {
     const fetchSupportingData = async () => {
       if (entriesData) {
@@ -70,6 +129,7 @@ export const EntriesListController = () => {
             const transpInfo = await getTransporterById(entry.transporterId);
             return {
               ...entry,
+              entryDate: dayjs(entry.entryDate).format("DD-MM-YYYY"),
               supplierName: suppInfo.company,
               transporterId: transpInfo.name,
             };
@@ -96,6 +156,7 @@ export const EntriesListController = () => {
     isLoadingRemoveEntry,
     isModalOpen,
     selectedEntryId,
+    dataGridLocaleText,
     handleClose: () => setIsModalOpen(false),
     handleConfirmRemove,
     t,

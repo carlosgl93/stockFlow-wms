@@ -26,26 +26,16 @@ export const saveProduct = async (product: IProduct, optionalId?: string) => {
   // Check if a product with the same name, internalCode, or extCode already exists
   const productsRef = collection(db, "products");
   const nameQuery = query(productsRef, where("name", "==", name));
-  const internalCodeQuery = query(
-    productsRef,
-    where("internalCode", "==", internalCode)
-  );
   const extCodeQuery = query(productsRef, where("extCode", "==", extCode));
 
-  const [nameSnapshot, internalCodeSnapshot, extCodeSnapshot] =
-    await Promise.all([
-      getDocs(nameQuery),
-      getDocs(internalCodeQuery),
-      getDocs(extCodeQuery),
-    ]);
+  const [nameSnapshot, extCodeSnapshot] = await Promise.all([
+    getDocs(nameQuery),
+    getDocs(extCodeQuery),
+  ]);
 
-  if (
-    !nameSnapshot.empty ||
-    !internalCodeSnapshot.empty ||
-    !extCodeSnapshot.empty
-  ) {
+  if (!nameSnapshot.empty || !extCodeSnapshot.empty) {
     throw new ValidationError(
-      "A product with the same name, internalCode, or extCode already exists."
+      "A product with the same name or extCode already exists."
     );
   }
 

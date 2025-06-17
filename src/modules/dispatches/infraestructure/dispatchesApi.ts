@@ -139,6 +139,7 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "dispatch",
+        dispatchId: dispatchRef.id,
         ...dispatch,
         productsIds: dispatch.products.map((product) => product.id),
         createdAt: now,

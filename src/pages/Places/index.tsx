@@ -1,4 +1,4 @@
-import { AddIcon, SearchIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { usePlaces } from "modules/places/infra";
 import { PlacesList } from "modules/places/presentation";
@@ -9,7 +9,6 @@ import { useRedirect, useTranslate } from "utils";
 
 const PlacesPage = () => {
   const { t } = useTranslate();
-  const notImplemented = useNotImplementedYetToast();
   const redirect = useRedirect();
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
 
@@ -29,9 +28,9 @@ const PlacesPage = () => {
           <Text>
             {/* {t("Total registers: ")} {total} {t("Pages:")} {pages} */}
           </Text>
-          <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
+          {/* <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
             {t("Search")}
-          </Button>
+          </Button> */}
 
           <Button leftIcon={<AddIcon />} onClick={handleCreate}>
             {t("Create")}

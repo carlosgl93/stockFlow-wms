@@ -7,4 +7,5 @@ export const places = {
   "Create your place.": "Crea tu lugar.",
   "Edit Place": "Editar lugar",
   "Edit your place.": "Edita tu lugar.",
+  "Search by place name...": "Buscar por nombre de lugar",
 };

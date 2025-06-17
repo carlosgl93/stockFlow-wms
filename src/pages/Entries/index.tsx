@@ -1,4 +1,4 @@
-import { AddIcon, SearchIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { EntriesListController } from "modules/entries/infraestructure";
 import { EntriesList } from "modules/entries/presentation";
@@ -8,7 +8,6 @@ import { useNotImplementedYetToast } from "shared/Toast";
 import { useRedirect, useTranslate } from "utils";
 
 const EntriesPage = () => {
-  const notImplemented = useNotImplementedYetToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
   const handleCreate = () => {
@@ -23,13 +22,9 @@ const EntriesPage = () => {
         description={t("Create, edit, remove entries.")}
       >
         <Box display="flex" alignItems="center" gap={4}>
-          <Text>
-            {/* {t("Total registers: ")} {total} {t("Pages:")} {pages} */}
-          </Text>
-          <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
-            {t("Search")}
-          </Button>
-
+          {/* <Text>
+            {t("Total registers: ")} {total} {t("Pages:")} {pages}
+          </Text> */}
           <Button leftIcon={<AddIcon />} onClick={handleCreate}>
             {t("Create")}
           </Button>

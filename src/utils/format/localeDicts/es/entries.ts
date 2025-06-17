@@ -97,4 +97,10 @@ export const entries = {
   "Edit your entry.": "Edita tu ingreso.",
   "Total Liters / Kilos": "Total Litros o Kilos",
   "Total Boxes": "Total Cajas",
+  "Search by date, doc number or produt name...":
+    "Buscar por fecha, num de guía o nombre...",
+  "Export to CSV": "Exportar a CSV",
+  Print: "Imprimir",
+  Export: "Exportar a CSV",
+  "Remove Entry": "Eliminar ingreso",
 };

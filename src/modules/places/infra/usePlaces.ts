@@ -52,6 +52,7 @@ export const usePlaces = () => {
           status: "success",
         });
         queryClient.invalidateQueries(["places"]);
+        redirect(`/places`);
       },
       onError: () => {
         toast({

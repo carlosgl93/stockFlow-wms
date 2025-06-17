@@ -24,7 +24,7 @@ interface IProps {
 const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
   const redirect = useRedirect();
   const { removeProductMutation, isLoadingRemoveProduct } = useCRUDProducts();
-  const { t } = useTranslate();
+  const { t, dataGridLocaleText } = useTranslate();
 
   if (products.length === 0) {
     return <EmptyStateResult />;
@@ -189,9 +189,11 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
               quickFilterProps: {
                 debounceMs: 500,
                 placeholder: t("Search by name..."),
+                sx: { width: "300px" },
               },
             },
           }}
+          localeText={dataGridLocaleText}
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
@@ -217,7 +219,7 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
 
 export { ProductsList };
 
-const commonTooltipStyles = {
+export const commonTooltipStyles = {
   padding: 2,
   color: "white",
   fontWeight: "bold",

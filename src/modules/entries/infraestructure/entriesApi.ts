@@ -1,6 +1,6 @@
 import { db } from "shared/firebase";
 import { EntryDTO, IEntry, IProductEntry } from "../types";
-import { APIError, ValidationError } from "shared/Error";
+import { APIError, ValidationError, formatError } from "shared/Error";
 import { dateVO } from "utils/format";
 import {
   collection,
@@ -59,7 +59,13 @@ export const fetchEntries = async (
 
     return entriesWithProducts;
   } catch (error) {
-    throw new APIError("Failed to fetch entries", error);
+    Logger.error(
+      formatError("fetchEntries", error, { page, pageSize, lastVisible })
+    );
+    throw new APIError(
+      formatError("fetchEntries", error, { page, pageSize, lastVisible }),
+      error
+    );
   }
 };
 
@@ -131,6 +137,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
 
       // Store the entry
       const entryRef = await addDoc(entriesRef, {
+        entryDate: entry.entryDate,
         supplierId: entry.supplierId,
         docNumber: entry.docNumber,
         transporterId: entry.transporterId,
@@ -143,6 +150,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
+        entryId: entryRef.id,
         ...entry,
         products: entry.products,
         productsIds: entry.products.map((product) => product.id),
@@ -250,14 +258,14 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       }
     });
   } catch (error) {
-    Logger.error("Failed to add entry", { error, entry });
+    Logger.error(formatError("addEntry", error, { entry }));
     if (error instanceof ValidationError) {
       throw {
-        message: error.message,
+        message: formatError("addEntry", error, { entry }),
         code: "400",
       };
     }
-    throw new APIError("Failed to add entry", error);
+    throw new APIError(formatError("addEntry", error, { entry }), error);
   }
 };
 
@@ -286,13 +294,36 @@ export const updateEntry = async ({
     return await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
       const entryDoc = await transaction.get(entryDocRef);
+      const historicMovementsRef = collection(db, "historicMovements");
+
+      const historicMovementsQuery = query(
+        historicMovementsRef,
+        where("entryId", "==", entryId),
+        where("type", "==", "entry")
+      );
+
+      const historicMovementsSnapshot = await getDocs(historicMovementsQuery);
+      const historicMovementsEntryDoc =
+        historicMovementsSnapshot.docs[0] || null;
+
+      // Fix: Only use an ID if it exists, otherwise generate a new doc ref
+      let foundHistoricMovementsEntryDocRef;
+      if (historicMovementsEntryDoc) {
+        foundHistoricMovementsEntryDocRef = doc(
+          db,
+          "historicMovements",
+          historicMovementsEntryDoc.id
+        );
+      } else {
+        throw new ValidationError(
+          "Historic movements entry does not exist for this entry.",
+          "404"
+        );
+      }
 
       if (!entryDoc.exists()) {
         throw new ValidationError("Entry does not exist.");
       }
-
-      const entryData = entryDoc.data() as IEntry;
-
       // Prepare reads for products and places
       const productRefs = values.products.map((product) =>
         doc(db, "products", product.id)
@@ -331,6 +362,7 @@ export const updateEntry = async ({
           throw new ValidationError("Invalid placeId.");
         }
       });
+      Logger.info("values", { values });
 
       // Update entry
       transaction.update(entryDocRef, {
@@ -339,16 +371,30 @@ export const updateEntry = async ({
         transporterId: values.transporterId,
         description: values.description,
         updatedAt: dateVO.now(),
-        entryIds: values.products.map((product) => product.id), // Update entryIds array
+        productsIds: values.products.map((product) => product.id), // Update entryIds array
+        // placeId: values.products[] || "",
       });
 
-      // Add to historicMovements collection
-      const historicMovementsRef = collection(db, "historicMovements");
-      await addDoc(historicMovementsRef, {
-        type: "entry",
-        data: { ...values, products: values.products },
-        createdAt: dateVO.now(),
+      // instead of adding to historic movements, i need to update the entry in historic movements
+
+      Logger.info("historicMovementsEntryDoc", {
+        historicMovementsEntryDoc,
       });
+      if (historicMovementsEntryDoc?.exists()) {
+        Logger.info("Updating historic movements entry", {
+          values,
+        });
+        transaction.update(foundHistoricMovementsEntryDocRef, {
+          ...values,
+          // products: values.products,
+          updatedAt: dateVO.now(),
+        });
+      } else {
+        throw new ValidationError(
+          "Historic movements entry does not exist for this entry.",
+          "404"
+        );
+      }
 
       // Get existing products in the subcollection
       const productsCollectionRef = collection(entryDocRef, "products");
@@ -447,8 +493,14 @@ export const updateEntry = async ({
 
         if (!stockSnapshot.empty) {
           // Use existing stock entry
+          const stockProductDoc = stockSnapshot.docs[0];
+          const stockProductRef = doc(db, "stock", stockProductDoc.id);
+          const stockProductData = stockProductDoc.data();
           stockRef = stockSnapshot.docs[0].ref;
-          stockData = stockSnapshot.docs[0].data() as IStock;
+          stockData = {
+            ...stockProductData,
+            placeId: product.placeId,
+          } as IStock;
         } else {
           // Create new stock entry
           stockRef = doc(collection(db, "stock"));
@@ -461,6 +513,8 @@ export const updateEntry = async ({
             createdAt: dateVO.now(),
             updatedAt: dateVO.now(),
             expirityDate: product?.expirityDate || "",
+            placeId:
+              values.products.find((p) => p.id === product.id)?.placeId || "",
           };
           transaction.set(stockRef, stockData);
         }
@@ -545,8 +599,13 @@ export const updateEntry = async ({
             (lotProductData.looseUnitsNumber || 0) + looseUnitsDifference;
 
           transaction.update(lotProductRef, {
+            id: lotProductRef.id,
+            lotId: lotId,
+            productId: product.id,
             unitsNumber: Math.max(0, newUnitsNumber),
+            expirationDate: product?.expirityDate || "",
             looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+            placeId: product?.placeId,
           });
         } else {
           const lotProductRef = doc(collection(db, "lotProducts"));
@@ -557,6 +616,8 @@ export const updateEntry = async ({
             unitsNumber: product.unitsNumber,
             looseUnitsNumber: product.looseUnitsNumber,
             expirationDate: product?.expirityDate || "",
+            placeId:
+              values.products.find((p) => p.id === product.id)?.placeId || "",
           });
         }
       }
@@ -627,14 +688,17 @@ export const updateEntry = async ({
       return { ...values, id: entryDoc.id };
     });
   } catch (error) {
+    Logger.error(formatError("updateEntry", error, { entryId, values }));
     if (error instanceof FirebaseError) {
-      Logger.error("Failed to update entry", { error, entryId, values });
       throw new APIError(
-        error && error.message ? error.message : "Failed to update entry",
+        formatError("updateEntry", error, { entryId, values }),
         error
       );
     }
-    throw new APIError("Failed to update entry", error);
+    throw new APIError(
+      formatError("updateEntry", error, { entryId, values }),
+      error
+    );
   }
 };
 
@@ -729,15 +793,13 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       transaction.delete(entryDocRef);
     });
   } catch (error) {
-    Logger.error("Failed to remove entry", { error, entryId });
+    Logger.error(formatError("removeEntry", error, { entryId }));
     if (error instanceof ValidationError) {
       throw error;
     }
     if (error instanceof FirebaseError)
-      throw new APIError(
-        error && error.message ? error.message : "Failed to remove entry",
-        error
-      );
+      throw new APIError(formatError("removeEntry", error, { entryId }), error);
+    throw new APIError(formatError("removeEntry", error, { entryId }), error);
   }
 };
 
@@ -765,7 +827,8 @@ export const getEntryById = async (entryId: string): Promise<IEntry> => {
       products: productsToEnter,
     };
   } catch (error) {
-    throw new APIError("Failed to get entry", error);
+    Logger.error(formatError("getEntryById", error, { entryId }));
+    throw new APIError(formatError("getEntryById", error, { entryId }), error);
   }
 };
 
@@ -797,7 +860,11 @@ export const fetchEntriesByProductId = async (
 
     return entriesWithProduct;
   } catch (error) {
-    throw new APIError("Failed to fetch entries by product ID", error);
+    Logger.error(formatError("fetchEntriesByProductId", error, { productId }));
+    throw new APIError(
+      formatError("fetchEntriesByProductId", error, { productId }),
+      error
+    );
   }
 };
 
@@ -846,8 +913,17 @@ export const fetchEntriesByProductIdAndLotId = async (
 
     return entriesWithProductAndLot;
   } catch (error) {
+    Logger.error(
+      formatError("fetchEntriesByProductIdAndLotId", error, {
+        productId,
+        lotId,
+      })
+    );
     throw new APIError(
-      "Failed to fetch entries by product ID and/or lot ID",
+      formatError("fetchEntriesByProductIdAndLotId", error, {
+        productId,
+        lotId,
+      }),
       error
     );
   }

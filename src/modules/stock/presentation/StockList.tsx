@@ -118,11 +118,6 @@ export const StockList = ({
     let calculatedWholeUnitsTotal = 0;
     let calculatedLooseUnitsTotal = 0;
 
-    Logger.info("Generating rows with lotPRoducts:", {
-      lotProducts,
-      rows,
-    });
-
     const newRows = lotProducts
       ?.filter((item) => {
         const productMatch = !productId || item.productId === productId;
@@ -172,6 +167,10 @@ export const StockList = ({
     }
     return newRows;
   };
+
+  Logger.info("Generating rows with lotPRoducts:", {
+    rows,
+  });
 
   useEffect(() => {
     if (stockData) {

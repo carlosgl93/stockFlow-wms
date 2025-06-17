@@ -30,9 +30,6 @@ const DispatchesPage = () => {
           <Text>
             {/* {t("Total registers: ")} {total} {t("Pages:")} {pages} */}
           </Text>
-          <Button leftIcon={<SearchIcon />} onClick={notImplemented}>
-            {t("Search")}
-          </Button>
 
           <Button leftIcon={<AddIcon />} onClick={handleCreate}>
             {t("Create")}
