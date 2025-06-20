@@ -1,6 +1,6 @@
 import { db } from "shared/firebase";
 import { DispatchedStatus, IDispatch } from "../types";
-import { APIError, ValidationError } from "shared/Error";
+import { APIError, ValidationError, formatError } from "shared/Error";
 import { dateVO } from "utils/format";
 import {
   collection,
@@ -19,6 +19,8 @@ import {
 import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
 import { FirebaseError } from "firebase/app";
+import { IProductEntry } from "modules/entries/types";
+import type { QueryClient } from "@tanstack/react-query";
 
 export const fetchDispatches = async (
   page: number,
@@ -157,112 +159,361 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
     throw new APIError("Failed to add dispatch", error);
   }
 };
+
+// Utility to remove undefined fields from an object (shallow) and cast to Firestore update type
+function removeUndefined<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined)
+  ) as Partial<T>;
+}
+
 export const updateDispatch = async ({
   dispatchId,
   values,
+  queryClient,
 }: {
   dispatchId: string;
   values: IDispatch;
+  queryClient?: QueryClient;
 }): Promise<IDispatch> => {
+  values.docNumber = values.docNumber?.toUpperCase();
+  values.description = values.description?.trim().toUpperCase();
+  values.products = values.products.map((product) => ({
+    ...product,
+    lotId: product.lotId?.toUpperCase(),
+    palletNumber: product.palletNumber?.toUpperCase(),
+  }));
+  Logger.info("values for update dispatch (normalized)", values);
   try {
-    return await runTransaction(db, async (transaction) => {
+    const result = await runTransaction(db, async (transaction) => {
       const dispatchDocRef = doc(db, "dispatches", dispatchId);
       const dispatchDoc = await transaction.get(dispatchDocRef);
+      const historicMovementsRef = collection(db, "historicMovements");
+
+      const historicMovementsQuery = query(
+        historicMovementsRef,
+        where("dispatchId", "==", dispatchId),
+        where("type", "==", "dispatch")
+      );
+
+      const historicMovementsSnapshot = await getDocs(historicMovementsQuery);
+      Logger.info("historicMovementsSnapshot", {
+        historicMovementsSnapshot: historicMovementsSnapshot.docs.map((d) =>
+          d.data()
+        ),
+      });
+      const historicMovementsDispatchDoc =
+        historicMovementsSnapshot.docs[0] || null;
+
+      let foundHistoricMovementsDispatchDocRef;
+      if (historicMovementsDispatchDoc) {
+        foundHistoricMovementsDispatchDocRef = doc(
+          db,
+          "historicMovements",
+          historicMovementsDispatchDoc.id
+        );
+      } else {
+        throw new ValidationError(
+          "Historic movements entry does not exist for this dispatch.",
+          "404"
+        );
+      }
 
       if (!dispatchDoc.exists()) {
         throw new ValidationError("Dispatch does not exist.");
       }
 
       const dispatchData = dispatchDoc.data() as IDispatch;
+      const now = dateVO.now();
 
-      for (const product of values.products) {
-        if (!product.stockId) {
-          throw new ValidationError("StockId is required.");
+      // Prepare reads for products and places
+      const productRefs = values.products.map((product) =>
+        doc(db, "products", product.id)
+      );
+      const productDocs = await Promise.all(
+        productRefs.map((ref) => transaction.get(ref))
+      );
+
+      const placeRefs = values.products
+        .filter(
+          (product) =>
+            product.placeId !== "" &&
+            product.placeId !== "No especificaré un lugar" &&
+            product.placeId !== "NO ESPECIFICARÉ UN LUGAR"
+        )
+        .map((product) => doc(db, "places", product.placeId || ""));
+      const placeDocs = await Promise.all(
+        placeRefs.map((ref) => transaction.get(ref))
+      );
+
+      // Validate products and places
+      productDocs.forEach((productDoc, index) => {
+        if (!productDoc.exists()) {
+          Logger.info("Product not found", {
+            productId: values.products[index].id,
+          });
+          throw new ValidationError("Invalid productId.");
         }
+      });
 
-        const stockRef = doc(db, "stock", product.stockId);
+      placeDocs.forEach((placeDoc, index) => {
+        if (!placeDoc.exists()) {
+          Logger.info("PlaceId not found", {
+            placeId: values.products[index].placeId,
+          });
+          throw new ValidationError("Invalid placeId.");
+        }
+      });
+      Logger.info("values", { values });
+
+      // Update dispatch document
+      transaction.update(
+        dispatchDocRef,
+        removeUndefined({
+          supplierId: values.supplierId,
+          docNumber: values.docNumber,
+          transporterId: values.transporterId,
+          description: values.description,
+          updatedAt: now,
+          productsIds: values.products.map((product) => product.id),
+          products: values.products.map((product) => ({
+            ...product,
+            looseUnitsNumber: product.looseUnitsNumber || 0,
+            lotId: product.lotId?.toUpperCase(),
+            palletNumber: product.palletNumber?.toUpperCase(),
+          })),
+        })
+      );
+
+      Logger.info("historicMovementsDispatchDoc", {
+        historicMovementsDispatchDoc,
+      });
+
+      if (historicMovementsDispatchDoc?.exists()) {
+        Logger.info("Updating historic movements dispatch", {
+          values,
+        });
+        transaction.update(
+          foundHistoricMovementsDispatchDocRef,
+          removeUndefined({
+            ...values,
+            products: values.products.map((product) => ({
+              ...product,
+              looseUnitsNumber: product.looseUnitsNumber || 0,
+              lotId: product.lotId?.toUpperCase(),
+              palletNumber: product.palletNumber?.toUpperCase(),
+            })),
+            updatedAt: now,
+          })
+        );
+      } else {
+        throw new ValidationError(
+          "Historic movements dispatch does not exist for this dispatch.",
+          "404"
+        );
+      }
+
+      // Get existing products in the dispatch
+      const existingProducts: IProductEntry[] = dispatchData.products || [];
+
+      // Identify products to remove
+      Logger.info("Identifying products to remove", {
+        existingProducts,
+        updatedProducts: values.products,
+      });
+      const productsToRemove = existingProducts.filter(
+        (existingProduct) =>
+          !values.products.some(
+            (product) =>
+              product.id === existingProduct.id &&
+              product.lotId === existingProduct.lotId
+          )
+      );
+
+      // Remove products that are no longer in the updated dispatch
+      for (const existingProduct of productsToRemove) {
+        // Update stock for deleted product
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
+        );
+        const stockSnapshot = await getDocs(stockQuery);
+        if (!stockSnapshot.empty) {
+          const stockRef = stockSnapshot.docs[0].ref;
+          const stockData = stockSnapshot.docs[0].data() as IStock;
+          transaction.update(stockRef, {
+            unitsNumber: stockData.unitsNumber + existingProduct.unitsNumber,
+            looseUnitsNumber:
+              stockData.looseUnitsNumber + existingProduct.looseUnitsNumber,
+            updatedAt: now,
+          });
+        }
+        // Update LotProduct entry for deleted product
         const lotProductQuery = query(
           collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", product.lotId)
+          where("productId", "==", existingProduct.id),
+          where("lotId", "==", existingProduct.lotId)
         );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
 
-        // Fetch documents
-        const [stockDoc, lotProductSnapshot] = await Promise.all([
-          transaction.get(stockRef),
-          getDocs(lotProductQuery),
-        ]);
-
-        if (!stockDoc.exists()) {
-          throw new ValidationError("Stock does not exist.");
-        }
-
-        const stockData = stockDoc.data() as IStock;
-
-        const productFromDb = dispatchData.products.find(
-          (p) => p.id === product.id
-        );
-
-        // Stock adjustments
-        const unitDifference =
-          product.unitsNumber - (productFromDb?.unitsNumber || 0);
-        const looseUnitDifference =
-          product.looseUnitsNumber - (productFromDb?.looseUnitsNumber || 0);
-
-        transaction.update(stockRef, {
-          unitsNumber: stockData.unitsNumber - unitDifference,
-          looseUnitsNumber: stockData.looseUnitsNumber - looseUnitDifference,
-          updatedAt: dateVO.now(),
-        });
-
-        // Update LotProduct entry
         if (!lotProductSnapshot.empty) {
           const lotProductDoc = lotProductSnapshot.docs[0];
           const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
           const lotProductData = lotProductDoc.data();
-          transaction.update(lotProductRef, {
-            unitsNumber: lotProductData.unitsNumber - unitDifference,
-            looseUnitsNumber:
-              lotProductData.looseUnitsNumber - looseUnitDifference,
-          });
-        } else {
-          throw new ValidationError(
-            "LotProduct entry not found for the given product and lot."
-          );
-        }
 
-        // Update dispatch products
-        if (!productFromDb) {
-          dispatchData.products.push(product);
-        } else {
-          productFromDb.unitsNumber = product.unitsNumber;
-          productFromDb.looseUnitsNumber = product.looseUnitsNumber;
+          const newUnitsNumber =
+            (lotProductData.unitsNumber || 0) + existingProduct.unitsNumber;
+          const newLooseUnitsNumber =
+            (lotProductData.looseUnitsNumber || 0) +
+            existingProduct.looseUnitsNumber;
+
+          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
+            transaction.update(lotProductRef, {
+              unitsNumber: Math.max(0, newUnitsNumber),
+              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+            });
+          } else {
+            transaction.delete(lotProductRef);
+          }
         }
       }
 
-      // Update dispatch
-      transaction.update(dispatchDocRef, {
-        ...values,
-        productsIds: values.products.map((product) => product.id), // Update dispatchIds array
-        updatedAt: dateVO.now(),
-      });
+      // Process each product in updated dispatch
+      for (const product of values.products) {
+        // Validate or generate lotId
+        let lotId = product.lotId || doc(collection(db, "lots")).id;
+        if (!lotId) {
+          lotId = doc(collection(db, "lots")).id;
+        }
 
-      // Add to historicMovements collection
-      const historicMovementsRef = collection(db, "historicMovements");
-      await addDoc(historicMovementsRef, {
-        type: "dispatch",
-        data: { ...values, id: dispatchDoc.id },
-        createdAt: dateVO.now(),
-      });
+        // Query stock using productId and lotId
+        const stockQuery = query(
+          collection(db, "stock"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
+        );
+        const stockSnapshot = await getDocs(stockQuery);
+
+        let stockRef: DocumentReference;
+        let stockData: IStock | null = null;
+
+        if (!stockSnapshot.empty) {
+          // Use existing stock entry
+          const stockProductDoc = stockSnapshot.docs[0];
+          const stockProductRef = doc(db, "stock", stockProductDoc.id);
+          const stockProductData = stockProductDoc.data();
+          stockRef = stockSnapshot.docs[0].ref;
+          stockData = {
+            ...stockProductData,
+            placeId: product.placeId,
+          } as IStock;
+        } else {
+          // Create new stock entry
+          stockRef = doc(collection(db, "stock"));
+          stockData = {
+            id: stockRef.id,
+            productId: product.id,
+            lotId: lotId,
+            unitsNumber: 0,
+            looseUnitsNumber: 0,
+            createdAt: now,
+            updatedAt: now,
+            expirityDate: product?.expirityDate || "",
+            placeId:
+              values.products.find((p) => p.id === product.id)?.placeId || "",
+          };
+          transaction.set(stockRef, stockData);
+        }
+
+        // Find existing product in dispatch
+        const existingProduct = existingProducts.find(
+          (p) => p.id === product.id && p.lotId === product.lotId
+        );
+
+        let unitsDifference = 0;
+        let looseUnitsDifference = 0;
+        if (existingProduct) {
+          unitsDifference = product.unitsNumber - existingProduct.unitsNumber;
+          looseUnitsDifference =
+            product.looseUnitsNumber - existingProduct.looseUnitsNumber;
+        } else {
+          unitsDifference = product.unitsNumber;
+          looseUnitsDifference = product.looseUnitsNumber;
+        }
+
+        // Update stock quantities based on the difference (dispatch = subtract)
+        transaction.update(stockRef, {
+          unitsNumber: stockData.unitsNumber - unitsDifference,
+          looseUnitsNumber: stockData.looseUnitsNumber - looseUnitsDifference,
+          updatedAt: now,
+        });
+
+        // Update LotProduct entry
+        const lotProductQuery = query(
+          collection(db, "lotProducts"),
+          where("productId", "==", product.id),
+          where("lotId", "==", lotId)
+        );
+        const lotProductSnapshot = await getDocs(lotProductQuery);
+
+        if (!lotProductSnapshot.empty) {
+          const lotProductDoc = lotProductSnapshot.docs[0];
+          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
+          const lotProductData = lotProductDoc.data();
+
+          const newUnitsNumber =
+            (lotProductData.unitsNumber || 0) - unitsDifference;
+          const newLooseUnitsNumber =
+            (lotProductData.looseUnitsNumber || 0) - looseUnitsDifference;
+
+          transaction.update(lotProductRef, {
+            id: lotProductRef.id,
+            lotId: lotId,
+            productId: product.id,
+            unitsNumber: Math.max(0, newUnitsNumber),
+            expirationDate: product?.expirityDate || "",
+            looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
+            placeId: product?.placeId,
+          });
+        } else {
+          const lotProductRef = doc(collection(db, "lotProducts"));
+          transaction.set(lotProductRef, {
+            id: lotProductRef.id,
+            lotId: lotId,
+            productId: product.id,
+            unitsNumber: Math.max(0, -unitsDifference),
+            looseUnitsNumber: Math.max(0, -looseUnitsDifference),
+            expirationDate: product?.expirityDate || "",
+            placeId:
+              values.products.find((p) => p.id === product.id)?.placeId || "",
+          });
+        }
+      }
+
+      // Delete products that are no longer in the updated dispatch (already handled above)
 
       return { ...values, id: dispatchDoc.id };
     });
-  } catch (error) {
-    Logger.error("Failed to update dispatch", { error });
-    if (error instanceof FirebaseError) {
-      throw new APIError("Firebase error occurred", error.message);
+    // Invalidate relevant queries after update
+    if (queryClient) {
+      queryClient.invalidateQueries(["dispatches"]);
+      queryClient.invalidateQueries(["dispatch", dispatchId]);
+      // Add more keys if you have other relevant queries
     }
-    throw new APIError("Failed to update dispatch", error);
+    return result;
+  } catch (error) {
+    Logger.error(formatError("updateDispatch", error, { dispatchId, values }));
+    if (error instanceof FirebaseError) {
+      throw new APIError(
+        formatError("updateDispatch", error, { dispatchId, values }),
+        error
+      );
+    }
+    throw new APIError(
+      formatError("updateDispatch", error, { dispatchId, values }),
+      error
+    );
   }
 };
 

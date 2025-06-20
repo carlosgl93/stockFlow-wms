@@ -107,6 +107,7 @@ export const CreateDispatchForm = ({
     setSelectedProduct,
     selectedProduct,
     register,
+    inStockValue,
   } = CreateDispatchController({ dispatchToEdit });
 
   const totalValue =
@@ -521,7 +522,7 @@ export const CreateDispatchForm = ({
                 </Tooltip>
               </Box>
               <span style={{ color: "red" }}>
-                {t("In stock")} {totalStockByLotAndProduct?.unitsNumber}
+                {t("In stock")} {Number(inStockValue)}
               </span>
             </FormLabel>
             <Controller
@@ -531,8 +532,8 @@ export const CreateDispatchForm = ({
               rules={{
                 required: dispatchToEdit ? false : true,
                 validate: (value) => {
-                  if (value > 0 && totalStockByLotAndProduct?.unitsNumber) {
-                    if (value > totalStockByLotAndProduct?.unitsNumber) {
+                  if (value > 0 && inStockValue) {
+                    if (value > inStockValue) {
                       return t(
                         "The units number can't be higher than the stock"
                       );

@@ -59,6 +59,11 @@ export const CreateDispatchController = ({
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
+  // in stock value is used to have a reactive variable that will
+  // be used to show the user how the stock is changing
+  const [inStockValue, setInStockValue] = useState(0);
+  const [removedProductsFromDispatch, setRemovedProductsFromDispatch] =
+    useState<IProductEntry[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { page, pageSize, lastVisible } = useDispatches();
@@ -141,6 +146,38 @@ export const CreateDispatchController = ({
     [setValue, onCloseCreateProduct]
   );
 
+  const handleRemoveProductFromDispatch = async (
+    params: GridRenderCellParams<IDispatch>
+  ) => {
+    Logger.info("Removing product from dispatch", {
+      params,
+    });
+    setAddedToDispatch((prev) => {
+      return prev.filter((p) => {
+        const uniqueId = getProductCompositeId(p);
+        return params.id !== uniqueId;
+      });
+    });
+    setRemovedProductsFromDispatch((prev) => {
+      const product = addedToDispatch.find(
+        (p) => getProductCompositeId(p) === params.id
+      );
+      if (product) {
+        return [...prev, product];
+      }
+      return prev;
+    });
+    setInStockValue((prev) => {
+      const product = addedToDispatch.find(
+        (p) => getProductCompositeId(p) === params.row.id
+      );
+      if (product) {
+        return Number(prev) + Number(product.unitsNumber);
+      }
+      return Number(prev);
+    });
+  };
+
   const handleAddProductToDispatch = async () => {
     const validation = await trigger();
     Logger.info("validation", [validation]);
@@ -155,14 +192,7 @@ export const CreateDispatchController = ({
       return;
     }
     const newDataToDispatch = getValues();
-    const {
-      totalUnitsNumber,
-      lotId,
-      placeId,
-      palletNumber,
-      heightCMs,
-      widthCMs,
-    } = newDataToDispatch;
+    const { totalUnitsNumber, lotId } = newDataToDispatch;
     if (
       totalUnitsNumber === 0 ||
       totalUnitsNumber === undefined ||
@@ -170,7 +200,7 @@ export const CreateDispatchController = ({
     ) {
       toast({
         title: "Error",
-        description: t("Check the fields, some are missing"),
+        description: t("Lote o número de unidades invalidas"),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -189,12 +219,15 @@ export const CreateDispatchController = ({
         qPerUnit: selectedProduct?.boxDetails?.quantity || 1,
         unitsPerBox: selectedProduct?.boxDetails?.units || 1,
       };
-      const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
+      setInStockValue((prev) => {
+        return prev - newProductToAdd.unitsNumber;
+      });
+      const newCompositeId = getProductCompositeId(newProductToAdd);
       if (
-        !addedToDispatch.find(
-          (entry) =>
-            `${entry.id}-${entry.lotId}-${entry.palletNumber}` === uniqueId
-        )
+        !addedToDispatch.find((product) => {
+          const compositeId = getProductCompositeId(product);
+          return compositeId === newCompositeId;
+        })
       ) {
         setAddedToDispatch((prev) => [...prev, newProductToAdd]);
       }
@@ -285,6 +318,7 @@ export const CreateDispatchController = ({
           {
             dispatchId: dispatchToEdit.id,
             values: dataToSubmit,
+            queryClient,
           },
           {
             onSuccess: async () => {
@@ -328,14 +362,7 @@ export const CreateDispatchController = ({
             <IconButton
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
-              onClick={() => {
-                setAddedToDispatch((prev) => {
-                  return prev.filter((p) => {
-                    const uniqueId = getProductCompositeId(p);
-                    return uniqueId !== params.id;
-                  });
-                });
-              }}
+              onClick={() => handleRemoveProductFromDispatch(params)}
             />
           }
         </FlexBox>
@@ -343,6 +370,7 @@ export const CreateDispatchController = ({
     },
     { field: "intCode", headerName: t("Internal Code"), width: 150 },
     { field: "productName", headerName: t("Product Name"), width: 150 },
+    { field: "palletNumber", headerName: t("Pallet"), width: 150 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
     {
       field: "totalUnitsNumber",
@@ -364,7 +392,7 @@ export const CreateDispatchController = ({
   ];
 
   let rows: IDispatchRow[] = addedToDispatch.reduce((acc, p) => {
-    const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+    const uniqueId = getProductCompositeId(p);
     const unitOfMeasure = p.unitOfMeasure;
     let totalUnitsnumber;
     if (
@@ -535,6 +563,15 @@ export const CreateDispatchController = ({
     selectedProduct?.boxDetails!.quantity
   } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
 
+  useEffect(() => {
+    if (!totalStockByLotAndProduct?.unitsNumber) {
+      setInStockValue(0);
+    }
+    if (totalStockByLotAndProduct?.unitsNumber) {
+      setInStockValue(totalStockByLotAndProduct.unitsNumber);
+    }
+  }, [totalStockByLotAndProduct?.unitsNumber]);
+
   return {
     isLoading,
     isSearchingSupplier,
@@ -609,5 +646,6 @@ export const CreateDispatchController = ({
     selectedProduct,
     setSelectedProduct,
     register,
+    inStockValue,
   };
 };

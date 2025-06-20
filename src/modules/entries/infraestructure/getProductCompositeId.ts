@@ -8,6 +8,6 @@
 import { IProductEntry } from "../types";
 
 export function getProductCompositeId(p: IProductEntry) {
-  const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+  const uniqueId = `${p.id}-${p.lotId}`;
   return uniqueId;
 }

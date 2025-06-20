@@ -28,6 +28,7 @@ import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
 import { Logger } from "utils/logger";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -56,7 +57,10 @@ export const CreateEntryController = ({
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
-  const navigate = useNavigate();
+  const [removedProductsFromEntry, setRemovedProductsFromEntry] = useState<
+    IProductEntry[]
+  >([]);
+  const queryClient = useQueryClient();
 
   const {
     addEntryMutation,
@@ -172,6 +176,7 @@ export const CreateEntryController = ({
         await updateEntryMutation({
           entryId: entryToEdit.id,
           values: dataToSave,
+          queryClient,
         });
       } else {
         await addEntryMutation(dataToSave);
@@ -195,7 +200,7 @@ export const CreateEntryController = ({
     // Find the product in addedToEntry that corresponds to the clicked row
     // The uniqueId for rows is created as `${p.id}-${p.lotId}-${p.palletNumber}`
     const productEntry = addedToEntry.find(
-      (p) => `${p.id}-${p.lotId}-${p.palletNumber}` === clickedRowId
+      (p) => getProductCompositeId(p) === clickedRowId
     );
 
     if (productEntry) {
@@ -296,10 +301,8 @@ export const CreateEntryController = ({
       entryToEdit.products.forEach((p) => {
         setAddedToEntry((prev) => {
           const existingEntry = prev.find(
-            (entry) =>
-              entry.id === p.id &&
-              entry.lotId === p.lotId &&
-              entry.palletNumber === p.palletNumber
+            (entry) => entry.id === p.id && entry.lotId === p.lotId
+            // entry.palletNumber === p.palletNumber
           );
           if (!existingEntry) {
             return [...prev, p];
@@ -330,7 +333,7 @@ export const CreateEntryController = ({
   }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
 
   let rows: IEntryRow[] = addedToEntry.reduce((acc, p) => {
-    const uniqueId = `${p.id}-${p.lotId}-${p.palletNumber}`;
+    const uniqueId = getProductCompositeId(p);
     const unitOfMeasure = p.unitOfMeasure;
     let totalUnitsnumber;
     if (
@@ -379,14 +382,7 @@ export const CreateEntryController = ({
             <IconButton
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
-              onClick={() =>
-                setAddedToEntry((prev) => {
-                  return prev.filter((p) => {
-                    const uniqueId = getProductCompositeId(p);
-                    return uniqueId !== params.id;
-                  });
-                })
-              }
+              onClick={() => handleRemoveProductFromEntry(params)}
             />
           }
         </Box>
@@ -439,22 +435,35 @@ export const CreateEntryController = ({
       });
       return false;
     }
-    if (expirityDate === "") {
-      toast({
-        title: "Error",
-        description: t("Expiry date is required"),
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      return false;
-    }
+
     return true;
+  };
+
+  const handleRemoveProductFromEntry = async (
+    params: GridRenderCellParams<IEntry>
+  ) => {
+    Logger.info("Removing product from entry", {
+      params,
+    });
+    setAddedToEntry((prev) => {
+      return prev.filter((p) => {
+        const uniqueId = getProductCompositeId(p);
+        return params.id !== uniqueId;
+      });
+    });
+    setRemovedProductsFromEntry((prev: IProductEntry[]) => {
+      const product = addedToEntry.find(
+        (p) => getProductCompositeId(p) === params.id
+      );
+      if (product) {
+        return [...prev, product];
+      }
+      return prev;
+    });
   };
 
   const handleAddProductToEntry = () => {
     const newDataToEntry = getValues();
-    const { totalUnitsNumber, lotId, placeId, expirityDate } = newDataToEntry;
     Logger.info("data", newDataToEntry);
 
     if (validateProductToEnter(newDataToEntry)) {
@@ -472,12 +481,12 @@ export const CreateEntryController = ({
         qPerUnit: selectedProduct?.boxDetails?.quantity || 1,
         unitsPerBox: selectedProduct?.boxDetails?.units || 1,
       };
-      const uniqueId = `${newProductToAdd.id}-${newProductToAdd.lotId}-${newProductToAdd.palletNumber}`;
+      const uniqueId = getProductCompositeId(newProductToAdd);
       if (
-        !addedToEntry.find(
-          (entry) =>
-            `${entry.id}-${entry.lotId}-${entry.palletNumber}` === uniqueId
-        )
+        !addedToEntry.find((product) => {
+          const compositeId = getProductCompositeId(product);
+          compositeId === uniqueId;
+        })
       ) {
         setAddedToEntry((prev) => [...prev, newProductToAdd]);
       }

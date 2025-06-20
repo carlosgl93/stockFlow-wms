@@ -20,6 +20,7 @@ import { Logger } from "utils/logger";
 import { IStock } from "modules/stock/types";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { FirebaseError } from "firebase/app";
+import type { QueryClient } from "@tanstack/react-query";
 
 export const fetchEntries = async (
   page: number,
@@ -272,9 +273,11 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
 export const updateEntry = async ({
   entryId,
   values,
+  queryClient,
 }: {
   entryId: string;
   values: EntryDTO;
+  queryClient: QueryClient;
 }): Promise<IEntry> => {
   // Normalize string values to uppercase
   values.docNumber = values.docNumber?.toUpperCase();
@@ -282,16 +285,13 @@ export const updateEntry = async ({
 
   values.products = values.products.map((product) => ({
     ...product,
-    lotId: product.lotId?.toUpperCase(), // Uppercase if provided, else remains undefined
-    // placeId: product.placeId?.toUpperCase(), // Uppercase if provided, else remains undefined
-    // expirityDate is a date string and should not be uppercased
-    // palletNumber normalization can be added here if it's part of ProductInEntryDTO and needs it
+    lotId: product.lotId?.toUpperCase(),
     palletNumber: product.palletNumber?.toUpperCase(),
   }));
 
   Logger.info("values for update (normalized)", values);
   try {
-    return await runTransaction(db, async (transaction) => {
+    const result = await runTransaction(db, async (transaction) => {
       const entryDocRef = doc(db, "entries", entryId);
       const entryDoc = await transaction.get(entryDocRef);
       const historicMovementsRef = collection(db, "historicMovements");
@@ -687,6 +687,13 @@ export const updateEntry = async ({
 
       return { ...values, id: entryDoc.id };
     });
+    // Invalidate relevant queries after update
+    if (queryClient) {
+      queryClient.invalidateQueries(["entries"]);
+      queryClient.invalidateQueries(["entry", entryId]);
+      // Add more keys if you have other relevant queries
+    }
+    return result;
   } catch (error) {
     Logger.error(formatError("updateEntry", error, { entryId, values }));
     if (error instanceof FirebaseError) {
