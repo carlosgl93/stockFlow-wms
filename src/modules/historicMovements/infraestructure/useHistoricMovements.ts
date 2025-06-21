@@ -6,37 +6,13 @@ export const useHistoricMovements = (
   productId: string | null,
   type: "entry" | "dispatch" | null
 ) => {
-  const [page, setPage] = useState(0);
-  const [pageSize] = useState(10);
-  const [lastVisible, setLastVisible] = useState<string | null>(null);
-
   const { data: historicMovements, isLoading } = useQuery({
-    queryKey: [
-      "historicMovements",
-      productId,
-      type,
-      page,
-      pageSize,
-      lastVisible,
-    ],
-    queryFn: async () => {
-      const data = await fetchHistoricMovements(
-        page,
-        pageSize,
-        lastVisible,
-        productId,
-        type
-      );
-      if (data.length > 0) {
-        setLastVisible(data[data.length - 1].id);
-      }
-      return data;
-    },
+    queryKey: ["historicMovements", productId, type],
+    queryFn: () => fetchHistoricMovements(productId, type),
   });
 
   return {
     historicMovements,
     isLoading,
-    fetchNextPage: (nextPage: number) => setPage(nextPage),
   };
 };

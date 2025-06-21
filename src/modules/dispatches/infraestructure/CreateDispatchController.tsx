@@ -1,6 +1,12 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { useToast, useDisclosure, IconButton, Box } from "@chakra-ui/react";
+import {
+  useToast,
+  useDisclosure,
+  IconButton,
+  Box,
+  Tooltip,
+} from "@chakra-ui/react";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { IDispatch, IDispatchForm, IDispatchRow } from "../types";
@@ -25,6 +31,7 @@ import { getProductCompositeId } from "modules/entries/infraestructure";
 import { useNavigate } from "shared/Router";
 import { useQueryClient } from "@tanstack/react-query";
 import { removeDispatch } from "./dispatchesApi";
+import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 export const CreateDispatchController = ({
   dispatchToEdit,
@@ -48,12 +55,10 @@ export const CreateDispatchController = ({
   const [lotId, setLotId] = useState("");
   const toast = useToast();
   const { t } = useTranslate();
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
-    limit: 5,
-  });
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({});
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
-  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
-  const { products: getProductsData, isFetching } = useProducts(5);
+  const { getTransporters, isLoadingGetTransporters } = useTransporters();
+  const { products: getProductsData, isFetching } = useProducts();
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
@@ -66,7 +71,6 @@ export const CreateDispatchController = ({
     useState<IProductEntry[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { page, pageSize, lastVisible } = useDispatches();
   const {
     handleSubmit,
     control,
@@ -86,8 +90,6 @@ export const CreateDispatchController = ({
     isLoadingGetProductLots,
   } = useLots({
     productId,
-    pageSize: 10,
-    page: 1,
   });
 
   const {
@@ -323,7 +325,7 @@ export const CreateDispatchController = ({
           {
             onSuccess: async () => {
               await queryClient.invalidateQueries({
-                queryKey: ["dispatches", page, pageSize, lastVisible],
+                queryKey: ["dispatches"],
               });
             },
           }
@@ -359,11 +361,24 @@ export const CreateDispatchController = ({
           h={"100%"}
         >
           {
-            <IconButton
-              aria-label="Remove Entry"
-              icon={<DeleteIcon />}
-              onClick={() => handleRemoveProductFromDispatch(params)}
-            />
+            <Tooltip
+              label={t("Eliminar producto del despacho")}
+              placement="left"
+              hasArrow
+              sx={{
+                bgColor: "red.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Remove Entry"
+                icon={<DeleteIcon />}
+                sx={{
+                  fontSize: "1.5rem",
+                }}
+                onClick={() => handleRemoveProductFromDispatch(params)}
+              />
+            </Tooltip>
           }
         </FlexBox>
       ),

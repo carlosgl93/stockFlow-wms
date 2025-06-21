@@ -62,10 +62,6 @@ export const StockList = ({
     stockData,
     lotProducts,
   });
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 10,
-    page: 0,
-  });
 
   const { t } = useTranslate();
   const [totalUnits, setTotalUnits] = useState<number>(0);
@@ -216,8 +212,6 @@ export const StockList = ({
           rows={rows}
           columns={columns}
           rowCount={rows?.length}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
           loading={isLoading}
           slots={{
             noRowsOverlay: () => (

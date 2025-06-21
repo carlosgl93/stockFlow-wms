@@ -18,7 +18,6 @@ import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 interface IProps {
   dispatches: IDispatch[];
-  pageSize?: number;
 }
 
 export const DispatchesList = ({ dispatches }: IProps) => {

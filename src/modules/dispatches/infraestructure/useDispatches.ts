@@ -14,9 +14,6 @@ import { FirestoreError } from "firebase/firestore";
 import { useParams } from "shared/Router";
 
 export const useDispatches = () => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
 
@@ -29,7 +26,7 @@ export const useDispatches = () => {
     status,
   } = useQuery({
     queryKey: ["dispatches"],
-    queryFn: () => fetchDispatches(page, pageSize, lastVisible),
+    queryFn: fetchDispatches,
   });
 
   const addDispatchMutation = useMutation(addDispatch, {
@@ -119,8 +116,5 @@ export const useDispatches = () => {
     getDispatchByIdData,
     isFetchingGetDispatchById,
     isErrorGetDispatchById,
-    page,
-    lastVisible,
-    pageSize,
   };
 };

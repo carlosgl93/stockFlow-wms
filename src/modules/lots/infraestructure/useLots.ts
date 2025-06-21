@@ -3,21 +3,13 @@ import { useToast } from "@chakra-ui/react";
 import { UpdateLotParams, addLot, removeLot, updateLot } from "./mutations";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { getLots } from "./queries/getLots";
-import { useState } from "react";
 import { getProductLots } from "./queries";
 
 type UseLotsProps = {
   productId?: string;
-  pageSize?: number;
-  page?: number;
 };
 
-export const useLots = ({
-  productId = "",
-  pageSize = 10,
-  page = 1,
-}: UseLotsProps) => {
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
+export const useLots = ({ productId = "" }: UseLotsProps) => {
   const toast = useToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
@@ -91,11 +83,9 @@ export const useLots = ({
     isLoading: isLoadingGetLots,
     isError: isErrorGetLots,
   } = useQuery({
-    queryKey: ["lots", page, pageSize],
-    queryFn: () => getLots(pageSize, page),
-    onSuccess: (data) => {
-      setLastVisible(data.lastVisible);
-    },
+    queryKey: ["lots"],
+    queryFn: getLots,
+    // onSuccess: () => {},
   });
 
   const {
@@ -103,17 +93,12 @@ export const useLots = ({
     isLoading: isLoadingGetProductLots,
     isError: isErrorGetProductLots,
   } = useQuery({
-    queryKey: ["productLots", productId, page, pageSize],
+    queryKey: ["productLots", productId],
     queryFn: () =>
       getProductLots({
         productId,
-        page,
-        pageSize,
       }),
     enabled: !!productId,
-    onSuccess: (data) => {
-      setLastVisible(data.lastVisible);
-    },
   });
 
   const {
@@ -122,10 +107,7 @@ export const useLots = ({
     isError: isErrorGetUniqueLots,
   } = useQuery({
     queryKey: ["lots"],
-    queryFn: () => getLots(pageSize, page),
-    onSuccess: (data) => {
-      setLastVisible(data.lastVisible);
-    },
+    queryFn: getLots,
   });
 
   return {

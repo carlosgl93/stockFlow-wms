@@ -39,8 +39,6 @@ const StockPage = () => {
   const { getLotProductsData, isLoadingGetLotProducts } = useLotProduct({
     lotId: lotSelected,
     productId: searchedStockProduct,
-    pageSize: 10,
-    lastVisible: "",
   });
   const { t } = useTranslate();
 

@@ -175,8 +175,8 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
         <DataGrid
           rows={rows}
           columns={columns}
-          pageSizeOptions={[5, 10, 25, 50, 100]}
           loading={isLoading}
+          autoPageSize
           slots={{ toolbar: GridToolbar }}
           slotProps={{
             toolbar: {
@@ -198,12 +198,6 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
           disableColumnSelector
           disableDensitySelector
           initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-                page: 0,
-              },
-            },
             filter: {
               filterModel: {
                 items: [],

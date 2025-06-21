@@ -11,7 +11,6 @@ import { useState } from "react";
 import { getPlaces } from "./queries";
 
 export const usePlaces = () => {
-  const [pageSize, setPageSize] = useState(5);
   const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
@@ -88,11 +87,8 @@ export const usePlaces = () => {
     isLoading: isLoadingGetPlaces,
     isError: isErrorGetPlaces,
   } = useQuery({
-    queryKey: ["places", pageSize, lastVisible],
-    queryFn: () => getPlaces(pageSize, lastVisible ? lastVisible : null),
-    onSuccess: (data) => {
-      setLastVisible(data.lastVisible);
-    },
+    queryKey: ["places"],
+    queryFn: () => getPlaces(),
   });
 
   return {

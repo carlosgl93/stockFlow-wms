@@ -7,13 +7,10 @@ import { APIError } from "shared/Error";
 import { getSupplierById } from "./queries/getSupplierById";
 
 type UseSuppliersProps = {
-  limit?: number;
   suppId?: string;
 };
 
-export const useSuppliers = ({ limit, suppId }: UseSuppliersProps) => {
-  const [pageSize, setPageSize] = useState(50);
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
+export const useSuppliers = ({ suppId }: UseSuppliersProps) => {
   const toast = useToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
@@ -87,11 +84,7 @@ export const useSuppliers = ({ limit, suppId }: UseSuppliersProps) => {
     isError: isErrorGetSuppliers,
   } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () =>
-      getSuppliers(limit || pageSize, lastVisible ? lastVisible : null),
-    onSuccess: (data) => {
-      setLastVisible(data?.lastVisible || null);
-    },
+    queryFn: getSuppliers,
   });
 
   const {

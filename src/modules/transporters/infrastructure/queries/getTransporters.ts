@@ -12,21 +12,12 @@ import { db } from "shared/firebase";
 import { APIError } from "shared/Error";
 import { ITransporter } from "modules/transporters/types";
 
-export const getTransporters = async (
-  pageSize: number,
-  lastVisible: string | null
-) => {
+export const getTransporters = async () => {
   try {
     let transportersQuery = query(
       collection(db, "transporters"),
-      orderBy("name"),
-      limit(pageSize)
+      orderBy("name")
     );
-
-    if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "transporters", lastVisible));
-      transportersQuery = query(transportersQuery, startAfter(lastVisibleDoc));
-    }
 
     const snapshot = await getDocs(transportersQuery);
     const transporters = snapshot.docs.map((doc) => ({

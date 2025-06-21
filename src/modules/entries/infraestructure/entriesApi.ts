@@ -10,8 +10,6 @@ import {
   getDoc,
   query,
   orderBy,
-  limit,
-  startAfter,
   where,
   runTransaction,
   DocumentReference,
@@ -22,23 +20,10 @@ import { getProductCompositeId } from "./getProductCompositeId";
 import { FirebaseError } from "firebase/app";
 import type { QueryClient } from "@tanstack/react-query";
 
-export const fetchEntries = async (
-  page: number,
-  pageSize: number,
-  lastVisible: string | null
-): Promise<IEntry[]> => {
+export const fetchEntries = async (): Promise<IEntry[]> => {
   try {
     const entriesRef = collection(db, "entries");
-    let q = query(entriesRef, orderBy("createdAt"), limit(pageSize));
-    if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "entries", lastVisible));
-      q = query(
-        entriesRef,
-        orderBy("createdAt"),
-        startAfter(lastVisibleDoc),
-        limit(pageSize)
-      );
-    }
+    const q = query(entriesRef, orderBy("createdAt"));
     const snapshot = await getDocs(q);
     const entries = snapshot.docs.map(
       (doc) => ({ ...doc.data(), id: doc.id } as IEntry)
@@ -60,13 +45,8 @@ export const fetchEntries = async (
 
     return entriesWithProducts;
   } catch (error) {
-    Logger.error(
-      formatError("fetchEntries", error, { page, pageSize, lastVisible })
-    );
-    throw new APIError(
-      formatError("fetchEntries", error, { page, pageSize, lastVisible }),
-      error
-    );
+    Logger.error(formatError("fetchEntries", error));
+    throw new APIError(formatError("fetchEntries", error), error);
   }
 };
 

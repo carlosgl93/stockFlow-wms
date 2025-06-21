@@ -33,7 +33,7 @@ export const CreateStockForm = ({ stockToEdit }: { stockToEdit?: IStock }) => {
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
   const [searchResults, setSearchedResults] = useState<null | IProduct[]>(null);
 
-  const { products: getProductsData, isFetching } = useProducts(5);
+  const { products: getProductsData, isFetching } = useProducts();
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
 
   const [products, setProducts] = useState<IProduct[]>([]);

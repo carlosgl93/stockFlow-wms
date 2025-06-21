@@ -22,23 +22,11 @@ import { FirebaseError } from "firebase/app";
 import { IProductEntry } from "modules/entries/types";
 import type { QueryClient } from "@tanstack/react-query";
 
-export const fetchDispatches = async (
-  page: number,
-  pageSize: number,
-  lastVisible: string | null
-): Promise<IDispatch[]> => {
+export const fetchDispatches = async (): Promise<IDispatch[]> => {
   try {
     const dispatchesRef = collection(db, "dispatches");
     let q = query(dispatchesRef);
-    if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "dispatches", lastVisible));
-      q = query(
-        dispatchesRef,
-        orderBy("createdAt"),
-        startAfter(lastVisibleDoc),
-        limit(pageSize)
-      );
-    }
+
     const snapshot = await getDocs(q);
     const result = snapshot.docs.map(
       (doc) => ({ ...doc.data(), id: doc.id } as IDispatch)

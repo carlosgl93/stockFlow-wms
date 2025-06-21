@@ -13,16 +13,9 @@ import { getLotProducts } from "./queries/getLotProducts";
 type useLotsProductProps = {
   lotId?: string;
   productId?: string;
-  pageSize?: number;
-  lastVisible?: string;
 };
 
-export const useLotProduct = ({
-  lotId,
-  productId,
-  pageSize = 25,
-  lastVisible,
-}: useLotsProductProps) => {
+export const useLotProduct = ({ lotId, productId }: useLotsProductProps) => {
   const toast = useToast();
   const { t } = useTranslate();
 
@@ -98,15 +91,11 @@ export const useLotProduct = ({
       "getLotProducts",
       params.productId ? params.productId : productId,
       params?.lotProductId ? params.lotProductId : lotId,
-      pageSize,
-      lastVisible,
     ],
     queryFn: () =>
       getLotProducts(
         params?.lotProductId ? params.lotProductId : lotId,
-        params.productId ? params.productId : productId,
-        pageSize,
-        lastVisible
+        params.productId ? params.productId : productId
       ),
   });
 

@@ -39,7 +39,7 @@ import { useForm } from "react-hook-form";
 
 const defaultParams: IQueryParams = { limit: 50, sort: "asc", id: "" };
 
-export const useProducts = (pageSize: number = 50, page: number = 1) => {
+export const useProducts = () => {
   const [params, setParams] = useState<IQueryParams>(defaultParams);
   const redirect = useRedirect();
   const toast = useToast();
@@ -48,22 +48,10 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
   const queryClient = useQueryClient();
 
   const { data, isFetching } = useQuery({
-    queryKey: ["products", page, pageSize],
+    queryKey: ["products"],
     queryFn: async (): Promise<IProductsCollection> => {
       const productsRef = collection(db, "products");
-      let productsQuery = query(productsRef, queryLimit(pageSize));
-
-      if (page > 1) {
-        const lastVisibleDoc = await getDocs(
-          query(productsRef, queryLimit((page - 1) * pageSize))
-        );
-        const lastVisible = lastVisibleDoc.docs[lastVisibleDoc.docs.length - 1];
-        productsQuery = query(
-          productsRef,
-          startAfter(lastVisible),
-          queryLimit(pageSize)
-        );
-      }
+      let productsQuery = query(productsRef);
 
       const querySnapshot = await getDocs(productsQuery);
       const products: IProduct[] = [];
@@ -71,7 +59,6 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
         products.push({ id: doc.id, ...doc.data() } as IProduct);
       });
 
-      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
       const countSnapshot = await getCountFromServer(productsRef);
 
       return {
@@ -79,7 +66,6 @@ export const useProducts = (pageSize: number = 50, page: number = 1) => {
         meta: {
           ...params,
           total: countSnapshot.data().count,
-          lastVisible,
         },
       };
     },

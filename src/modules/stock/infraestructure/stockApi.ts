@@ -18,23 +18,10 @@ import {
 import { Logger } from "utils/logger";
 import { IProduct } from "modules/products/types";
 
-export const fetchStock = async (
-  page: number,
-  pageSize: number,
-  lastVisible: string | null
-): Promise<IRenderStock[]> => {
+export const fetchStock = async (): Promise<IRenderStock[]> => {
   try {
     const stockRef = collection(db, "stock");
-    let q = query(stockRef, orderBy("createdAt"), limit(pageSize));
-    if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "stock", lastVisible));
-      q = query(
-        stockRef,
-        orderBy("createdAt"),
-        startAfter(lastVisibleDoc),
-        limit(pageSize)
-      );
-    }
+    let q = query(stockRef, orderBy("createdAt"));
     const snapshot = await getDocs(q);
     const stockEntries = snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as IStock)

@@ -9,8 +9,6 @@ import { saveTransporter } from "./mutations/saveTransporter";
 import { updateTransporter } from "./mutations/updateTransporter";
 
 export const useTransporters = (limit?: number | undefined) => {
-  const [pageSize, setPageSize] = useState(50);
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
 
@@ -20,10 +18,7 @@ export const useTransporters = (limit?: number | undefined) => {
     isError: isErrorGetTransporters,
   } = useQuery({
     queryKey: ["transporters"],
-    queryFn: () => getTransporters(limit || pageSize, lastVisible),
-    onSuccess: (data) => {
-      setLastVisible(data?.lastVisible || null);
-    },
+    queryFn: getTransporters,
     onError: (error: APIError) => {
       toast({
         title: t("Failed to add supplier."),

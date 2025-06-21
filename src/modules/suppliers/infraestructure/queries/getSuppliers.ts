@@ -12,21 +12,9 @@ import { db } from "shared/firebase";
 import { APIError } from "shared/Error";
 import { ISupplier } from "modules/suppliers";
 
-export const getSuppliers = async (
-  pageSize: number,
-  lastVisible: string | null
-) => {
+export const getSuppliers = async () => {
   try {
-    let suppliersQuery = query(
-      collection(db, "suppliers"),
-      orderBy("company"),
-      limit(pageSize)
-    );
-
-    if (lastVisible) {
-      const lastVisibleDoc = await getDoc(doc(db, "suppliers", lastVisible));
-      suppliersQuery = query(suppliersQuery, startAfter(lastVisibleDoc));
-    }
+    let suppliersQuery = query(collection(db, "suppliers"), orderBy("company"));
 
     const snapshot = await getDocs(suppliersQuery);
     const suppliers = snapshot.docs.map((doc) => ({

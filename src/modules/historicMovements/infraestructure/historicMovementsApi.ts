@@ -24,9 +24,6 @@ export interface IHistoricMovement {
 }
 
 export const fetchHistoricMovements = async (
-  page: number,
-  pageSize: number,
-  lastVisible: string | null,
   productId: string | null = null,
   type: "entry" | "dispatch" | null = null
 ): Promise<IHistoricMovement[]> => {

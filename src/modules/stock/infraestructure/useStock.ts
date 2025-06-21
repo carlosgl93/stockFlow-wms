@@ -14,17 +14,14 @@ import { FirestoreError } from "firebase/firestore";
 import { useParams } from "shared/Router";
 
 export const useStock = () => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
 
   const { stockId } = useParams<{ stockId: string }>();
 
   const { data: stockData, isLoading: isLoadingGetStock } = useQuery({
-    queryKey: ["stock", page, pageSize, lastVisible],
-    queryFn: () => fetchStock(page, pageSize, lastVisible),
+    queryKey: ["stock"],
+    queryFn: fetchStock,
   });
 
   const addStockMutation = useMutation(addStock, {

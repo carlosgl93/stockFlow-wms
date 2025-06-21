@@ -1,4 +1,4 @@
-import { Box, IconButton, useDisclosure } from "@chakra-ui/react";
+import { Box, IconButton, Tooltip, useDisclosure } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState, useCallback } from "react";
 import { useEntries } from "./useEntries";
@@ -29,6 +29,7 @@ import { usePlaces } from "modules/places/infra";
 import { Logger } from "utils/logger";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -45,11 +46,9 @@ export const CreateEntryController = ({
   const [addedToEntry, setAddedToEntry] = useState<IProductEntry[]>([]);
   const [willSpecifyPlace, setWillSpecifyPlace] = useState(true);
 
-  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({
-    limit: 5,
-  });
-  const { getTransporters, isLoadingGetTransporters } = useTransporters(5);
-  const { products: getProductsData, isFetching } = useProducts(5);
+  const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({});
+  const { getTransporters, isLoadingGetTransporters } = useTransporters();
+  const { products: getProductsData, isFetching } = useProducts();
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
 
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
@@ -379,11 +378,24 @@ export const CreateEntryController = ({
           h={"100%"}
         >
           {
-            <IconButton
-              aria-label="Remove Entry"
-              icon={<DeleteIcon />}
-              onClick={() => handleRemoveProductFromEntry(params)}
-            />
+            <Tooltip
+              label={t("Eliminar producto del ingreso")}
+              placement="left"
+              hasArrow
+              sx={{
+                bgColor: "red.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Remove Entry"
+                icon={<DeleteIcon />}
+                sx={{
+                  fontSize: "1.5rem",
+                }}
+                onClick={() => handleRemoveProductFromEntry(params)}
+              />
+            </Tooltip>
           }
         </Box>
       ),

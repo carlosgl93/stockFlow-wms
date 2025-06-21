@@ -8,15 +8,11 @@ import {
 import { APIError } from "shared/Error";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { FirestoreError } from "firebase/firestore";
 import { useParams } from "shared/Router";
 
 export const useEntries = () => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [lastVisible, setLastVisible] = useState<null | string>(null);
   const toast = useToast();
   const { t } = useTranslate();
   const redirect = useRedirect();
@@ -24,12 +20,12 @@ export const useEntries = () => {
   const { entryId } = useParams<{ entryId: string }>();
 
   const { data: entriesData, isLoading: isLoadingGetEntries } = useQuery({
-    queryKey: ["entries", page, pageSize, lastVisible],
-    queryFn: () => fetchEntries(page, pageSize, lastVisible),
+    queryKey: ["entries"],
+    queryFn: fetchEntries,
   });
 
   const addEntryMutation = useMutation(addEntry, {
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries(["entries"]);
       toast({
         title: t("Entry added successfully"),

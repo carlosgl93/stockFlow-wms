@@ -3,11 +3,7 @@ import {
   query,
   where,
   getDocs,
-  limit,
-  startAfter,
   QueryConstraint,
-  doc, // Added doc
-  getDoc, // Added getDoc
   documentId, // Added documentId for potential use if product IDs are document IDs
 } from "firebase/firestore";
 import { db } from "shared/firebase";
@@ -27,25 +23,18 @@ export interface ILotProductWithProduct extends ILotProduct {
  *
  * @param {string} [lotId] - The ID of the Lot to retrieve products for.
  * @param {string} [productId] - The ID of the Product to retrieve products for. (Note: this filters lotProducts by productId, not the product itself)
- * @param {number} [pageSize] - The number of documents to retrieve per page.
- * @param {string} [lastVisible] - The Firestore document ID of the last visible LotProduct from the previous page.
  * @returns {Promise<{ lotProducts: ILotProductWithProduct[], lastVisible: string }>} - A promise that resolves to an array of LotProducts with product details and the last visible document ID.
  * @throws {APIError} - If there is an error retrieving the documents.
  */
 export const getLotProducts = async (
   lotId?: string,
-  productId?: string, // This refers to lotProduct.productId for filtering
-  pageSize?: number,
-  lastVisible?: string
+  productId?: string // This refers to lotProduct.productId for filtering
 ): Promise<{ lotProducts: ILotProductWithProduct[]; lastVisible: string }> => {
   Logger.info("getLotProducts called with:", {
     lotId,
     productId,
-    pageSize,
-    lastVisible,
   });
 
-  const pageLimit = pageSize || 25;
   const lotProductRef = collection(db, "lotProducts");
   const queryConstraints: QueryConstraint[] = [];
 
@@ -74,21 +63,6 @@ export const getLotProducts = async (
     case "NONE":
       break;
   }
-
-  if (lastVisible) {
-    const lastDocRef = doc(db, "lotProducts", lastVisible);
-    const lastDocSnap = await getDoc(lastDocRef);
-    if (lastDocSnap.exists()) {
-      queryConstraints.push(startAfter(lastDocSnap));
-    } else {
-      Logger.warn(
-        `Last visible LotProduct document with ID ${lastVisible} not found. Pagination may restart or be incorrect.`
-      );
-      // Depending on desired behavior, you might throw an error or clear lastVisible
-    }
-  }
-
-  queryConstraints.push(limit(pageLimit));
 
   const finalQuery = query(lotProductRef, ...queryConstraints);
 

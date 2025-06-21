@@ -28,8 +28,7 @@ export const EntriesList = () => {
         <DataGrid
           rows={rows}
           columns={columns}
-          rowCount={5}
-          paginationMode="client"
+          autoPageSize
           slots={{ toolbar: GridToolbar }}
           loading={isLoadingGetEntries || isLoadingRemoveEntry}
           slotProps={{

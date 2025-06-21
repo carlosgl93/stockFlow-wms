@@ -14,7 +14,6 @@ import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 interface IProps {
   places: IPlace[];
-  pageSize?: number;
 }
 
 const PlacesList = ({ places }: IProps) => {
