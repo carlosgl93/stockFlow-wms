@@ -34,7 +34,7 @@ interface SignInFormValues {
   password: string;
 }
 
-export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
+export const SignInForm = () => {
   const {
     handleSubmit,
     control,
@@ -68,7 +68,7 @@ export const SignInForm = ({ initialEmail, initialPassword }: IProps) => {
   };
 
   const handleForgotPassword = async () => {
-    const email = control._formValues.email || initialEmail || "";
+    const email = control._formValues.email || "";
     if (!email) {
       toast({
         title: t("Please enter your email to reset your password."),

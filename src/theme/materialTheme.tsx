@@ -2,7 +2,6 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 import { useMediaQuery } from "@mui/material";
-import { GridColDef, DataGrid } from "@mui/x-data-grid";
 
 const commonThemeOptions = {
   typography: {
@@ -49,14 +48,14 @@ const darkTheme = createTheme({
 });
 
 const AppThemeProvider = ({ children }: { children: ReactNode }) => {
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const theme = useMemo(
-    () => (prefersDarkMode ? darkTheme : lightTheme),
-    [prefersDarkMode]
-  );
+  // const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+  // const theme = useMemo(
+  // () => (prefersDarkMode ? darkTheme : lightTheme),
+  // [prefersDarkMode]
+  // );
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={lightTheme}>
       <CssBaseline />
       {children}
     </ThemeProvider>

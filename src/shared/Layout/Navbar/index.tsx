@@ -15,7 +15,6 @@ import { Link, useNavigate } from "shared/Router";
 
 import { useAuthStore } from "modules/auth/application";
 
-import { ToggleModeButton } from "../ToggleModeButton";
 import { DesktopNav } from "./DesktopNav";
 import { LoaderBar } from "./LoaderBar";
 import { MobileNav } from "./MobileNav";
@@ -61,12 +60,12 @@ export const Navbar = () => {
             <DesktopNav />
           </Flex>
         </Flex>
-        <HStack direction={"row"} spacing={4}>
+        <HStack direction={"row"} spacing={4} mr={4}>
           <LocaleSelector />
           <SignInButton />
           {/* <SignUpButton /> */}
           <LogoutButton />
-          <ToggleModeButton />
+          {/* <ToggleModeButton /> */}
         </HStack>
       </Flex>
       <LoaderBar />
@@ -133,7 +132,7 @@ const LogoutButton = () => {
       variant="link"
       onClick={() => logout().then(() => navigate("/"))}
     >
-      Logout
+      {t("Logout")}
     </Button>
   );
 };
