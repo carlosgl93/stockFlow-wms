@@ -14,29 +14,35 @@ import { Link } from "shared/Router";
 
 import { INavItem } from "./INavItem";
 import { useNavItems } from "./useNavItems";
+import { useTranslate } from "utils";
 
 export const MobileNav = () => {
   const bg = useColorModeValue("white", "gray.800");
   const navItems = useNavItems();
+  const { t } = useTranslate();
 
   return (
     <Stack
       p={4}
       display={{ md: "none" }}
       bg={bg}
-      borderBottom={1}
       borderStyle="solid"
       borderColor={useColorModeValue("gray.200", "gray.900")}
     >
       {navItems.map((navItem) => (
-        <MobileNavItem key={navItem.label} {...navItem} />
+        <MobileNavItem key={t(navItem.label)} {...navItem} t={t} />
       ))}
     </Stack>
   );
 };
 
 // todo: navigation: Link
-const MobileNavItem = ({ label, children, href }: INavItem) => {
+const MobileNavItem = ({
+  label,
+  children,
+  href,
+  t,
+}: INavItem & { t: (s: string) => string }) => {
   const { isOpen, onToggle } = useDisclosure();
 
   return (
@@ -55,7 +61,7 @@ const MobileNavItem = ({ label, children, href }: INavItem) => {
           fontWeight="bold"
           color={useColorModeValue("gray.600", "gray.200")}
         >
-          {label}
+          {t(label)}
         </Text>
         {children && (
           <Icon
@@ -81,10 +87,9 @@ const MobileNavItem = ({ label, children, href }: INavItem) => {
                 key={child.label}
                 py={2}
                 href={child.href}
-                target="_blank"
                 rel="noreferrer noopener"
               >
-                {child.label}
+                {t(child.label)}
               </ChLink>
             ))}
         </Stack>

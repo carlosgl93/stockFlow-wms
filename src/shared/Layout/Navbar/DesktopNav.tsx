@@ -10,6 +10,7 @@ import {
   Stack,
   Text,
   useColorModeValue,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { useBrandColor } from "theme";
 
@@ -24,7 +25,7 @@ export const DesktopNav = () => {
   const navItems = useNavItems();
 
   const linkColor = useColorModeValue("gray.600", "gray.200");
-  const popoverContentBgColor = useColorModeValue("white", "gray.800");
+  const popoverContentBgColor = useColorModeValue("white", "white");
   const brandColor = useBrandColor();
   const { t } = useTranslate();
 

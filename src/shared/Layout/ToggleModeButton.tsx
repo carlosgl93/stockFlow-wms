@@ -1,5 +1,3 @@
-import React from "react";
-
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import { IconButton, useColorMode, IconButtonProps } from "@chakra-ui/react";
 

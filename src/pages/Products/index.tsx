@@ -1,8 +1,7 @@
-import { SearchIcon, AddIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
-import { useNotImplementedYetToast } from "shared/Toast";
 import { ProductsList } from "modules/products/presentation";
 import { useRedirect, useTranslate } from "utils";
 import { useProducts } from "modules/products/infrastructure";
@@ -13,7 +12,6 @@ import { Logger } from "utils/logger";
 import { ConfirmationModal } from "../../shared/ConfirmationModal";
 
 const ProductsPage = () => {
-  const notImplemented = useNotImplementedYetToast();
   const redirect = useRedirect();
   const { t } = useTranslate();
   const [uploadedProducts, setUploadedProducts] = useState<IProduct[] | null>(

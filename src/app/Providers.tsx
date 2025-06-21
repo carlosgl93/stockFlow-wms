@@ -2,13 +2,11 @@ import { ReactNode } from "react";
 
 import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { theme } from "theme";
 
 import { LocaleProvider, queryClient } from "utils";
 
 import { AuthProvider } from "modules/auth/application";
-import { ThemeProvider } from "@mui/material";
-import { AppThemeProvider } from "theme/materialTheme";
+import { lightTheme } from "theme/theme";
 
 interface IProps {
   children: ReactNode;
@@ -17,7 +15,7 @@ interface IProps {
 const Providers = ({ children }: IProps) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ChakraProvider theme={theme}>
+      <ChakraProvider theme={lightTheme}>
         <LocaleProvider>
           <AuthProvider>{children}</AuthProvider>
         </LocaleProvider>

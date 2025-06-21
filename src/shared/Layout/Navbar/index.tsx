@@ -9,6 +9,8 @@ import {
   HStack,
   useColorModeValue,
   useDisclosure,
+  useMediaQuery,
+  VStack,
 } from "@chakra-ui/react";
 
 import { Link, useNavigate } from "shared/Router";
@@ -23,9 +25,9 @@ import { t } from "utils";
 import { Logo } from "../Footer/Logo";
 
 export const Navbar = () => {
-  const { isOpen, onToggle } = useDisclosure();
+  const { isOpen, onToggle, onClose } = useDisclosure();
   const bg = useColorModeValue("white", "gray.800");
-
+  const isMobile = useMediaQuery("(max-width: 32em)")[0];
   return (
     <Box w="100%" position="fixed" zIndex="10">
       <Flex
@@ -37,7 +39,7 @@ export const Navbar = () => {
         borderStyle="solid"
         borderColor={useColorModeValue("gray.200", "gray.900")}
         align="center"
-        bg={bg}
+        bg={"white"}
       >
         <Flex
           flex={{ base: 1, md: "auto" }}
@@ -60,23 +62,48 @@ export const Navbar = () => {
             <DesktopNav />
           </Flex>
         </Flex>
-        <HStack direction={"row"} spacing={4} mr={4}>
+        <HStack
+          spacing={2}
+          mr={{ base: 0, md: 4 }}
+          display={{ base: "none", md: "flex" }}
+        >
           <LocaleSelector />
           <SignInButton />
-          {/* <SignUpButton /> */}
+          <SignUpButton />
           <LogoutButton />
-          {/* <ToggleModeButton /> */}
         </HStack>
       </Flex>
       <LoaderBar />
+      {/* Mobile navigation */}
       <Collapse in={isOpen} animateOpacity>
-        <MobileNav />
+        <Box
+          pb={4}
+          px={4}
+          display={{ md: "none" }}
+          bg={bg}
+          borderBottom="1px solid"
+          borderColor={useColorModeValue("gray.200", "gray.900")}
+        >
+          <VStack align="stretch" spacing={3}>
+            <MobileNav />
+            <LocaleSelector />
+            <SignInButton mobile onClick={onClose} />
+            {/* <SignUpButton mobile onClick={onClose} /> */}
+            <LogoutButton mobile onClick={onClose} />
+          </VStack>
+        </Box>
       </Collapse>
     </Box>
   );
 };
 
-const SignInButton = () => {
+const SignInButton = ({
+  mobile = false,
+  onClick,
+}: {
+  mobile?: boolean;
+  onClick?: () => void;
+}) => {
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
 
   if (isAuthenticated) {
@@ -85,19 +112,30 @@ const SignInButton = () => {
 
   return (
     <Button
-      // fontWeight={400}
-      // variant="link"
       as={Link}
       to="/sign-in"
       colorScheme="orange"
+      w={mobile ? "100%" : undefined}
+      size={mobile ? "md" : "sm"}
+      display={
+        mobile
+          ? { base: "flex", md: "none" }
+          : { base: "none", md: "inline-flex" }
+      }
+      onClick={mobile ? onClick : undefined}
     >
       {t("Sign In")}
     </Button>
   );
 };
 
-const SignUpButton = () => {
-  // const notImplemented = useNotImplementedYetToast();
+const SignUpButton = ({
+  mobile = false,
+  onClick,
+}: {
+  mobile?: boolean;
+  onClick?: () => void;
+}) => {
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
 
   if (isAuthenticated) {
@@ -108,15 +146,28 @@ const SignUpButton = () => {
     <Button
       as={Link}
       to="/sign-up"
-      display={{ base: "none", md: "inline-flex" }}
       colorScheme="orange"
+      w={mobile ? "100%" : undefined}
+      size={mobile ? "md" : "sm"}
+      display={
+        mobile
+          ? { base: "flex", md: "none" }
+          : { base: "none", md: "inline-flex" }
+      }
+      onClick={mobile ? onClick : undefined}
     >
       {t("Sign Up")}
     </Button>
   );
 };
 
-const LogoutButton = () => {
+const LogoutButton = ({
+  mobile = false,
+  onClick,
+}: {
+  mobile?: boolean;
+  onClick?: () => void;
+}) => {
   const navigate = useNavigate();
 
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
@@ -126,11 +177,24 @@ const LogoutButton = () => {
     return null;
   }
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+    if (mobile && onClick) onClick();
+  };
+
   return (
     <Button
       fontWeight={400}
       variant="link"
-      onClick={() => logout().then(() => navigate("/"))}
+      onClick={mobile ? handleLogout : () => logout().then(() => navigate("/"))}
+      w={mobile ? "100%" : undefined}
+      size={mobile ? "md" : "sm"}
+      display={
+        mobile
+          ? { base: "flex", md: "none" }
+          : { base: "none", md: "inline-flex" }
+      }
     >
       {t("Logout")}
     </Button>

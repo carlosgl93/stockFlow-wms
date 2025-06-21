@@ -18,7 +18,7 @@ export const Footer = () => {
   const { t } = useTranslate();
   const isAuthenticated = useAuthStore((store) => store.isAuthenticated);
   return (
-    <Box bg={bg} color={color}>
+    <Box bg={"white"} color={"gray.700"}>
       <Container as={Stack} maxW="1340px" py={10}>
         <SimpleGrid
           templateColumns={{
