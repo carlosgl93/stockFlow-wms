@@ -176,7 +176,7 @@ const ProductsList = ({ products, isPreview, isLoading }: IProps) => {
           rows={rows}
           columns={columns}
           loading={isLoading}
-          autoPageSize
+          // autoPageSize
           slots={{ toolbar: GridToolbar }}
           slotProps={{
             toolbar: {

@@ -165,4 +165,5 @@ export const products = {
   NonToxic: "No Tóxico",
   "Search by name...": "Buscar por nombre de producto...",
   "Create your product.": "Crea tu producto.",
+  "Select a product": "Selecciona un producto",
 };

@@ -33,13 +33,14 @@ import { DataGrid } from "@mui/x-data-grid";
 import { CreateEntryController } from "../infraestructure";
 import { AppThemeProvider } from "theme/materialTheme";
 import { InfoIcon } from "@chakra-ui/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const [showBoxTooltip, setShowBoxTooltip] = useState(false);
   const [showUnitsTooltip, setShowUnitsTooltip] = useState(false);
   const [showTotalTooltip, setShowTotalTooltip] = useState(false);
+
   const {
     isLoading,
     setIsLoading,
@@ -91,6 +92,20 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     handleRowClick,
   } = CreateEntryController({ entryToEdit: entryToEdit || null });
 
+  const unitsNumber = watch("unitsNumber");
+  const looseUnitsNumber = watch("looseUnitsNumber");
+  const productId = watch("productId");
+
+  // Add useEffect to update selectedProduct when productId changes
+  useEffect(() => {
+    if (productId && products.length > 0) {
+      const product = products.find((p) => p.id === productId);
+      if (product && product !== selectedProduct) {
+        setSelectedProduct(product);
+      }
+    }
+  }, [productId, products, selectedProduct, setSelectedProduct]);
+
   const boxesTooltipLabel = `${t("Each box is made up of")} ${
     selectedProduct?.boxDetails?.units
   } ${t(selectedProduct?.boxDetails?.container || "").toLowerCase()} ${t(
@@ -99,23 +114,23 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
     selectedProduct?.boxDetails?.unitOfMeasure || ""
   ).toLowerCase()} ${t("per")}`;
 
-  const unitsTooltipLabel = `${t(
-    "Each unit is made up of"
-  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${
-    selectedProduct?.boxDetails!.quantity
-  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
+  const unitsTooltipLabel = `${t("Each unit is made up of")} ${
+    selectedProduct?.boxDetails?.container?.toLowerCase() || ""
+  } ${selectedProduct?.boxDetails?.quantity || ""} ${t(
+    selectedProduct?.boxDetails?.unitOfMeasure || ""
+  ).toLowerCase()}`;
 
-  const looseUnitsTooltipLabel = `${t(
-    "Each unit is made up of"
-  )} ${selectedProduct?.boxDetails?.container.toLowerCase()} ${t("of")} ${
-    selectedProduct?.boxDetails!.quantity
-  } ${t(selectedProduct?.boxDetails?.unitOfMeasure || "").toLowerCase()}`;
+  const looseUnitsTooltipLabel = `${t("Each unit is made up of")} ${
+    selectedProduct?.boxDetails?.container?.toLowerCase() || ""
+  } ${t("of")} ${selectedProduct?.boxDetails?.quantity || ""} ${t(
+    selectedProduct?.boxDetails?.unitOfMeasure || ""
+  ).toLowerCase()}`;
 
   const totalValue =
     selectedProduct?.selectionType === "box"
-      ? (selectedProduct?.boxDetails?.units || 0) * watch("unitsNumber") +
-        watch("looseUnitsNumber")
-      : (selectedProduct?.boxDetails?.quantity || 0) * watch("unitsNumber");
+      ? (selectedProduct?.boxDetails?.units || 0) * (unitsNumber || 0) +
+        (looseUnitsNumber || 0)
+      : (selectedProduct?.boxDetails?.quantity || 0) * (unitsNumber || 0);
 
   if (isLoadingAddEntry || isLoadingUpdateEntry) {
     return <Loading />;
@@ -308,19 +323,21 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   )}
                   <Select
                     {...field}
+                    value={field.value || ""} // Ensure controlled component
                     onChange={(e) => {
                       field.onChange(e);
                       setIsSearchingProduct(false);
-                      setSelectedProduct(
+                      const selectedProd =
                         products.find(
                           (product) => product.id === e.target.value
-                        ) || null
-                      );
+                        ) || null;
+                      setSelectedProduct(selectedProd);
                     }}
                   >
+                    <option value="">{t("Select a product")}</option>
                     {products?.map((product) => (
                       <option key={product.id} value={product.id}>
-                        {product.name}
+                        {product.name.toUpperCase()}
                       </option>
                     ))}
                   </Select>
@@ -531,11 +548,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   selectedProduct?.selectionType === "box"
                     ? `${t("Units per box")}: (${
                         selectedProduct?.boxDetails?.units
-                      }) * ${t("Boxes to enter")} (${watch(
-                        "unitsNumber"
-                      )}) + ${t("Loose units to enter")} (${watch(
-                        "looseUnitsNumber"
-                      )}) = ${
+                      }) * ${t("Boxes to enter")} (${unitsNumber}) + ${t(
+                        "Loose units to enter"
+                      )} (${looseUnitsNumber}) = ${
                         ["Gram", "ML", "C.C"].includes(
                           selectedProduct?.boxDetails?.unitOfMeasure || ""
                         )
@@ -554,7 +569,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                       }`
                     : `${selectedProduct?.boxDetails?.quantity} ${t(
                         selectedProduct?.boxDetails?.unitOfMeasure || ""
-                      )} * ${watch("unitsNumber")} = ${
+                      )} * ${unitsNumber} = ${
                         ["Gram", "ML", "C.C"].includes(
                           selectedProduct?.boxDetails?.unitOfMeasure || ""
                         )
@@ -586,7 +601,6 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                 />
               </Tooltip>
             </FlexBox>
-
             <Controller
               name="totalUnitsNumber"
               control={control}
@@ -596,12 +610,8 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   selectedProduct?.boxDetails?.unitOfMeasure || ""
                 );
                 const displayValue = isSpecialUnit
-                  ? selectedProduct?.boxDetails?.quantity
-                    ? (selectedProduct?.boxDetails?.quantity *
-                        watch("unitsNumber")) /
-                      1000
-                    : 0
-                  : field.value;
+                  ? totalValue / 1000
+                  : totalValue;
                 return (
                   <Input
                     type="number"

@@ -27,7 +27,6 @@ import { DeleteIcon } from "@chakra-ui/icons";
 import { getProductCompositeId } from "./getProductCompositeId";
 import { usePlaces } from "modules/places/infra";
 import { Logger } from "utils/logger";
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
@@ -285,10 +284,38 @@ export const CreateEntryController = ({
         index === self.findIndex((s) => s.id === product.id)
     );
     setProducts(uniqueProducts);
-    setValue("productId", uniqueProducts[0]?.id || "");
-    setSelectedProduct(uniqueProducts[0] || null);
+
+    // Only set the first product as default if no product is currently selected
+    // or if we're dealing with search results
+    const currentProductId = watch("productId");
+    const shouldUpdateProduct =
+      !currentProductId || (searchResults as IProduct[])?.length > 0;
+
+    if (shouldUpdateProduct && uniqueProducts.length > 0) {
+      setValue("productId", uniqueProducts[0]?.id || "");
+      setSelectedProduct(uniqueProducts[0] || null);
+    }
+
+    // If we have a current product ID, make sure selectedProduct is in sync
+    if (currentProductId && uniqueProducts.length > 0) {
+      const currentProduct = uniqueProducts.find(
+        (p) => p.id === currentProductId
+      );
+      if (currentProduct) {
+        setSelectedProduct(currentProduct);
+      }
+    }
+
     trigger();
-  }, [searchResults, getProductsData, isOpenCreateProduct]);
+  }, [
+    searchResults,
+    getProductsData,
+    isOpenCreateProduct,
+    setValue,
+    watch,
+    trigger,
+    setSelectedProduct,
+  ]);
 
   useEffect(() => {
     setValue("placeId", getPlacesData?.places[0]?.id || "");
