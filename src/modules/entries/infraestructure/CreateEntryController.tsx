@@ -29,6 +29,7 @@ import { usePlaces } from "modules/places/infra";
 import { Logger } from "utils/logger";
 import { useQueryClient } from "@tanstack/react-query";
 import { commonTooltipStyles } from "../../products/presentation/ProductsList";
+import { getHumanReadableError } from "shared/Error";
 
 export const CreateEntryController = ({
   entryToEdit,
@@ -58,6 +59,7 @@ export const CreateEntryController = ({
   const [removedProductsFromEntry, setRemovedProductsFromEntry] = useState<
     IProductEntry[]
   >([]);
+  const [rows, setRows] = useState<IEntryRow[]>([]);
   const queryClient = useQueryClient();
 
   const {
@@ -76,7 +78,11 @@ export const CreateEntryController = ({
     watch,
     getValues,
     register,
-  } = useForm<IEntryForm>();
+  } = useForm<IEntryForm>({
+    defaultValues: {
+      looseUnitsNumber: 0,
+    },
+  });
   const toast = useToast();
   const { t } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -180,14 +186,13 @@ export const CreateEntryController = ({
         await addEntryMutation(dataToSave);
       }
     } catch (error) {
-      let errorMessage = "An unknown error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      const errorMessage = getHumanReadableError(error, t);
       toast({
-        title: "Error",
+        title: t("Error"),
         description: errorMessage,
         status: "error",
+        duration: 8000,
+        isClosable: true,
       });
     }
   };
@@ -234,13 +239,13 @@ export const CreateEntryController = ({
       });
       trigger();
     } else if (import.meta.env?.MODE === "development") {
-      const entry = EntryFixture.toStructure();
-      (Object.keys(entry) as (keyof IEntry)[]).forEach((key) => {
-        if (key !== "products") {
-          setValue(key, entry[key]);
-        }
-      });
-      trigger();
+      // const entry = EntryFixture.toStructure();
+      // (Object.keys(entry) as (keyof IEntry)[]).forEach((key) => {
+      //   if (key !== "products") {
+      //     setValue(key, entry[key]);
+      //   }
+      // });
+      // trigger();
     }
   }, [setValue, entryToEdit, trigger]);
 
@@ -358,38 +363,47 @@ export const CreateEntryController = ({
     }
   }, [watch("looseUnitsNumber"), watch("unitsNumber")]);
 
-  let rows: IEntryRow[] = addedToEntry.reduce((acc, p) => {
-    const uniqueId = getProductCompositeId(p);
-    const unitOfMeasure = p.unitOfMeasure;
-    let totalUnitsnumber;
-    if (
-      unitOfMeasure === "ML" ||
-      unitOfMeasure === "Gram" ||
-      unitOfMeasure === "C.C"
-    ) {
-      totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
-    } else {
-      totalUnitsnumber = p.unitsNumber;
-    }
+  useEffect(() => {
+    const generateRows = () => {
+      return addedToEntry.reduce((acc, p) => {
+        const uniqueId = getProductCompositeId(p);
+        const unitOfMeasure = p.unitOfMeasure;
+        let totalUnitsnumber;
+        if (
+          unitOfMeasure === "ML" ||
+          unitOfMeasure === "Gram" ||
+          unitOfMeasure === "C.C"
+        ) {
+          totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
+        } else {
+          totalUnitsnumber = p.unitsNumber;
+        }
 
-    if (!acc.find((row) => row.id === uniqueId)) {
-      acc.push({
-        id: uniqueId,
-        productName: products.find((pr) => pr.id === p.id)?.name || "",
-        lot: p.lotId,
-        place:
-          getPlacesData?.places.find((pl) => pl.id === p.placeId)?.name ||
-          "No se especificó",
-        palletNumber: p.palletNumber,
-        expirityDate: p.expirityDate || "",
-        unitsNumber: p.unitsNumber,
-        looseUnitsNumber: p.looseUnitsNumber,
-        totalUnitsNumber: totalUnitsnumber,
-        boxes: p.unitsNumber / p.unitsPerBox! || 1,
-      });
-    }
-    return acc;
-  }, [] as IEntryRow[]);
+        if (!acc.find((row) => row.id === uniqueId)) {
+          acc.push({
+            id: uniqueId,
+            productName:
+              products
+                .find((pr) => pr.id === p.id)
+                ?.name.toLocaleUpperCase("es-CL") || "",
+            lot: p.lotId,
+            place:
+              getPlacesData?.places.find((pl) => pl.id === p.placeId)?.name ||
+              "No se especificó",
+            palletNumber: p.palletNumber,
+            expirityDate: p.expirityDate || "",
+            unitsNumber: p.unitsNumber,
+            looseUnitsNumber: p.looseUnitsNumber,
+            totalUnitsNumber: totalUnitsnumber,
+            boxes: Number((p.unitsNumber / p.unitsPerBox!).toFixed(0)) || 1,
+          });
+        }
+        return acc;
+      }, [] as IEntryRow[]);
+    };
+
+    setRows(generateRows());
+  }, [addedToEntry, products, getPlacesData?.places]);
 
   const columns: GridColDef[] = [
     {
@@ -430,7 +444,23 @@ export const CreateEntryController = ({
     { field: "productName", headerName: t("Product"), width: 150 },
     { field: "lot", headerName: t("Lot"), width: 100 },
     { field: "place", headerName: t("Place"), width: 100 },
-    { field: "expirityDate", headerName: t("Expiry Date"), width: 150 },
+    {
+      field: "expirityDate",
+      headerName: t("Expiry Date"),
+      width: 150,
+      renderCell: (params) => {
+        const date = new Date(params.value);
+        return (
+          <Box display="flex" justifyContent="center" width="100%">
+            {date.toLocaleDateString("es-CL", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })}
+          </Box>
+        );
+      },
+    },
     { field: "palletNumber", headerName: t("Pallet Number"), width: 100 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 100 },
     {
@@ -453,7 +483,17 @@ export const CreateEntryController = ({
   ];
 
   const validateProductToEnter = (product: IEntryForm) => {
-    const { totalUnitsNumber, lotId, expirityDate } = product;
+    const { totalUnitsNumber, lotId, expirityDate, productId } = product;
+    if (!productId) {
+      toast({
+        title: "Error",
+        description: t("Product is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
     if (totalUnitsNumber === 0 || totalUnitsNumber === undefined) {
       toast({
         title: "Error",
@@ -468,6 +508,17 @@ export const CreateEntryController = ({
       toast({
         title: "Error",
         description: t("Lot is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
+
+    if (!expirityDate) {
+      toast({
+        title: "Error",
+        description: t("Expiry date is required"),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -503,7 +554,6 @@ export const CreateEntryController = ({
 
   const handleAddProductToEntry = () => {
     const newDataToEntry = getValues();
-    Logger.info("data", newDataToEntry);
 
     if (validateProductToEnter(newDataToEntry)) {
       const newProductToAdd: IProductEntry = {

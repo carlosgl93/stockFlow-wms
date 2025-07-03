@@ -1,4 +1,4 @@
-import { SearchIcon, EditIcon, DeleteIcon, TimeIcon } from "@chakra-ui/icons";
+import { SearchIcon, EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import { Box, IconButton, Tooltip } from "@chakra-ui/react";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { useRedirect, useTranslate } from "utils";
@@ -13,8 +13,10 @@ import dayjs from "dayjs";
 
 export const EntriesListController = () => {
   const [rows, setRows] = useState<IEntry[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null); // State for selected entry
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<IEntry | null>(null);
   const redirect = useRedirect();
   const {
     removeEntryMutation,
@@ -23,6 +25,10 @@ export const EntriesListController = () => {
     isLoadingGetEntries,
   } = useEntries();
   const { t, dataGridLocaleText } = useTranslate();
+  const handleDetailClick = (entry: IEntry) => {
+    setSelectedEntry(entry);
+    setIsDetailModalOpen(true);
+  };
   const columns: GridColDef[] = [
     {
       field: "actions",
@@ -37,6 +43,24 @@ export const EntriesListController = () => {
           h={"100%"}
         >
           <Tooltip
+            label={t("Detail")}
+            placement="left"
+            hasArrow
+            sx={{
+              bgColor: "blue.500",
+              ...commonTooltipStyles,
+            }}
+          >
+            <IconButton
+              aria-label="Detail"
+              icon={<SearchIcon />}
+              sx={{
+                fontSize: "1rem",
+              }}
+              onClick={() => handleDetailClick(params.row)}
+            />
+          </Tooltip>
+          <Tooltip
             label={t("Edit Entry")}
             placement="left"
             hasArrow
@@ -49,8 +73,7 @@ export const EntriesListController = () => {
               aria-label="Edit Entry"
               icon={<EditIcon />}
               sx={{
-                fontSize: "1.2rem",
-                p: 2,
+                fontSize: "1rem",
               }}
               onClick={() => redirect(`/entries/edit/${params.row.id}`)}
             />
@@ -68,8 +91,7 @@ export const EntriesListController = () => {
               aria-label="Remove Entry"
               icon={<DeleteIcon />}
               sx={{
-                fontSize: "1.2rem",
-                p: 2,
+                fontSize: "1rem",
               }}
               onClick={() => {
                 setSelectedEntryId(params.row.id || null);
@@ -156,8 +178,11 @@ export const EntriesListController = () => {
     isLoadingRemoveEntry,
     isModalOpen,
     selectedEntryId,
+    isDetailModalOpen,
+    selectedEntry,
     dataGridLocaleText,
     handleClose: () => setIsModalOpen(false),
+    handleDetailClose: () => setIsDetailModalOpen(false),
     handleConfirmRemove,
     t,
   };

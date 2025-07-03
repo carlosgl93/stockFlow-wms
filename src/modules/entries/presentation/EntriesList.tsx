@@ -1,9 +1,10 @@
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { Box } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { EmptyStateResult } from "shared/Result";
 import { AppThemeProvider } from "theme/materialTheme";
 import { EntriesListController } from "../infraestructure";
-import { ConfirmationModal } from "shared/ConfirmationModal"; // Added import
+import { ConfirmationModal } from "shared/ConfirmationModal";
+import { EntryDetailModal } from "./EntryDetailModal";
 
 export const EntriesList = () => {
   const {
@@ -12,9 +13,12 @@ export const EntriesList = () => {
     isModalOpen,
     isLoadingGetEntries,
     isLoadingRemoveEntry,
+    isDetailModalOpen,
+    selectedEntry,
     dataGridLocaleText,
     t,
     handleClose,
+    handleDetailClose,
     handleConfirmRemove,
   } = EntriesListController();
 
@@ -58,6 +62,11 @@ export const EntriesList = () => {
         onClose={handleClose}
         onConfirm={handleConfirmRemove}
         title={t("Delete Entry")}
+      />
+      <EntryDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailClose}
+        entry={selectedEntry}
       />
     </Box>
   );

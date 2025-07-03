@@ -5,10 +5,9 @@ import {
   removeStock,
   getStockById,
 } from "./stockApi";
-import { APIError } from "shared/Error";
+import { APIError, getHumanReadableError } from "shared/Error";
 import { queryClient, useQuery, useTranslate } from "utils";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 import { FirestoreError } from "firebase/firestore";
 import { useParams } from "shared/Router";
@@ -35,11 +34,12 @@ export const useStock = () => {
       });
     },
     onError: (error: FirestoreError) => {
+      const errorMessage = getHumanReadableError(error, t);
       toast({
         title: t("Failed to add stock"),
-        description: t(error?.message),
+        description: errorMessage,
         status: "error",
-        duration: 5000,
+        duration: 8000,
         isClosable: true,
       });
     },
@@ -56,14 +56,15 @@ export const useStock = () => {
       });
     },
     onError: (error: FirestoreError) => {
+      const errorMessage = getHumanReadableError(error, t);
       toast({
         title: t("Failed to update stock"),
-        description: t(error?.message),
+        description: errorMessage,
         status: "error",
-        duration: 5000,
+        duration: 8000,
         isClosable: true,
       });
-      throw new APIError(t("Failed to update stock"), error);
+      throw new APIError(errorMessage, error);
     },
   });
 
@@ -78,14 +79,15 @@ export const useStock = () => {
       });
     },
     onError: (error: FirestoreError) => {
+      const errorMessage = getHumanReadableError(error, t);
       toast({
         title: t("Failed to remove stock"),
-        description: error?.message,
+        description: errorMessage,
         status: "error",
-        duration: 5000,
+        duration: 8000,
         isClosable: true,
       });
-      throw new APIError(t("Failed to remove stock"), error);
+      throw new APIError(errorMessage, error);
     },
   });
 

@@ -21,7 +21,7 @@ import { useLotProductStock } from "modules/lotProduct/infraestructure";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FlexBox } from "shared/Layout";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { ValidationError } from "shared/Error";
+import { ValidationError, getHumanReadableError } from "shared/Error";
 import { DispatchFixture } from "utils/fixtures";
 import { IStock } from "modules/stock/types";
 import { ITransporter } from "modules/transporters/types";
@@ -64,6 +64,7 @@ export const CreateDispatchController = ({
   const [transporters, setTransporters] = useState<ITransporter[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [lots, setLots] = useState<IStock[]>([]);
+  const [rows, setRows] = useState<IDispatchRow[]>([]);
   // in stock value is used to have a reactive variable that will
   // be used to show the user how the stock is changing
   const [inStockValue, setInStockValue] = useState(0);
@@ -180,33 +181,47 @@ export const CreateDispatchController = ({
     });
   };
 
-  const handleAddProductToDispatch = async () => {
-    const validation = await trigger();
-    Logger.info("validation", [validation]);
-    if (!validation) {
+  const validateProductToDispatch = (product: IDispatchForm) => {
+    const { totalUnitsNumber, lotId, productId } = product;
+    if (!productId) {
       toast({
         title: "Error",
-        description: `${t("Please fill/check all the fields")} ${t(
-          `fields to fill/check`
-        )}: ${Object.keys(errors).join(", ")}`,
-        status: "error",
-      });
-      return;
-    }
-    const newDataToDispatch = getValues();
-    const { totalUnitsNumber, lotId } = newDataToDispatch;
-    if (
-      totalUnitsNumber === 0 ||
-      totalUnitsNumber === undefined ||
-      lotId === ""
-    ) {
-      toast({
-        title: "Error",
-        description: t("Lote o número de unidades invalidas"),
+        description: t("Product is required"),
         status: "error",
         duration: 5000,
         isClosable: true,
       });
+      return false;
+    }
+    if (totalUnitsNumber === 0 || totalUnitsNumber === undefined) {
+      toast({
+        title: "Error",
+        description: t("Total units number is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
+    if (lotId === "") {
+      toast({
+        title: "Error",
+        description: t("Lot is required"),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAddProductToDispatch = async () => {
+    await trigger();
+    const newDataToDispatch = getValues();
+
+    if (!validateProductToDispatch(newDataToDispatch)) {
       return;
     } else {
       const newProductToAdd: IProductEntry = {
@@ -335,14 +350,13 @@ export const CreateDispatchController = ({
       }
       navigate("/dispatches");
     } catch (error) {
-      let errorMessage = "An unknown error occurred";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      const errorMessage = getHumanReadableError(error, t);
       toast({
-        title: "Error",
+        title: t("Error"),
         description: errorMessage,
         status: "error",
+        duration: 8000,
+        isClosable: true,
       });
     } finally {
     }
@@ -383,8 +397,9 @@ export const CreateDispatchController = ({
         </FlexBox>
       ),
     },
-    { field: "intCode", headerName: t("Internal Code"), width: 150 },
-    { field: "productName", headerName: t("Product Name"), width: 150 },
+    { field: "extCode", headerName: t("Ext Code"), width: 150 },
+    { field: "productName", headerName: t("Product Name"), width: 250 },
+    { field: "lotId", headerName: t("Lot"), width: 100 },
     { field: "palletNumber", headerName: t("Pallet"), width: 150 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
     {
@@ -406,37 +421,47 @@ export const CreateDispatchController = ({
     },
   ];
 
-  let rows: IDispatchRow[] = addedToDispatch.reduce((acc, p) => {
-    const uniqueId = getProductCompositeId(p);
-    const unitOfMeasure = p.unitOfMeasure;
-    let totalUnitsnumber;
-    if (
-      unitOfMeasure === "ML" ||
-      unitOfMeasure === "Gram" ||
-      unitOfMeasure === "C.C"
-    ) {
-      totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
-    } else {
-      totalUnitsnumber = p.unitsNumber;
-    }
+  useEffect(() => {
+    const generateRows = () => {
+      return addedToDispatch.reduce((acc, p) => {
+        const uniqueId = getProductCompositeId(p);
+        const unitOfMeasure = p.unitOfMeasure;
+        let totalUnitsnumber;
+        if (
+          unitOfMeasure === "ML" ||
+          unitOfMeasure === "Gram" ||
+          unitOfMeasure === "C.C"
+        ) {
+          totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
+        } else {
+          totalUnitsnumber = p.unitsNumber;
+        }
 
-    if (!acc.find((row) => row.id === uniqueId)) {
-      const productInfo = products.find((pr) => pr.id === p.id);
-      acc.push({
-        id: uniqueId,
-        extCode: productInfo?.extCode!,
-        intCode: productInfo?.internalCode!,
-        productName: productInfo?.name || "",
-        unitsNumber: p.unitsNumber,
-        looseUnitsNumber: p.looseUnitsNumber,
-        lotId: p.lotId,
-        palletNumber: p.palletNumber,
-        totalUnitsNumber: totalUnitsnumber,
-        boxes: p.unitsNumber / p.unitsPerBox! || 1,
-      });
-    }
-    return acc;
-  }, [] as IDispatchRow[]);
+        if (!acc.find((row) => row.id === uniqueId)) {
+          const productInfo = products.find((pr) => pr.id === p.id);
+          console.log("Adding row for product", p);
+          acc.push({
+            extCode: productInfo?.extCode!,
+            intCode: productInfo?.internalCode!,
+            id: uniqueId,
+            productName:
+              products
+                .find((pr) => pr.id === p.id)
+                ?.name.toLocaleUpperCase("es-CL") || "",
+            lotId: p.lotId,
+            palletNumber: p.palletNumber,
+            unitsNumber: p.unitsNumber,
+            looseUnitsNumber: p.looseUnitsNumber,
+            totalUnitsNumber: totalUnitsnumber,
+            boxes: Number((p.unitsNumber / p.unitsPerBox!).toFixed(0)) || 1,
+          });
+        }
+        return acc;
+      }, [] as IDispatchRow[]);
+    };
+
+    setRows(generateRows());
+  }, [addedToDispatch, products]);
 
   useEffect(() => {
     // USE EFFECT TO SET THE VALUES OF THE FORM BASED ON THE DISPATCH TO EDIT OR A FIXTURE

@@ -5,7 +5,7 @@ import {
   GridToolbar,
 } from "@mui/x-data-grid";
 import { Box, IconButton, Tooltip, useDisclosure } from "@chakra-ui/react";
-import { DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon, TimeIcon, SearchIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IDispatch } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
@@ -15,6 +15,7 @@ import { ConfirmationModal } from "shared/ConfirmationModal";
 import { useState } from "react";
 import dayjs from "dayjs";
 import { commonTooltipStyles } from "../../products/presentation/ProductsList";
+import { DispatchDetailModal } from "./DispatchDetailModal";
 
 interface IProps {
   dispatches: IDispatch[];
@@ -33,6 +34,10 @@ export const DispatchesList = ({ dispatches }: IProps) => {
   const [selectedDispatchId, setSelectedDispatchId] = useState<string | null>(
     null
   );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedDispatch, setSelectedDispatch] = useState<IDispatch | null>(
+    null
+  );
 
   const handleRemoveClick = (id: string) => {
     setSelectedDispatchId(id);
@@ -47,6 +52,11 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     }
   };
 
+  const handleDetailClick = (dispatch: IDispatch) => {
+    setSelectedDispatch(dispatch);
+    setIsDetailModalOpen(true);
+  };
+
   if (dispatches?.length === 0) {
     return <EmptyStateResult />;
   }
@@ -55,63 +65,82 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     {
       field: "actions",
       headerName: t("Actions"),
-      width: 100,
-      renderCell: (params: GridRenderCellParams<IDispatch>) => (
-        <Box
-          display="flex"
-          gap={2}
-          justifyContent={"center"}
-          alignContent={"center"}
-          h={"100%"}
-        >
-          <Tooltip
-            label={t("Edit Dispatch")}
-            placement="left"
-            hasArrow
-            sx={{
-              bgColor: "blue.500",
-              ...commonTooltipStyles,
-            }}
+      width: 120,
+      renderCell: (params: GridRenderCellParams<IDispatch>) => {
+        const dispatch = dispatches.find((d) => d.id === params.row.id);
+        return (
+          <Box
+            display="flex"
+            gap={2}
+            justifyContent={"center"}
+            alignContent={"center"}
+            h={"100%"}
           >
-            <IconButton
-              aria-label="Edit Dispatch"
-              icon={<EditIcon />}
-              onClick={() => redirect(`/dispatches/edit/${params.row.id}`)}
-              sx={{
-                fontSize: "1.2rem",
-                p: 2,
-              }}
-            />
-          </Tooltip>
-          {!isLoadingRemoveDispatch ? (
             <Tooltip
-              label={t("Remove Dispatch")}
+              label={t("Detail")}
               placement="left"
               hasArrow
               sx={{
-                bgColor: "red.500",
+                bgColor: "blue.500",
                 ...commonTooltipStyles,
               }}
             >
               <IconButton
-                aria-label="Remove Dispatch"
-                icon={<DeleteIcon />}
-                onClick={() => handleRemoveClick(params.row.id || "")}
+                aria-label="Detail"
+                icon={<SearchIcon />}
+                onClick={() => dispatch && handleDetailClick(dispatch)}
                 sx={{
-                  fontSize: "1.2rem",
-                  p: 2,
+                  fontSize: "1rem",
                 }}
               />
             </Tooltip>
-          ) : (
-            <IconButton
-              aria-label="Remove Dispatch"
-              icon={<TimeIcon />}
-              onClick={() => handleRemoveClick(params.row.id || "")}
-            />
-          )}
-        </Box>
-      ),
+            <Tooltip
+              label={t("Edit Dispatch")}
+              placement="left"
+              hasArrow
+              sx={{
+                bgColor: "blue.500",
+                ...commonTooltipStyles,
+              }}
+            >
+              <IconButton
+                aria-label="Edit Dispatch"
+                icon={<EditIcon />}
+                onClick={() => redirect(`/dispatches/edit/${params.row.id}`)}
+                sx={{
+                  fontSize: "1rem",
+                }}
+              />
+            </Tooltip>
+            {!isLoadingRemoveDispatch ? (
+              <Tooltip
+                label={t("Remove Dispatch")}
+                placement="left"
+                hasArrow
+                sx={{
+                  bgColor: "red.500",
+                  ...commonTooltipStyles,
+                }}
+              >
+                <IconButton
+                  aria-label="Remove Dispatch"
+                  icon={<DeleteIcon />}
+                  onClick={() => handleRemoveClick(params.row.id || "")}
+                  sx={{
+                    fontSize: "1rem",
+                  }}
+                />
+              </Tooltip>
+            ) : (
+              <IconButton
+                aria-label="Remove Dispatch"
+                icon={<TimeIcon />}
+                onClick={() => handleRemoveClick(params.row.id || "")}
+              />
+            )}
+          </Box>
+        );
+      },
     },
     {
       field: "dispatchDate",
@@ -227,6 +256,11 @@ export const DispatchesList = ({ dispatches }: IProps) => {
         onConfirm={confirmRemove}
         title={t("Confirm Removal")}
         description={t("Are you sure you want to remove this dispatch?")}
+      />
+      <DispatchDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        dispatch={selectedDispatch}
       />
     </Box>
   );

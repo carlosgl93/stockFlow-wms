@@ -1,15 +1,16 @@
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
 import { Box, Text } from "@chakra-ui/react";
 import { IRenderStock, IStock, ISuppsAndTrans } from "../types";
 import { AppThemeProvider } from "theme/materialTheme";
 import { capitalize, useTranslate } from "utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { IEntry } from "modules/entries/types";
 import { FlexBox } from "shared/Layout";
 import { IPlace } from "modules/places/infra";
 import { Logger } from "utils/logger";
 import { IProduct } from "modules/products/types";
-import { ILotProductWithProduct } from "modules/lotProduct/infraestructure/queries";
+import dayjs from "dayjs";
+import { ILotProductWithProduct } from "modules/lotProduct/infraestructure/queries/getLotProducts";
 
 interface IProps {
   entries: IEntry[];
@@ -41,29 +42,13 @@ interface IRow {
 }
 
 export const StockList = ({
-  entries, // This prop might become unused or be used for other purposes
-  stock, // This prop might become unused or be used for other purposes
   productId,
   selectedLot,
-  suppsAndTrans, // This prop might become unused or be used for other purposes
   placesInfo,
   isLoading,
-  stockData,
   lotProducts,
 }: IProps) => {
-  Logger.info("StockList rendered with props:", {
-    entries,
-    stock,
-    productId,
-    selectedLot,
-    suppsAndTrans,
-    placesInfo,
-    isLoading,
-    stockData,
-    lotProducts,
-  });
-
-  const { t } = useTranslate();
+  const { t, dataGridLocaleText } = useTranslate();
   const [totalUnits, setTotalUnits] = useState<number>(0);
   const [totalBoxes, setTotalBoxes] = useState<number>(0);
   const [matchedProduct, setMatchedProduct] = useState<IProduct | null>(null);
@@ -84,6 +69,7 @@ export const StockList = ({
         ) {
           return <Text color="red.500">{t("No Place Specified")}</Text>;
         }
+        return <Text>{params.formattedValue}</Text>;
       },
     },
     { field: "unitsNumber", headerName: t("Total Units"), width: 150 },
@@ -109,7 +95,14 @@ export const StockList = ({
     // { field: "transporter", headerName: t("Transporter"), width: 150 }, // Remove or adapt
   ];
 
-  const generateRows = (): IRow[] => {
+  const generateRows = useCallback((): {
+    rows: IRow[];
+    stats: {
+      totalUnits: number;
+      totalBoxes: number;
+      matchedProduct: IProduct | null;
+    };
+  } => {
     let calculatedTotalUnits = 0;
     let calculatedWholeUnitsTotal = 0;
     let calculatedLooseUnitsTotal = 0;
@@ -135,46 +128,54 @@ export const StockList = ({
           item.placeId ||
           t("N/A");
         const unitOfMeasure = item.product?.boxDetails?.unitOfMeasure || "";
-        // Ensure quantity is treated as a string for parseFloat
         const quantityString = String(
           item.product?.boxDetails?.quantity || "0"
         );
         const quantityPerUnit = parseFloat(quantityString);
         const totalQuantity = currentTotal * quantityPerUnit;
+        const expDate = item.expirationDate
+          ? dayjs(item.expirationDate).format("DD/MM/YYYY")
+          : t("N/A");
 
         return {
           id: item.id!,
-          productName: item.product?.name || t("N/A"),
+          productName:
+            item.product?.name.toLocaleUpperCase("es-CL") || t("N/A"),
           lotId: item.lotId,
           placeId: placeName,
           totalUnits: `${totalQuantity} ${unitOfMeasure}`,
           unitsNumber: units,
           looseUnitsNumber: looseUnits,
-          expirityDate: item.expirationDate || t("N/A"),
+          expirityDate: expDate,
         };
       });
 
-    setTotalUnits(calculatedWholeUnitsTotal);
     const matchProduct = lotProducts?.find((i) => i.productId === productId);
-    setMatchedProduct(matchProduct?.product || null);
     const unitsPerBox = matchProduct?.product?.boxDetails?.units;
+    let calculatedTotalBoxes = 0;
     if (lotProducts && unitsPerBox && calculatedWholeUnitsTotal > 0) {
-      setTotalBoxes(calculatedWholeUnitsTotal / unitsPerBox);
+      calculatedTotalBoxes = calculatedWholeUnitsTotal / unitsPerBox;
     }
-    return newRows;
-  };
 
-  Logger.info("Generating rows with lotPRoducts:", {
-    rows,
-  });
+    return {
+      rows: newRows,
+      stats: {
+        totalUnits: calculatedWholeUnitsTotal,
+        totalBoxes: calculatedTotalBoxes,
+        matchedProduct: matchProduct?.product || null,
+      },
+    };
+  }, [lotProducts, productId, selectedLot, placesInfo, t]);
 
   useEffect(() => {
-    if (stockData) {
-      // Ensure stockData is available
-      const newRows = generateRows();
-      setRows(newRows);
+    if (lotProducts) {
+      const { rows, stats } = generateRows();
+      setRows(rows);
+      setTotalUnits(stats.totalUnits);
+      setTotalBoxes(stats.totalBoxes);
+      setMatchedProduct(stats.matchedProduct);
     }
-  }, [stockData, productId, selectedLot, placesInfo, suppsAndTrans]);
+  }, [lotProducts, placesInfo]);
 
   return (
     <Box height={400} width="100%">
@@ -203,17 +204,18 @@ export const StockList = ({
       </FlexBox>
       <AppThemeProvider>
         <DataGrid
+          localeText={dataGridLocaleText}
           slotProps={{
-            loadingOverlay: {
-              variant: "skeleton",
-              noRowsVariant: "skeleton",
+            toolbar: {
+              csvOptions: {
+                fileName: `stock-${new Date().toISOString()}.csv`,
+                utf8WithBom: true,
+              },
+              contentEditable: false,
             },
           }}
-          rows={rows}
-          columns={columns}
-          rowCount={rows?.length}
-          loading={isLoading}
           slots={{
+            toolbar: GridToolbar, // Add this line to enable the toolbar
             noRowsOverlay: () => (
               <FlexBox
                 sx={{
@@ -239,6 +241,10 @@ export const StockList = ({
               </FlexBox>
             ),
           }}
+          rows={rows}
+          columns={columns}
+          rowCount={rows?.length}
+          loading={isLoading}
         />
       </AppThemeProvider>
     </Box>

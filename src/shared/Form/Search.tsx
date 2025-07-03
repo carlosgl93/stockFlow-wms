@@ -4,7 +4,7 @@ import { debounce } from "lodash-es";
 import { Logger } from "utils/logger";
 import { useTranslate } from "utils";
 import { useBrandColor } from "theme";
-import { FirebaseError } from "firebase/app";
+import { getHumanReadableError } from "shared/Error";
 
 interface SearchProps<T> {
   setResults: Dispatch<SetStateAction<T[]>>;
@@ -42,44 +42,34 @@ export const Search = <T,>({
           }, 3000);
         }
       } catch (error) {
-        if (error instanceof Error) {
-          Logger.error("Search function error:", [error.message]);
-        }
-        if (error instanceof FirebaseError) {
-          Logger.error("Firebase error in search function:", [error.message]);
-        }
+        const errorMessage = getHumanReadableError(error, t);
+        Logger.error("Search function error:", [errorMessage]);
         setResults([]);
         setDisplayFeedback(true);
-        if (error instanceof Error) {
-          Logger.error("Search function error:", [error.message]);
-        }
-        if (error instanceof FirebaseError) {
-          Logger.error("Firebase error in search function:", [error.message]);
-        }
         setTimeout(() => {
           setDisplayFeedback(false);
         }, 3000);
       } finally {
-        setIsLoading(false); // Set loading to false after search completes or errors
+        setIsLoading(false);
       }
     }, 1000);
-  }, [searchFunction, setResults, setIsLoading, setDisplayFeedback]);
+  }, [searchFunction, setResults, setIsLoading, setDisplayFeedback, t]);
 
   useEffect(() => {
     const trimmedQuery = query.trim();
     if (trimmedQuery !== "") {
-      setIsLoading(true); // Set loading to true when query changes and is not empty
+      setIsLoading(true);
       debouncedSearchFunction(trimmedQuery.toLowerCase());
     } else {
       setResults([]);
-      setIsLoading(false); // Set loading to false if query is empty
-      debouncedSearchFunction.cancel(); // Cancel any pending debounced calls
+      setIsLoading(false);
+      debouncedSearchFunction.cancel();
     }
 
     return () => {
-      debouncedSearchFunction.cancel(); // Cleanup on unmount
+      debouncedSearchFunction.cancel();
     };
-  }, [query, debouncedSearchFunction, setIsLoading, setResults]);
+  }, [query, setIsLoading, setResults]);
 
   return (
     <Box w={"100%"}>

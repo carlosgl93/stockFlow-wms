@@ -658,7 +658,11 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
             )}
           </FormControl> */}
         </Box>
-        <Button onClick={handleAddProductToEntry} colorScheme="green">
+        <Button
+          onClick={handleAddProductToEntry}
+          colorScheme="green"
+          disabled={!productId || !unitsNumber}
+        >
           {t("Add product to the list")}
         </Button>
         <AppThemeProvider>

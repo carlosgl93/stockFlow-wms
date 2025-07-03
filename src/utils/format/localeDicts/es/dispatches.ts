@@ -71,5 +71,13 @@ export const dispatches = {
   "Dispatch Date": "Fecha de Despacho",
   "Search by date, doc number, lot id or produt name...":
     "Buscar por fecha, número de documento, id de lote o nombre del producto...",
-  "Remove Dispatch": "Eliminar Despacho",
+  "Remove Dispatch": "Eliminar despacho",
+  "Edit your Dispatch.": "Edita tu despacho",
+  Operation: "Operación",
+  create: "crear",
+  update: "actualizar",
+  delete: "eliminar",
+  "Delivery Date": "Fecha de Entrega",
+  Status: "Estado",
+  "Total Units in Dispatch": "Total de Unidades en despacho",
 };

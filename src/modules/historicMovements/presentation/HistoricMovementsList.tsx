@@ -63,6 +63,25 @@ export const HistoricMovementsList = ({
       },
     },
     {
+      field: "operationType",
+      headerName: t("Operation"),
+      width: 120,
+      renderCell: (params) => {
+        const operationType: "create" | "update" | "delete" =
+          params.row.operationType || "create";
+        const colorMap = {
+          create: "green.500",
+          update: "blue.500",
+          delete: "red.500",
+        };
+        return (
+          <Box color={colorMap[operationType] || "gray.500"}>
+            {capitalize(t(operationType))}
+          </Box>
+        );
+      },
+    },
+    {
       field: "docNumber",
       headerName: t("Document Number"),
       width: 150,

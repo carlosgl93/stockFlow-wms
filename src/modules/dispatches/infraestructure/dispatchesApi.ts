@@ -1,6 +1,11 @@
 import { db } from "shared/firebase";
 import { DispatchedStatus, IDispatch } from "../types";
-import { APIError, ValidationError, formatError } from "shared/Error";
+import {
+  APIError,
+  ValidationError,
+  formatError,
+  getHumanReadableError,
+} from "shared/Error";
 import { dateVO } from "utils/format";
 import {
   collection,
@@ -33,7 +38,9 @@ export const fetchDispatches = async (): Promise<IDispatch[]> => {
     );
     return result;
   } catch (error) {
-    throw new APIError("Failed to fetch dispatches", error);
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -129,6 +136,7 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "dispatch",
+        operationType: "create",
         dispatchId: dispatchRef.id,
         ...dispatch,
         productsIds: dispatch.products.map((product) => product.id),
@@ -141,10 +149,13 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
     });
   } catch (error) {
     Logger.error("Failed to add dispatch", { error });
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+
     if (error instanceof ValidationError) {
       throw error;
     }
-    throw new APIError("Failed to add dispatch", error);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -291,6 +302,7 @@ export const updateDispatch = async ({
               lotId: product.lotId?.toUpperCase(),
               palletNumber: product.palletNumber?.toUpperCase(),
             })),
+            operationType: "update",
             updatedAt: now,
           })
         );
@@ -492,16 +504,13 @@ export const updateDispatch = async ({
     return result;
   } catch (error) {
     Logger.error(formatError("updateDispatch", error, { dispatchId, values }));
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+
     if (error instanceof FirebaseError) {
-      throw new APIError(
-        formatError("updateDispatch", error, { dispatchId, values }),
-        error
-      );
+      throw new APIError(humanError, error);
     }
-    throw new APIError(
-      formatError("updateDispatch", error, { dispatchId, values }),
-      error
-    );
+    throw new APIError(humanError, error);
   }
 };
 
@@ -570,6 +579,8 @@ export const removeDispatch = async (dispatchId: string): Promise<void> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "dispatch",
+        operationType: "delete",
+        dispatchId: dispatchId,
         data: { id: dispatchDoc.id, ...dispatchData },
         createdAt: dateVO.now(),
       });
@@ -579,7 +590,9 @@ export const removeDispatch = async (dispatchId: string): Promise<void> => {
     });
   } catch (error) {
     Logger.error("Failed to remove dispatch", { error });
-    throw new APIError("Failed to remove dispatch", error);
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -593,6 +606,8 @@ export const getDispatchById = async (
     }
     return { id: dispatchDoc.id, ...dispatchDoc.data() } as IDispatch;
   } catch (error) {
-    throw new APIError("Failed to get dispatch", error);
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };

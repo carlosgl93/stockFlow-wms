@@ -38,7 +38,6 @@ import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
 import { InfoIcon } from "@chakra-ui/icons";
-import { useEffect } from "react";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
@@ -103,7 +102,6 @@ export const CreateDispatchForm = ({
     setShowUnitsTooltip,
     setShowTotalTooltip,
     unitsTooltipLabel,
-    looseUnitsTooltipLabel,
     setSelectedProduct,
     selectedProduct,
     register,
@@ -364,7 +362,7 @@ export const CreateDispatchForm = ({
                   >
                     {products?.map((product) => (
                       <option key={product.id} value={product.id}>
-                        {product.name}
+                        {product.name.toLocaleUpperCase("es-CL")}
                       </option>
                     ))}
                   </Select>
@@ -455,9 +453,9 @@ export const CreateDispatchForm = ({
                       {t("I will not specify a place")}
                     </option>
 
-                    {(totalStockByLotAndProduct?.placesIds?.length
+                    {(totalStockByLotAndProduct?.placeId?.length
                       ? getPlacesData?.places.filter((p) =>
-                          totalStockByLotAndProduct?.placesIds?.includes(p.id)
+                          totalStockByLotAndProduct?.placeId?.includes(p.id)
                         )
                       : getPlacesData?.places
                     )?.map((places) => (

@@ -1,6 +1,11 @@
 import { db } from "shared/firebase";
 import { EntryDTO, IEntry, IProductEntry } from "../types";
-import { APIError, ValidationError, formatError } from "shared/Error";
+import {
+  APIError,
+  ValidationError,
+  formatError,
+  getHumanReadableError,
+} from "shared/Error";
 import { dateVO } from "utils/format";
 import {
   collection,
@@ -46,7 +51,9 @@ export const fetchEntries = async (): Promise<IEntry[]> => {
     return entriesWithProducts;
   } catch (error) {
     Logger.error(formatError("fetchEntries", error));
-    throw new APIError(formatError("fetchEntries", error), error);
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -130,9 +137,10 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
-        type: "entry",
-        entryId: entryRef.id,
         ...entry,
+        type: "entry",
+        operationType: "create",
+        entryId: entryRef.id,
         products: entry.products,
         productsIds: entry.products.map((product) => product.id),
         createdAt: now,
@@ -222,7 +230,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
               (lotProductData.looseUnitsNumber || 0) + product.looseUnitsNumber,
             placeId: product?.placeId,
             expirationDate:
-              product?.expirityDate || lotProductData.expirityDate,
+              product?.expirityDate || lotProductData.expirationDate,
           });
         } else {
           const lotProductRef = doc(collection(db, "lotProducts"));
@@ -231,7 +239,7 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
             lotId: lotId,
             productId: product.id,
             unitsNumber: product.unitsNumber,
-            looseUnitsNumber: product.looseUnitsNumber,
+            looseUnitsNumber: product.looseUnitsNumber || 0,
             placeId: product?.placeId,
             expirationDate: product?.expirityDate,
           });
@@ -240,13 +248,16 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
     });
   } catch (error) {
     Logger.error(formatError("addEntry", error, { entry }));
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+
     if (error instanceof ValidationError) {
       throw {
-        message: formatError("addEntry", error, { entry }),
+        message: humanError,
         code: "400",
       };
     }
-    throw new APIError(formatError("addEntry", error, { entry }), error);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -364,9 +375,22 @@ export const updateEntry = async ({
         Logger.info("Updating historic movements entry", {
           values,
         });
+
+        // Clean the values object to remove undefined fields
+        const cleanValues = Object.fromEntries(
+          Object.entries(values).filter(([_, value]) => value !== undefined)
+        );
+
+        // Clean products array to remove undefined fields
+        cleanValues.products = values.products.map((product) =>
+          Object.fromEntries(
+            Object.entries(product).filter(([_, value]) => value !== undefined)
+          )
+        );
+
         transaction.update(foundHistoricMovementsEntryDocRef, {
-          ...values,
-          // products: values.products,
+          ...cleanValues,
+          operationType: "update",
           updatedAt: dateVO.now(),
         });
       } else {
@@ -510,7 +534,8 @@ export const updateEntry = async ({
           // Calculate the difference
           unitsDifference = product.unitsNumber - existingProduct.unitsNumber;
           looseUnitsDifference =
-            product.looseUnitsNumber - existingProduct.looseUnitsNumber;
+            (product.looseUnitsNumber || 0) -
+            (existingProduct.looseUnitsNumber || 0);
 
           Logger.info("unitsDifference", { unitsDifference });
           Logger.info("looseUnitsDifference", { looseUnitsDifference });
@@ -523,13 +548,18 @@ export const updateEntry = async ({
             updatedAt: dateVO.now(),
           });
 
+          // Clean product data to remove undefined fields
+          const cleanProduct = Object.fromEntries(
+            Object.entries(product).filter(([_, value]) => value !== undefined)
+          );
+
           // Update existing product entry
           const productEntryRef = doc(
             collection(db, "entries", entryDocRef.id, "products"),
             getProductCompositeId(product)
           );
           transaction.update(productEntryRef, {
-            ...product,
+            ...cleanProduct,
             stockId: stockRef.id,
             lotId: lotId,
             updatedAt: dateVO.now(),
@@ -548,12 +578,17 @@ export const updateEntry = async ({
           transaction.update(stockRef, {
             unitsNumber: stockData.unitsNumber + product.unitsNumber,
             looseUnitsNumber:
-              stockData.looseUnitsNumber + product.looseUnitsNumber,
+              stockData.looseUnitsNumber + (product.looseUnitsNumber || 0),
             updatedAt: dateVO.now(),
           });
 
+          // Clean product data to remove undefined fields
+          const cleanProduct = Object.fromEntries(
+            Object.entries(product).filter(([_, value]) => value !== undefined)
+          );
+
           transaction.set(productEntryRef, {
-            ...product,
+            ...cleanProduct,
             stockId: stockRef.id,
             lotId: lotId,
             createdAt: dateVO.now(),
@@ -574,16 +609,18 @@ export const updateEntry = async ({
           const lotProductData = lotProductDoc.data();
 
           const newUnitsNumber =
-            (lotProductData.unitsNumber || 0) + unitsDifference;
+            (lotProductData.unitsNumber || 0) + (unitsDifference || 0);
           const newLooseUnitsNumber =
-            (lotProductData.looseUnitsNumber || 0) + looseUnitsDifference;
+            (lotProductData.looseUnitsNumber || 0) +
+            (looseUnitsDifference || 0);
 
           transaction.update(lotProductRef, {
             id: lotProductRef.id,
             lotId: lotId,
             productId: product.id,
             unitsNumber: Math.max(0, newUnitsNumber),
-            expirationDate: product?.expirityDate || "",
+            expirationDate:
+              product?.expirityDate || lotProductData.expirationDate,
             looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
             placeId: product?.placeId,
           });
@@ -594,8 +631,8 @@ export const updateEntry = async ({
             lotId: lotId,
             productId: product.id,
             unitsNumber: product.unitsNumber,
-            looseUnitsNumber: product.looseUnitsNumber,
-            expirationDate: product?.expirityDate || "",
+            looseUnitsNumber: product.looseUnitsNumber || 0,
+            expirationDate: product?.expirityDate,
             placeId:
               values.products.find((p) => p.id === product.id)?.placeId || "",
           });
@@ -676,16 +713,13 @@ export const updateEntry = async ({
     return result;
   } catch (error) {
     Logger.error(formatError("updateEntry", error, { entryId, values }));
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+
     if (error instanceof FirebaseError) {
-      throw new APIError(
-        formatError("updateEntry", error, { entryId, values }),
-        error
-      );
+      throw new APIError(humanError, error);
     }
-    throw new APIError(
-      formatError("updateEntry", error, { entryId, values }),
-      error
-    );
+    throw new APIError(humanError, error);
   }
 };
 
@@ -772,6 +806,8 @@ export const removeEntry = async (entryId: string): Promise<void> => {
       const historicMovementsRef = collection(db, "historicMovements");
       await addDoc(historicMovementsRef, {
         type: "entry",
+        operationType: "delete",
+        entryId: entryId,
         data: { ...entryData, products: entryData?.productsIds },
         createdAt: dateVO.now(),
       });
@@ -781,12 +817,14 @@ export const removeEntry = async (entryId: string): Promise<void> => {
     });
   } catch (error) {
     Logger.error(formatError("removeEntry", error, { entryId }));
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+
     if (error instanceof ValidationError) {
       throw error;
     }
-    if (error instanceof FirebaseError)
-      throw new APIError(formatError("removeEntry", error, { entryId }), error);
-    throw new APIError(formatError("removeEntry", error, { entryId }), error);
+    if (error instanceof FirebaseError) throw new APIError(humanError, error);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -815,7 +853,9 @@ export const getEntryById = async (entryId: string): Promise<IEntry> => {
     };
   } catch (error) {
     Logger.error(formatError("getEntryById", error, { entryId }));
-    throw new APIError(formatError("getEntryById", error, { entryId }), error);
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -848,10 +888,9 @@ export const fetchEntriesByProductId = async (
     return entriesWithProduct;
   } catch (error) {
     Logger.error(formatError("fetchEntriesByProductId", error, { productId }));
-    throw new APIError(
-      formatError("fetchEntriesByProductId", error, { productId }),
-      error
-    );
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };
 
@@ -906,12 +945,8 @@ export const fetchEntriesByProductIdAndLotId = async (
         lotId,
       })
     );
-    throw new APIError(
-      formatError("fetchEntriesByProductIdAndLotId", error, {
-        productId,
-        lotId,
-      }),
-      error
-    );
+    const t = (key: string) => key; // Fallback translation function
+    const humanError = getHumanReadableError(error, t);
+    throw new APIError(humanError, error);
   }
 };

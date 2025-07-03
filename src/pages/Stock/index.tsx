@@ -1,5 +1,4 @@
 import { Box, Text, FormControl, FormLabel, Select } from "@chakra-ui/react";
-import { fetchEntriesByProductIdAndLotId } from "modules/entries/infraestructure";
 import { IEntry } from "modules/entries/types";
 import { searchProduct } from "modules/products/infrastructure";
 import { IProduct } from "modules/products/types";
@@ -154,27 +153,6 @@ const StockPage = () => {
       return <option>Busca un lote arriba</option>;
     }
   };
-
-  // const renderLoading = () => {
-  //   if (
-  //     isLoadingGetStock ||
-  //     isFetchingEntries ||
-  //     isLoadingProductSearch ||
-  //     // isLoadingLotSearch ||
-  //     isFetchingEntriesByProductId ||
-  //     isFetchingEntries
-  //   ) {
-  //     return <Loading size="md" />;
-  //   }
-  // };
-
-  // const renderLetsBegin = () => {
-  //   if (stockData?.length && !(setSearchedStockProduct || lotSelected)) {
-  //     return (
-  //       <LetsBegin headingText="Start by searching for a product AND/OR lot" />
-  //     );
-  //   }
-  // };
 
   return (
     <Page>

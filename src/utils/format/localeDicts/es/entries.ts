@@ -103,4 +103,11 @@ export const entries = {
   Print: "Imprimir",
   Export: "Exportar a CSV",
   "Remove Entry": "Eliminar ingreso",
+  // "Expiry date is required": "Se requiere la fecha de caducidad",
+  "Product is required": "Se requiere el producto",
+  Operation: "Operación",
+  create: "crear",
+  update: "actualizar",
+  delete: "eliminar",
+  Detail: "Detalle",
 };
