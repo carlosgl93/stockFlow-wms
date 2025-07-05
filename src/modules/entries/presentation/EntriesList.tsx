@@ -22,7 +22,7 @@ export const EntriesList = () => {
     handleConfirmRemove,
   } = EntriesListController();
 
-  if (rows?.length === 0) {
+  if (rows?.length === 0 && !isLoadingGetEntries) {
     return <EmptyStateResult />;
   }
 

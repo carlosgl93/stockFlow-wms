@@ -44,7 +44,7 @@ export const HistoricMovementsList = ({
     type
   );
   const [rows, setRows] = useState<IHistoricMovement[]>([]);
-  const { t } = useTranslate();
+  const { t, dataGridLocaleText } = useTranslate();
 
   useEffect(() => {
     if (historicMovements) {
@@ -152,6 +152,25 @@ export const HistoricMovementsList = ({
           rows={rows}
           columns={columns}
           loading={isLoading}
+          slotProps={{
+            toolbar: {
+              csvOptions: {
+                fileName: `mov-historicos-${new Date().toISOString()}.csv`,
+                utf8WithBom: true,
+              },
+              contentEditable: false,
+              showQuickFilter: true,
+              quickFilterProps: {
+                debounceMs: 500,
+                placeholder: t("Search by date, doc number or produt name..."),
+                sx: { width: "400px" },
+              },
+            },
+          }}
+          localeText={dataGridLocaleText}
+          disableColumnFilter
+          disableColumnSelector
+          disableDensitySelector
         />
       </AppThemeProvider>
     </Box>

@@ -15,7 +15,7 @@
     "test-storybook": "pnpm exec test-storybook --watch",
     "build-storybook": "storybook build",
     "emulators": "firebase emulators:start",
-    "deploy": "pnpm run build && firebase deploy && curl -X PURGE https://stockflow-wms.web.app",
+    "deploy": "pnpm run build && firebase deploy --only hosting && curl -X PURGE https://stockflow-wms.web.app",
     "create:test:user": "ts-node ./scripts/createTestUser.ts",
     "create:test:products": "ts-node ./scripts/createTestProducts.ts",
     "create:test:places": "ts-node ./scripts/createTestPlaces.ts",

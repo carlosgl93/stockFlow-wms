@@ -37,7 +37,10 @@ const PlacesPage = () => {
           </Button>
         </Box>
       </PageHeader>
-      <PlacesList places={getPlacesData?.places} />
+      <PlacesList
+        places={getPlacesData?.places}
+        isLoadingGetPlaces={isLoadingGetPlaces}
+      />
     </Page>
   );
 };

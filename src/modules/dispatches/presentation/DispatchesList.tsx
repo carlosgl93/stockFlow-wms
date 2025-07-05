@@ -4,7 +4,13 @@ import {
   GridRenderCellParams,
   GridToolbar,
 } from "@mui/x-data-grid";
-import { Box, IconButton, Tooltip, useDisclosure } from "@chakra-ui/react";
+import {
+  Box,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { DeleteIcon, EditIcon, TimeIcon, SearchIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { IDispatch } from "../types";
@@ -19,15 +25,15 @@ import { DispatchDetailModal } from "./DispatchDetailModal";
 
 interface IProps {
   dispatches: IDispatch[];
+  isLoadingGetDispatches: boolean;
 }
 
-export const DispatchesList = ({ dispatches }: IProps) => {
+export const DispatchesList = ({
+  dispatches,
+  isLoadingGetDispatches,
+}: IProps) => {
   const redirect = useRedirect();
-  const {
-    isLoadingGetDispatches,
-    removeDispatchMutation,
-    isLoadingRemoveDispatch,
-  } = useDispatches();
+  const { removeDispatchMutation, isLoadingRemoveDispatch } = useDispatches();
 
   const { t, dataGridLocaleText } = useTranslate();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -217,6 +223,10 @@ export const DispatchesList = ({ dispatches }: IProps) => {
     description: dispatch?.description,
     dispatchStatus: t(dispatch?.dispatchedStatus || ""),
   }));
+
+  if (isLoadingGetDispatches) {
+    return <CircularProgress />;
+  }
 
   return (
     <Box height={400} width="100%">

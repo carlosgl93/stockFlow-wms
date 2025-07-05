@@ -39,7 +39,10 @@ const DispatchesPage = () => {
       {isLoadingGetDispatches ? (
         <Loading size="md" />
       ) : (
-        <DispatchesList dispatches={dispatchesData} />
+        <DispatchesList
+          dispatches={dispatchesData}
+          isLoadingGetDispatches={isLoadingGetDispatches}
+        />
       )}
     </Page>
   );

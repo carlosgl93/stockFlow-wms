@@ -439,7 +439,6 @@ export const CreateDispatchController = ({
 
         if (!acc.find((row) => row.id === uniqueId)) {
           const productInfo = products.find((pr) => pr.id === p.id);
-          console.log("Adding row for product", p);
           acc.push({
             extCode: productInfo?.extCode!,
             intCode: productInfo?.internalCode!,

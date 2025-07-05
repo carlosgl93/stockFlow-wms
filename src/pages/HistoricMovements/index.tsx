@@ -1,4 +1,4 @@
-import { Box, FormControl, FormLabel, Select } from "@chakra-ui/react";
+import { Box, FormControl, FormLabel, Select, Button } from "@chakra-ui/react";
 import { HistoricMovementsList } from "modules/historicMovements/presentation/HistoricMovementsList";
 import { FlexBox, FlexColumn, Loading, Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
@@ -26,15 +26,28 @@ const HistoricMovements = () => {
   const [selectedType, setSelectedType] = useState<"entry" | "dispatch" | null>(
     null
   );
+  const [searchKey, setSearchKey] = useState(0); // Add key to force Search component re-render
 
   const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    // setSearchTerm(productId); // Trigger fetch of historic movements by product ID
+    if (productId === "") {
+      setSelectedProductId(null);
+      setSearchedStockProduct("");
+    } else {
+      setSelectedProductId(productId);
+    }
   };
 
   const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     setSelectedType(value === "" ? null : (value as "entry" | "dispatch"));
+  };
+
+  const handleClearFilters = () => {
+    setSelectedProductId(null);
+    setSearchedStockProduct("");
+    setSelectedType(null);
+    setSearchedProductsResult([]);
+    setSearchKey((prev) => prev + 1); // Force Search component to re-render and reset its internal state
   };
 
   const renderProductsOptions = () => {
@@ -56,7 +69,7 @@ const HistoricMovements = () => {
       ));
       options = [
         <option key="all" value="">
-          Selecciona un resultado
+          {t("All Products")}
         </option>,
         ...options,
       ];
@@ -64,7 +77,11 @@ const HistoricMovements = () => {
     }
 
     if (!uniqueProducts?.length) {
-      return <option>Busca un producto arriba</option>;
+      return (
+        <option value="">
+          {t("Search for a product above or select 'All Products'")}
+        </option>
+      );
     }
   };
 
@@ -72,7 +89,7 @@ const HistoricMovements = () => {
   //   useHistoricMovements(selectedProductId);
 
   useEffect(() => {
-    if (searchedStockProduct) {
+    if (searchedStockProduct && searchedStockProduct !== "") {
       handleProductSelect(searchedStockProduct);
     }
   }, [searchedStockProduct]);
@@ -103,6 +120,7 @@ const HistoricMovements = () => {
                 render={({ field }) => (
                   <FlexColumn gap={4}>
                     <Search<IProduct>
+                      key={searchKey}
                       placeholderText={t("Search for a product name")}
                       searchFunction={searchProduct}
                       setResults={setSearchedProductsResult}
@@ -117,11 +135,17 @@ const HistoricMovements = () => {
                     <Select
                       {...field}
                       onChange={(e) => {
-                        setSearchedStockProduct(e.target.value);
+                        const value = e.target.value;
+                        setSearchedStockProduct(value);
+                        handleProductSelect(value);
                       }}
                       value={searchedStockProduct}
                     >
-                      {renderProductsOptions()}
+                      {searchedProductsResult.length > 0 ? (
+                        renderProductsOptions()
+                      ) : (
+                        <option value="">{t("All Products")}</option>
+                      )}
                     </Select>
                   </FlexColumn>
                 )}
@@ -137,6 +161,20 @@ const HistoricMovements = () => {
                 <option value="entry">{t("Entries")}</option>
                 <option value="dispatch">{t("Dispatches")}</option>
               </Select>
+            </FormControl>
+          </Box>
+
+          <Box display={"flex"} flexDirection="column" gap={4} flex={1}>
+            <FormControl mb={4}>
+              <FormLabel>&nbsp;</FormLabel>
+              <Button
+                colorScheme="gray"
+                variant="outline"
+                onClick={handleClearFilters}
+                size="md"
+              >
+                {t("Clear Filters")}
+              </Button>
             </FormControl>
           </Box>
         </Box>

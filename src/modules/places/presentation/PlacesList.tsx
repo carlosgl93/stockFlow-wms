@@ -4,7 +4,7 @@ import {
   GridRenderCellParams,
   GridToolbar,
 } from "@mui/x-data-grid";
-import { Box, IconButton, Tooltip } from "@chakra-ui/react";
+import { Box, CircularProgress, IconButton, Tooltip } from "@chakra-ui/react";
 import { DeleteIcon, EditIcon, TimeIcon } from "@chakra-ui/icons";
 import { EmptyStateResult } from "shared/Result";
 import { AppThemeProvider } from "theme/materialTheme";
@@ -14,12 +14,17 @@ import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 
 interface IProps {
   places: IPlace[];
+  isLoadingGetPlaces: boolean;
 }
 
-const PlacesList = ({ places }: IProps) => {
+const PlacesList = ({ places, isLoadingGetPlaces }: IProps) => {
   const redirect = useRedirect();
   const { removePlaceMutation, isLoadingRemovePlace } = usePlaces();
   const { t, dataGridLocaleText } = useTranslate();
+
+  if (isLoadingGetPlaces) {
+    return <CircularProgress />;
+  }
 
   if (places?.length === 0) {
     return <EmptyStateResult />;
@@ -94,13 +99,12 @@ const PlacesList = ({ places }: IProps) => {
     { field: "name", headerName: t("Name"), width: 150 },
   ];
 
-  const rows = places?.map((place) => ({
-    id: place.id,
-    name: place.name,
-    // entryDate: place.entryDate,
-    // departureDate: place.departureDate,
-    // movementHistory: place.movementHistory,
-  }));
+  const rows = places
+    ?.map((place) => ({
+      id: place.id,
+      name: place.name,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   if (places?.length === 0) {
     return <EmptyStateResult />;
