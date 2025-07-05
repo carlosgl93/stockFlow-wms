@@ -14,9 +14,6 @@ import {
   doc,
   getDoc,
   query,
-  orderBy,
-  limit,
-  startAfter,
   where,
   runTransaction,
   DocumentReference,
@@ -269,6 +266,8 @@ export const updateDispatch = async ({
       transaction.update(
         dispatchDocRef,
         removeUndefined({
+          dispatchDate: values.dispatchDate,
+          deliveryDate: values.deliveryDate,
           supplierId: values.supplierId,
           docNumber: values.docNumber,
           transporterId: values.transporterId,

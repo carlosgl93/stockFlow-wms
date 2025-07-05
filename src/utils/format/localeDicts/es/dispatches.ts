@@ -80,4 +80,6 @@ export const dispatches = {
   "Delivery Date": "Fecha de Entrega",
   Status: "Estado",
   "Total Units in Dispatch": "Total de Unidades en despacho",
+  "Dispatch with this docNumber already exists.":
+    "Ya existe un despacho con este número de documento.",
 };

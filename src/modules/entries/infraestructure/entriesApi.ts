@@ -357,13 +357,13 @@ export const updateEntry = async ({
 
       // Update entry
       transaction.update(entryDocRef, {
+        entryDate: values.entryDate,
         supplierId: values.supplierId,
         docNumber: values.docNumber,
         transporterId: values.transporterId,
         description: values.description,
         updatedAt: dateVO.now(),
         productsIds: values.products.map((product) => product.id), // Update entryIds array
-        // placeId: values.products[] || "",
       });
 
       // instead of adding to historic movements, i need to update the entry in historic movements

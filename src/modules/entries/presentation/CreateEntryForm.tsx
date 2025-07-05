@@ -670,6 +670,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         </Button>
         <AppThemeProvider>
           <DataGrid
+            sx={{ height: "100%", width: "100%" }}
             rows={rows || []}
             columns={columns}
             rowCount={rows?.length || 100}

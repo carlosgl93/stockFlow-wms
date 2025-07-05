@@ -765,6 +765,9 @@ export const CreateDispatchForm = ({
         </Button>
         <AppThemeProvider>
           <DataGrid
+            sx={{
+              height: "100%",
+            }}
             rows={rows || []}
             columns={columns}
             rowCount={rows?.length || 100}

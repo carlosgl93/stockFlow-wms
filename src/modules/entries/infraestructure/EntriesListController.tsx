@@ -142,7 +142,6 @@ export const EntriesListController = () => {
     { field: "supplierName", headerName: t("Supplier"), width: 150 },
     { field: "transporterId", headerName: t("Transporter"), width: 150 },
   ];
-  Logger.info("rows", rows);
   useEffect(() => {
     const fetchSupportingData = async () => {
       if (entriesData) {
@@ -158,11 +157,7 @@ export const EntriesListController = () => {
             };
           })
         );
-        setRows(
-          rowsWithSupportingData.sort((a, b) =>
-            dayjs(a.entryDate).isBefore(b.entryDate) ? 1 : 0
-          ) as IEntry[]
-        );
+        setRows(rowsWithSupportingData as IEntry[]);
       }
     };
     fetchSupportingData();
