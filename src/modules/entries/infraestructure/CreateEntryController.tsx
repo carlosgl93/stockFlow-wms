@@ -484,6 +484,7 @@ export const CreateEntryController = ({
 
   const validateProductToEnter = (product: IEntryForm) => {
     const { totalUnitsNumber, lotId, expirityDate, productId } = product;
+
     if (!productId) {
       toast({
         title: "Error",

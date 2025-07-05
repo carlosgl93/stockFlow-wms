@@ -35,6 +35,7 @@ import { AppThemeProvider } from "theme/materialTheme";
 import { InfoIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
+import { capitalize } from "../../../utils/format/capitalize";
 
 export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   const [showBoxTooltip, setShowBoxTooltip] = useState(false);
@@ -115,13 +116,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
   ).toLowerCase()} ${t("per")}`;
 
   const unitsTooltipLabel = `${t("Each unit is made up of")} ${
-    selectedProduct?.boxDetails?.container?.toLowerCase() || ""
+    selectedProduct?.boxDetails?.container?.toLowerCase() || "of"
   } ${selectedProduct?.boxDetails?.quantity || ""} ${t(
     selectedProduct?.boxDetails?.unitOfMeasure || ""
   ).toLowerCase()}`;
 
   const looseUnitsTooltipLabel = `${t("Each unit is made up of")} ${
-    selectedProduct?.boxDetails?.container?.toLowerCase() || ""
+    selectedProduct?.boxDetails?.container?.toLowerCase() || "of"
   } ${t("of")} ${selectedProduct?.boxDetails?.quantity || ""} ${t(
     selectedProduct?.boxDetails?.unitOfMeasure || ""
   ).toLowerCase()}`;
@@ -261,7 +262,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                       >
                         {transporters?.map((trans) => (
                           <option key={trans.id} value={trans.id}>
-                            {trans.name}
+                            {capitalize(trans.name)}
                           </option>
                         ))}
                       </Select>

@@ -454,10 +454,14 @@ export const CreateDispatchForm = ({
                     </option>
 
                     {(totalStockByLotAndProduct?.placeId?.length
-                      ? getPlacesData?.places.filter((p) =>
-                          totalStockByLotAndProduct?.placeId?.includes(p.id)
+                      ? getPlacesData?.places
+                          .filter((p) =>
+                            totalStockByLotAndProduct?.placeId?.includes(p.id)
+                          )
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                      : getPlacesData?.places?.sort((a, b) =>
+                          a.name.localeCompare(b.name)
                         )
-                      : getPlacesData?.places
                     )?.map((places) => (
                       <option key={places.id} value={places.id}>
                         {places.name}

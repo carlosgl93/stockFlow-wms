@@ -10,6 +10,7 @@ import { getSupplierById } from "modules/suppliers";
 import { getTransporterById } from "modules/transporters/infrastructure";
 import { commonTooltipStyles } from "../../products/presentation/ProductsList";
 import dayjs from "dayjs";
+import { capitalize } from "../../../utils/format/capitalize";
 
 export const EntriesListController = () => {
   const [rows, setRows] = useState<IEntry[]>([]);
@@ -152,12 +153,16 @@ export const EntriesListController = () => {
             return {
               ...entry,
               entryDate: dayjs(entry.entryDate).format("DD-MM-YYYY"),
-              supplierName: suppInfo.company,
-              transporterId: transpInfo.name,
+              supplierName: capitalize(suppInfo.company),
+              transporterId: capitalize(transpInfo.name),
             };
           })
         );
-        setRows(rowsWithSupportingData as IEntry[]);
+        setRows(
+          rowsWithSupportingData.sort((a, b) =>
+            dayjs(a.entryDate).isBefore(b.entryDate) ? 1 : 0
+          ) as IEntry[]
+        );
       }
     };
     fetchSupportingData();

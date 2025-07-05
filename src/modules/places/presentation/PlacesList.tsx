@@ -111,7 +111,7 @@ const PlacesList = ({ places, isLoadingGetPlaces }: IProps) => {
   }
 
   return (
-    <Box height={400} width="100%">
+    <Box height={"100%"} width="100%">
       <AppThemeProvider>
         <DataGrid
           rows={rows}
@@ -133,6 +133,10 @@ const PlacesList = ({ places, isLoadingGetPlaces }: IProps) => {
                 sx: { width: "400px" },
               },
             },
+          }}
+          sx={{
+            height: "100%",
+            width: "100%",
           }}
           localeText={dataGridLocaleText}
           disableColumnFilter

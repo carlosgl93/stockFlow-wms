@@ -8,11 +8,11 @@ import { Logger } from "utils/logger";
  * Retrieves a Place by its ID from Firestore.
  *
  * @param {string} placeId - The ID of the place to retrieve.
- * @returns {Promise<IPlace>} - A promise that resolves to the Place object.
+ * @returns {Promise<IPlace | null>} - A promise that resolves to the Place object or null if not found.
  * @throws {ValidationError} - If the placeId is invalid.
  * @throws {APIError} - If there is an error retrieving the document.
  */
-export const getPlaceById = async (placeId: string): Promise<IPlace> => {
+export const getPlaceById = async (placeId: string): Promise<IPlace | null> => {
   if (!placeId) {
     Logger.error("Invalid placeId");
     throw new ValidationError("Invalid placeId");
@@ -25,7 +25,7 @@ export const getPlaceById = async (placeId: string): Promise<IPlace> => {
 
     if (!placeDoc.exists()) {
       Logger.warn(`No document found with ID: ${placeId}`);
-      throw new APIError("Place not found", "", 404);
+      return null; // Return null instead of throwing error
     }
 
     return { id: placeDoc.id, ...placeDoc.data() } as IPlace;

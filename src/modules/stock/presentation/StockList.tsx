@@ -125,8 +125,9 @@ export const StockList = ({
         calculatedLooseUnitsTotal += looseUnits;
         const placeName =
           placesInfo.find((p) => p.id === item.placeId)?.name ||
-          item.placeId ||
-          t("N/A");
+          (item.placeId && item.placeId !== "NO ESPECIFICARÉ UN LUGAR"
+            ? `${t("Place ID")}: ${item.placeId}`
+            : t("N/A"));
         const unitOfMeasure = item.product?.boxDetails?.unitOfMeasure || "";
         const quantityString = String(
           item.product?.boxDetails?.quantity || "0"
@@ -178,7 +179,7 @@ export const StockList = ({
   }, [lotProducts, placesInfo]);
 
   return (
-    <Box height={400} width="100%">
+    <Box height={"100%"} width="100%">
       <FlexBox mt={2} gap={2} justifyContent={"space-around"}>
         <Text>
           {!productId &&
@@ -241,6 +242,7 @@ export const StockList = ({
               </FlexBox>
             ),
           }}
+          sx={{ height: "100%", width: "100%" }}
           rows={rows}
           columns={columns}
           rowCount={rows?.length}

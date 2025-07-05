@@ -77,21 +77,36 @@ const StockPage = () => {
 
   useEffect(() => {
     const fetchPlacesInfo = async () => {
-      // filter to get unique placesIDs
-      const uniquePlacesIds = Array.from(
-        new Set(stockData?.map((stock) => stock?.placeId))
-      );
+      try {
+        // filter to get unique placesIDs
+        const uniquePlacesIds = Array.from(
+          new Set(stockData?.map((stock) => stock?.placeId))
+        );
 
-      const placesPromises = uniquePlacesIds.map((id) => {
-        if (!id || id === "NO ESPECIFICARÉ UN LUGAR" || id === "")
-          return Promise.resolve(null); // Skip if id is empty
-        return getPlaceById(id!);
-      });
+        const placesPromises = uniquePlacesIds.map(async (id) => {
+          if (!id || id === "NO ESPECIFICARÉ UN LUGAR" || id === "") {
+            return null; // Skip if id is empty
+          }
+          try {
+            return await getPlaceById(id);
+          } catch (error) {
+            Logger.error(`Failed to fetch place with ID: ${id}`, [error]);
+            return null; // Return null if place fetch fails
+          }
+        });
 
-      const placesInfo = await Promise.all(placesPromises);
-      setPlacesInfo(placesInfo.filter((place) => place !== null) as IPlace[]);
+        const placesInfo = await Promise.all(placesPromises);
+        setPlacesInfo(placesInfo.filter((place) => place !== null) as IPlace[]);
+      } catch (error) {
+        Logger.error("Failed to fetch places info", [error]);
+        // Set empty array if everything fails
+        setPlacesInfo([]);
+      }
     };
-    fetchPlacesInfo();
+
+    if (stockData && stockData.length > 0) {
+      fetchPlacesInfo();
+    }
   }, [stockData]);
 
   const renderProductsOptions = () => {

@@ -138,7 +138,7 @@ export const HistoricMovementsList = ({
   ];
 
   return (
-    <Box height={400} width="100%">
+    <Box height={"100%"} width="100%">
       <AppThemeProvider>
         <Button
           onClick={() => exportToExcel(rows, columns)}
@@ -167,6 +167,7 @@ export const HistoricMovementsList = ({
               },
             },
           }}
+          sx={{ height: "100%", width: "100%" }}
           localeText={dataGridLocaleText}
           disableColumnFilter
           disableColumnSelector

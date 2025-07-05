@@ -27,12 +27,11 @@ export const EntriesList = () => {
   }
 
   return (
-    <Box height={400} width="100%">
+    <Box height={"100%"} width="100%">
       <AppThemeProvider>
         <DataGrid
           rows={rows}
           columns={columns}
-          autoPageSize
           slots={{ toolbar: GridToolbar }}
           loading={isLoadingGetEntries || isLoadingRemoveEntry}
           slotProps={{
@@ -50,6 +49,7 @@ export const EntriesList = () => {
               },
             },
           }}
+          sx={{ height: "100%", width: "100%" }}
           localeText={dataGridLocaleText}
           disableColumnFilter
           disableColumnSelector
