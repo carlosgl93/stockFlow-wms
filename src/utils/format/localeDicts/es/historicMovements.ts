@@ -7,7 +7,6 @@ export const historicMovements = {
     "Busca un producto arriba o selecciona 'Todos los Productos'",
   "Clear Filters": "Limpiar Filtros",
   All: "Todos",
-  Entries: "Entradas",
   Dispatches: "Despachos",
   Type: "Tipo",
   Operation: "Operación",

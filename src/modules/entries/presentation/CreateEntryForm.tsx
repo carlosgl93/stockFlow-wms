@@ -386,11 +386,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                       {t("I will not specify a place")}
                     </option>
 
-                    {getPlacesData?.places.map((places) => (
-                      <option key={places.id} value={places.id}>
-                        {places.name}
-                      </option>
-                    ))}
+                    {getPlacesData?.places
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((places) => (
+                        <option key={places.id} value={places.id}>
+                          {places.name}
+                        </option>
+                      ))}
                   </Select>
                 )
               }

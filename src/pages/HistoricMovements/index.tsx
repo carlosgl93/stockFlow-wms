@@ -26,7 +26,7 @@ const HistoricMovements = () => {
   const [selectedType, setSelectedType] = useState<"entry" | "dispatch" | null>(
     null
   );
-  const [searchKey, setSearchKey] = useState(0); // Add key to force Search component re-render
+  const [searchKey, setSearchKey] = useState(0);
 
   const handleProductSelect = (productId: string) => {
     if (productId === "") {
