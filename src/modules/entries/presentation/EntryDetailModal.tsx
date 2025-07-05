@@ -16,7 +16,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { IEntry } from "../types";
-import { useTranslate } from "utils";
+import { capitalize, useTranslate } from "utils";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { getProductById } from "modules/products/infrastructure";
@@ -70,7 +70,7 @@ export const EntryDetailModal = ({ isOpen, onClose, entry }: IProps) => {
                 name:
                   productData.name ||
                   productData.id ||
-                  `Product ${baseProductId}`,
+                  `${t("Product")} ${baseProductId}`,
                 unitsNumber: productEntry.unitsNumber || 0,
                 looseUnitsNumber: productEntry.looseUnitsNumber || 0,
                 totalUnitsNumber: productEntry.totalUnitsNumber || 0,
@@ -86,7 +86,7 @@ export const EntryDetailModal = ({ isOpen, onClose, entry }: IProps) => {
               console.error(`Error fetching product ${baseProductId}:`, error);
               return {
                 id: productEntry.id,
-                name: `Product ${baseProductId}`,
+                name: `${t("Product")} ${baseProductId}`,
                 unitsNumber: productEntry.unitsNumber || 0,
                 looseUnitsNumber: productEntry.looseUnitsNumber || 0,
                 totalUnitsNumber: productEntry.totalUnitsNumber || 0,
@@ -190,7 +190,7 @@ export const EntryDetailModal = ({ isOpen, onClose, entry }: IProps) => {
                               fontWeight="bold"
                               color="blue.600"
                             >
-                              {product.name}
+                              {product.name.toUpperCase()}
                             </Text>
                             <Badge colorScheme="green" size="sm">
                               {t("Lot")}: {product.lotId}
@@ -226,7 +226,7 @@ export const EntryDetailModal = ({ isOpen, onClose, entry }: IProps) => {
                                 <Text as="span" fontWeight="medium">
                                   {t("Unit of Measure")}:
                                 </Text>{" "}
-                                {product.unitOfMeasure}
+                                {t(product.unitOfMeasure)}
                               </Text>
                               <Text fontSize="sm">
                                 <Text as="span" fontWeight="medium">

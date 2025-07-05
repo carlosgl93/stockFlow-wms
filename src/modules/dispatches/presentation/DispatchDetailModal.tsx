@@ -68,18 +68,20 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
                   `Error fetching supplier ${dispatch.supplierId}:`,
                   error
                 );
-                return { company: `Supplier ${dispatch.supplierId}` };
+                return { company: `${t("Supplier")} ${dispatch.supplierId}` };
               })
-            : Promise.resolve({ company: "Unknown Supplier" }),
+            : Promise.resolve({ company: t("Unknown Supplier") }),
           dispatch.transporterId
             ? getTransporterById(dispatch.transporterId).catch((error) => {
                 console.error(
                   `Error fetching transporter ${dispatch.transporterId}:`,
                   error
                 );
-                return { name: `Transporter ${dispatch.transporterId}` };
+                return {
+                  name: `${t("Transporter")} ${dispatch.transporterId}`,
+                };
               })
-            : Promise.resolve({ name: "Unknown Transporter" }),
+            : Promise.resolve({ name: t("Unknown Transporter") }),
         ]);
 
         // Fetch product details for each product in the dispatch
@@ -91,7 +93,7 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
               const productData = await getProductById(product.id);
               productsWithDetails.push({
                 id: product.id,
-                name: productData?.name || `Product ${product.id}`,
+                name: productData?.name || `${t("Product")} ${product.id}`,
                 lotId: product.lotId || "",
                 unitsNumber: product.unitsNumber || 0,
                 looseUnitsNumber: product.looseUnitsNumber || 0,
@@ -102,7 +104,7 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
               console.error(`Error fetching product ${product.id}:`, error);
               productsWithDetails.push({
                 id: product.id,
-                name: `Product ${product.id}`,
+                name: `${t("Product")} ${product.id}`,
                 lotId: product.lotId || "",
                 unitsNumber: product.unitsNumber || 0,
                 looseUnitsNumber: product.looseUnitsNumber || 0,
@@ -117,9 +119,10 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
           ...dispatch,
           productsWithDetails,
           supplierName:
-            supplierData?.company || `Supplier ${dispatch.supplierId}`,
+            supplierData?.company || `${t("Supplier")} ${dispatch.supplierId}`,
           transporterName:
-            transporterData?.name || `Transporter ${dispatch.transporterId}`,
+            transporterData?.name ||
+            `${t("Transporter")} ${dispatch.transporterId}`,
         });
       } catch (error) {
         console.error("Error fetching dispatch details:", error);
@@ -264,7 +267,7 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
                                   fontWeight="bold"
                                   color="blue.600"
                                 >
-                                  {product.name}
+                                  {product.name.toUpperCase()}
                                 </Text>
                                 {product.lotId && (
                                   <Badge colorScheme="green" size="sm">

@@ -82,4 +82,13 @@ export const dispatches = {
   "Total Units in Dispatch": "Total de Unidades en despacho",
   "Dispatch with this docNumber already exists.":
     "Ya existe un despacho con este número de documento.",
+  "Dispatch Details": "Detalles del Despacho",
+  "Loading dispatch details...": "Cargando detalles del despacho...",
+  "Not set": "No establecido",
+  "No description": "Sin descripción",
+  Unknown: "Desconocido",
+  "Unknown Supplier": "Proveedor Desconocido",
+  "Unknown Transporter": "Transportista Desconocido",
+  Product: "Producto",
+  "Pallet Number": "Número de Pallet",
 };

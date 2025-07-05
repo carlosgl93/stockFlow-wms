@@ -110,4 +110,10 @@ export const entries = {
   update: "actualizar",
   delete: "eliminar",
   Detail: "Detalle",
+  "Total Units in Entry": "Unidades Totales en el Ingreso",
+  "Quantity per Unit": "Cantidad por Unidad",
+  "Units per Box": "Unidades por Caja",
+  "Entry Details": "Detalles del Ingreso",
+  Product: "Producto",
+  "Loading products...": "Cargando productos...",
 };

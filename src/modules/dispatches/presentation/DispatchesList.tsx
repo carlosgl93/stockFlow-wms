@@ -220,7 +220,7 @@ export const DispatchesList = ({
     totalUnitsNumber: dispatch?.products.reduce((acc, curr) => {
       return acc + (curr?.totalUnitsNumber || 0);
     }, 0),
-    description: dispatch?.description,
+    description: dispatch?.description?.toUpperCase(),
     dispatchStatus: t(dispatch?.dispatchedStatus || ""),
   }));
 
