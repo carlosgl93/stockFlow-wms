@@ -62,11 +62,13 @@ const HistoricMovements = () => {
       );
     }
     if (uniqueProducts?.length >= 1) {
-      let options = uniqueProducts?.map((product) => (
-        <option key={product!.id} value={product!.id}>
-          {product!.name}
-        </option>
-      ));
+      let options = uniqueProducts
+        ?.sort((a, b) => b?.name.localeCompare(a?.name || "") || 0)
+        .map((product) => (
+          <option key={product!.id} value={product!.id}>
+            {product!.name}
+          </option>
+        ));
       options = [
         <option key="all" value="">
           {t("All Products")}

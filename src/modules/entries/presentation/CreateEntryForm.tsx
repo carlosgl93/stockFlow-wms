@@ -336,11 +336,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                     }}
                   >
                     <option value="">{t("Select a product")}</option>
-                    {products?.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name.toUpperCase()}
-                      </option>
-                    ))}
+                    {products
+                      ?.sort((a, b) => b.name.localeCompare(a.name))
+                      .map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name.toUpperCase()}
+                        </option>
+                      ))}
                   </Select>
                 </>
               )}
@@ -418,7 +420,9 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
-            <FormLabel>{t("Pallet Number")}</FormLabel>
+            <FormLabel>
+              {t("Pallet Number")} ({t("Optional")})
+            </FormLabel>
             <Controller
               name="palletNumber"
               control={control}

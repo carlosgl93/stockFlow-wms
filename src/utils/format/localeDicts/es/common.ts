@@ -46,10 +46,4 @@ export const common = {
   "shadow.md": "0 4px 8px rgba(0, 0, 0, 0.1)",
   "shadow.lg": "0 10px 20px rgba(0, 0, 0, 0.15)",
   "shadow.xl": "0 20px 40px rgba(0, 0, 0, 0.2)",
-
-  // Operation types
-  Operation: "Operación",
-  create: "crear",
-  update: "actualizar",
-  delete: "eliminar",
 };

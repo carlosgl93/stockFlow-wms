@@ -11,7 +11,7 @@ export const DispatchFixture = createFixture<IDispatchForm>({
   // placeId: "place-1",
   stockId: "stock-1",
   dispatchDate: "2023-10-01",
-  deliveryDate: "2023-10-11",
+  // deliveryDate: "2023-10-11",
   palletNumber: "PALLET123",
   unitsNumber: 100,
   looseUnitsNumber: 0,

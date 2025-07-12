@@ -38,6 +38,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { searchLot } from "modules/lots/infraestructure";
 import { IStock } from "modules/stock/types";
 import { InfoIcon } from "@chakra-ui/icons";
+import { capitalize } from "../../../utils/format/capitalize";
 
 export const CreateDispatchForm = ({
   dispatchToEdit,
@@ -106,6 +107,7 @@ export const CreateDispatchForm = ({
     selectedProduct,
     register,
     inStockValue,
+    isLoadingSaveTransporter,
   } = CreateDispatchController({ dispatchToEdit });
 
   const totalValue =
@@ -269,7 +271,7 @@ export const CreateDispatchForm = ({
                       >
                         {transporters?.map((trans) => (
                           <option key={trans.id} value={trans.id}>
-                            {trans.name}
+                            {capitalize(trans.name)}
                           </option>
                         ))}
                       </Select>
@@ -360,11 +362,13 @@ export const CreateDispatchForm = ({
                       setIsSearchingProduct(false); // Close the search
                     }}
                   >
-                    {products?.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name.toLocaleUpperCase("es-CL")}
-                      </option>
-                    ))}
+                    {products
+                      ?.sort((a, b) => b.name.localeCompare(a.name))
+                      .map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name.toLocaleUpperCase("es-CL")}
+                        </option>
+                      ))}
                   </Select>
                 </>
               )}
@@ -480,19 +484,16 @@ export const CreateDispatchForm = ({
         </Box>
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4} isInvalid={!!errors.palletNumber}>
-            <FormLabel>{t("Pallet Number")}</FormLabel>
+            <FormLabel>
+              {t("Pallet Number")} ({t("Optional")})
+            </FormLabel>
             <Controller
               name="palletNumber"
               control={control}
               defaultValue=""
-              rules={{ required: dispatchToEdit ? false : true }}
+              rules={{ required: false }}
               render={({ field }) => <Input {...field} />}
             />
-            {errors.palletNumber && (
-              <Text color="red.500" fontSize="sm">
-                {t("Pallet number is required.")}
-              </Text>
-            )}
           </FormControl>
           <FormControl mb={4} isInvalid={!!errors.unitsNumber}>
             <FormLabel

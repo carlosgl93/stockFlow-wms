@@ -44,4 +44,5 @@ export const stock = {
   "in Lot": "en Lote",
   "There is no stock for this product or lot, try another search":
     "No hay stock para este producto o lote, intenta otra búsqueda",
+  "All Lots": "Todos los lotes",
 };

@@ -1,4 +1,11 @@
-import { Box, Text, FormControl, FormLabel, Select } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  FormControl,
+  FormLabel,
+  Select,
+  Button,
+} from "@chakra-ui/react";
 import { IEntry } from "modules/entries/types";
 import { searchProduct } from "modules/products/infrastructure";
 import { IProduct } from "modules/products/types";
@@ -12,7 +19,7 @@ import { StockList } from "modules/stock/presentation";
 import { useEffect, useState } from "react";
 import { Search } from "shared/Form";
 import { FlexBox, FlexColumn, Loading, Page, PageHeader } from "shared/Layout";
-import { EmptyStateResult, ErrorPageStrategy, LetsBegin } from "shared/Result";
+import { EmptyStateResult, ErrorPageStrategy } from "shared/Result";
 import { useTranslate } from "utils";
 import { Logger } from "utils/logger";
 import { Controller, useForm } from "react-hook-form";
@@ -35,6 +42,7 @@ const StockPage = () => {
 
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
+  const [searchKey, setSearchKey] = useState(0);
   const { getLotProductsData, isLoadingGetLotProducts } = useLotProduct({
     lotId: lotSelected,
     productId: searchedStockProduct,
@@ -43,6 +51,15 @@ const StockPage = () => {
 
   const { control } = useForm();
   const { stockData, isLoadingGetStock } = useStock();
+
+  const handleClearFilters = () => {
+    setSearchedStockProduct("");
+    setLotSelected("");
+    setSearchedProductsResult([]);
+    setLotsResults([]);
+    setProductStock([]);
+    setSearchKey((prev) => prev + 1); // Force Search components to re-render and reset their internal state
+  };
 
   // fetch stock based on the entries
   useEffect(() => {
@@ -121,14 +138,16 @@ const StockPage = () => {
       );
     }
     if (uniqueProducts?.length >= 1) {
-      let options = uniqueProducts?.map((product) => (
-        <option key={product!.id} value={product!.id}>
-          {product!.name}
-        </option>
-      ));
+      let options = uniqueProducts
+        ?.sort((a, b) => b?.name.localeCompare(a?.name || "") || 0)
+        .map((product) => (
+          <option key={product!.id} value={product!.id}>
+            {product!.name}
+          </option>
+        ));
       options = [
         <option key="all" value="">
-          Selecciona un resultado
+          {t("All Products")}
         </option>,
         ...options,
       ];
@@ -136,7 +155,11 @@ const StockPage = () => {
     }
 
     if (!uniqueProducts?.length) {
-      return <option>Busca un producto arriba</option>;
+      return (
+        <option value="">
+          {t("Search for a product above or select 'All Products'")}
+        </option>
+      );
     }
   };
 
@@ -157,7 +180,7 @@ const StockPage = () => {
       ));
       options = [
         <option key="all" value="">
-          Selecciona un resultado
+          {t("All Lots")}
         </option>,
         ...options,
       ];
@@ -165,7 +188,11 @@ const StockPage = () => {
     }
 
     if (!uniqueLots?.length) {
-      return <option>Busca un lote arriba</option>;
+      return (
+        <option value="">
+          {t("Search for a lot above or select 'All Lots'")}
+        </option>
+      );
     }
   };
 
@@ -191,6 +218,7 @@ const StockPage = () => {
               render={({ field }) => (
                 <FlexColumn gap={4}>
                   <Search<IProduct>
+                    key={`product-${searchKey}`}
                     placeholderText={t("Search for a product name")}
                     searchFunction={searchProduct}
                     setResults={setSearchedProductsResult}
@@ -209,7 +237,11 @@ const StockPage = () => {
                     }}
                     value={searchedStockProduct}
                   >
-                    {renderProductsOptions()}
+                    {searchedProductsResult.length > 0 ? (
+                      renderProductsOptions()
+                    ) : (
+                      <option value="">{t("All Products")}</option>
+                    )}
                   </Select>
                 </FlexColumn>
               )}
@@ -226,6 +258,7 @@ const StockPage = () => {
               render={({ field }) => (
                 <FlexColumn gap={4}>
                   <Search<IStock>
+                    key={`lot-${searchKey}`}
                     placeholderText={t("Search by lot")}
                     searchFunction={searchLot}
                     setResults={setLotsResults}
@@ -245,7 +278,11 @@ const StockPage = () => {
                     }}
                     value={lotSelected}
                   >
-                    {renderLotsOptions()}
+                    {lotsResults.length > 0 ? (
+                      renderLotsOptions()
+                    ) : (
+                      <option value="">{t("All Lots")}</option>
+                    )}
                   </Select>
                 </FlexColumn>
               )}
@@ -253,6 +290,19 @@ const StockPage = () => {
             {/* {errors.productId && (
               <Box color="red">{t("This field is required")}</Box>
             )} */}
+          </FormControl>
+          <FormControl mb={4}>
+            <FlexBox alignItems={"center"} mb={2}>
+              <FormLabel>&nbsp;</FormLabel>
+            </FlexBox>
+            <Button
+              colorScheme="gray"
+              variant="outline"
+              onClick={handleClearFilters}
+              size="md"
+            >
+              {t("Clear Filters")}
+            </Button>
           </FormControl>
         </Box>
       </PageHeader>

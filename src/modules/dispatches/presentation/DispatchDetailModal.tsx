@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { getProductById } from "modules/products/infrastructure";
 import { getSupplierById } from "modules/suppliers";
 import { getTransporterById } from "modules/transporters/infrastructure";
+import { capitalize } from "../../../utils/format/capitalize";
 
 interface IProps {
   isOpen: boolean;
@@ -189,15 +190,15 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
               </HStack>
               <Divider />
 
-              <HStack justify="space-between">
+              {/* <HStack justify="space-between">
                 <Text fontWeight="bold">{t("Delivery Date")}:</Text>
                 <Text>
                   {dispatch.deliveryDate
                     ? dayjs(dispatch.deliveryDate).format("DD-MM-YYYY")
                     : t("Not set")}
                 </Text>
-              </HStack>
-              <Divider />
+              </HStack> */}
+              {/* <Divider /> */}
 
               <HStack justify="space-between">
                 <Text fontWeight="bold">{t("Description")}:</Text>
@@ -228,7 +229,7 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
               <HStack justify="space-between">
                 <Text fontWeight="bold">{t("Transporter")}:</Text>
                 <Text>
-                  {dispatchWithDetails?.transporterName ||
+                  {capitalize(dispatchWithDetails?.transporterName || "") ||
                     dispatch.transporterId}
                 </Text>
               </HStack>
@@ -288,22 +289,6 @@ export const DispatchDetailModal = ({ isOpen, onClose, dispatch }: IProps) => {
                                       {product.unitsNumber}
                                     </Badge>
                                   </Text>
-                                  {/* <Text fontSize="md">
-                                    <Text as="span" fontWeight="medium">
-                                      {t("Loose Units")}:
-                                    </Text>{" "}
-                                    <Badge colorScheme="orange" ml={2}>
-                                      {product.looseUnitsNumber}
-                                    </Badge>
-                                  </Text>
-                                  <Text fontSize="md">
-                                    <Text as="span" fontWeight="medium">
-                                      {t("Total Units")}:
-                                    </Text>{" "}
-                                    <Badge colorScheme="green" ml={2}>
-                                      {product.totalUnitsNumber}
-                                    </Badge>
-                                  </Text> */}
                                 </VStack>
 
                                 {product.palletNumber && (

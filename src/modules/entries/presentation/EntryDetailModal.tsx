@@ -228,18 +228,6 @@ export const EntryDetailModal = ({ isOpen, onClose, entry }: IProps) => {
                                 </Text>{" "}
                                 {t(product.unitOfMeasure)}
                               </Text>
-                              <Text fontSize="sm">
-                                <Text as="span" fontWeight="medium">
-                                  {t("Quantity per Unit")}:
-                                </Text>{" "}
-                                {product.qPerUnit}
-                              </Text>
-                              <Text fontSize="sm">
-                                <Text as="span" fontWeight="medium">
-                                  {t("Units per Box")}:
-                                </Text>{" "}
-                                {product.unitsPerBox}
-                              </Text>
                             </VStack>
                           </HStack>
 

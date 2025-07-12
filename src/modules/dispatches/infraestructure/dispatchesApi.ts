@@ -15,6 +15,7 @@ import {
   getDoc,
   query,
   where,
+  orderBy,
   runTransaction,
   DocumentReference,
 } from "firebase/firestore";
@@ -27,7 +28,7 @@ import type { QueryClient } from "@tanstack/react-query";
 export const fetchDispatches = async (): Promise<IDispatch[]> => {
   try {
     const dispatchesRef = collection(db, "dispatches");
-    let q = query(dispatchesRef);
+    let q = query(dispatchesRef, orderBy("docNumber", "desc"));
 
     const snapshot = await getDocs(q);
     const result = snapshot.docs.map(
@@ -94,10 +95,38 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
       }
 
       delete dispatch.id;
-      const dispatchRef = await addDoc(dispatchesRef, {
+
+      // Clean up undefined values before saving to Firestore
+      const cleanDispatchData = removeUndefined({
         ...dispatch,
-        productsIds: dispatch.products.map((product) => product.id), // Add dispatchIds array
+        productsIds: dispatch.products.map((product) => product.id),
+        createdAt: now,
+        dispatchedStatus: dispatch.dispatchedStatus || DispatchedStatus.Pending,
+        // Ensure all required fields have default values
+        description: dispatch.description || "",
+        products: dispatch.products.map((product) =>
+          removeUndefined({
+            ...product,
+            palletNumber: product.palletNumber || "",
+            looseUnitsNumber: product.looseUnitsNumber || 0,
+            totalUnitsNumber: product.totalUnitsNumber || 0,
+            unitsNumber: product.unitsNumber || 0,
+            placeId: product.placeId || "",
+            expirityDate: product.expirityDate || "",
+            unitOfMeasure: product.unitOfMeasure || "",
+            qPerUnit: product.qPerUnit || 1,
+            unitsPerBox: product.unitsPerBox || 1,
+          })
+        ),
       });
+
+      // Log the data being sent to Firestore for debugging
+      Logger.info("Adding dispatch to Firestore", {
+        cleanDispatchData,
+        originalDispatch: dispatch,
+      });
+
+      const dispatchRef = await addDoc(dispatchesRef, cleanDispatchData);
       dispatch.id = dispatchRef.id;
 
       // Add or update LotProduct entry
@@ -131,14 +160,30 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
-      await addDoc(historicMovementsRef, {
+      const cleanHistoricData = removeUndefined({
         type: "dispatch",
         operationType: "create",
         dispatchId: dispatchRef.id,
         ...dispatch,
         productsIds: dispatch.products.map((product) => product.id),
         createdAt: now,
+        description: dispatch.description || "",
+        products: dispatch.products.map((product) =>
+          removeUndefined({
+            ...product,
+            palletNumber: product.palletNumber || "",
+            looseUnitsNumber: product.looseUnitsNumber || 0,
+            totalUnitsNumber: product.totalUnitsNumber || 0,
+            unitsNumber: product.unitsNumber || 0,
+            placeId: product.placeId || "",
+            expirityDate: product.expirityDate || "",
+            unitOfMeasure: product.unitOfMeasure || "",
+            qPerUnit: product.qPerUnit || 1,
+            unitsPerBox: product.unitsPerBox || 1,
+          })
+        ),
       });
+      await addDoc(historicMovementsRef, cleanHistoricData);
 
       dispatch.createdAt = now;
       dispatch.dispatchedStatus = DispatchedStatus.Pending;
@@ -156,11 +201,35 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
   }
 };
 
-// Utility to remove undefined fields from an object (shallow) and cast to Firestore update type
+// Utility to remove undefined fields from an object (deep clean) and cast to Firestore update type
 function removeUndefined<T extends object>(obj: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([_, v]) => v !== undefined)
-  ) as Partial<T>;
+  const result: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        // Recursively clean nested objects
+        result[key] = removeUndefined(value as Record<string, unknown>);
+      } else if (Array.isArray(value)) {
+        // Clean arrays of objects
+        result[key] = value
+          .map((item) =>
+            item !== null && typeof item === "object"
+              ? removeUndefined(item as Record<string, unknown>)
+              : item
+          )
+          .filter((item) => item !== undefined);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+
+  return result as Partial<T>;
 }
 
 export const updateDispatch = async ({
@@ -267,11 +336,12 @@ export const updateDispatch = async ({
         dispatchDocRef,
         removeUndefined({
           dispatchDate: values.dispatchDate,
-          deliveryDate: values.deliveryDate,
+          // deliveryDate: values.deliveryDate,
           supplierId: values.supplierId,
           docNumber: values.docNumber,
           transporterId: values.transporterId,
           description: values.description,
+          dispatchedStatus: values.dispatchedStatus || DispatchedStatus.Pending,
           updatedAt: now,
           productsIds: values.products.map((product) => product.id),
           products: values.products.map((product) => ({

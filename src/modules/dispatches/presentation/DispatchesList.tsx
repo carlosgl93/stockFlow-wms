@@ -213,7 +213,7 @@ export const DispatchesList = ({
       .filter(Boolean)
       .join(", "),
     dispatchDate: dayjs(dispatch?.dispatchDate).format("DD-MM-YYYY"),
-    deliveryDate: dispatch?.deliveryDate,
+    // deliveryDate: dispatch?.deliveryDate,
     palletNumber: dispatch?.products[i]?.palletNumber,
     unitsNumber: dispatch?.products[i]?.unitsNumber,
     looseUnitsNumber: dispatch?.products[i]?.looseUnitsNumber,

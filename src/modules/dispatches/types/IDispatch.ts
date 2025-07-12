@@ -8,7 +8,7 @@ export interface IDispatch {
   transporterId: string;
   products: IProductEntry[];
   dispatchDate: string;
-  deliveryDate: string;
+  // deliveryDate: string;
   createdAt?: string;
   updatedAt?: string;
   dispatchedStatus?: DispatchedStatus;
@@ -34,7 +34,7 @@ export interface IDispatchForm {
   description?: string;
   transporterId: string;
   dispatchDate: string;
-  deliveryDate: string;
+  // deliveryDate: string;
   createdAt?: string;
   updatedAt?: string;
   dispatchedStatus?: DispatchedStatus;

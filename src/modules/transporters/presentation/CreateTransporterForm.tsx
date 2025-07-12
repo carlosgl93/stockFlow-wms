@@ -53,18 +53,18 @@ export const CreateTransporterForm = ({
     }
     // Handle form submission logic here
     Logger.info("handle data store", data);
-    if (location.pathname.includes("edit")) {
-      updateTransporter({
-        transId: transporterToEdit?.id || "",
-        transporter: data,
-      });
-    } else {
-      saveTransporter(data, {
-        onSuccess: (newTransporter) => {
-          if (onSuccess) onSuccess(newTransporter);
-        },
-      });
-    }
+    // if (location.pathname.includes("edit")) {
+    //   updateTransporter({
+    //     transId: transporterToEdit?.id || "",
+    //     transporter: data,
+    //   });
+    // } else {
+    saveTransporter(data, {
+      onSuccess: (newTransporter) => {
+        if (onSuccess) onSuccess(newTransporter);
+      },
+    });
+    // }
   };
 
   useEffect(() => {

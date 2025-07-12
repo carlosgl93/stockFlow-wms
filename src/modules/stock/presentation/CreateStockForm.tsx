@@ -179,11 +179,13 @@ export const CreateStockForm = ({ stockToEdit }: { stockToEdit?: IStock }) => {
                       setIsSearchingProduct(false); // Close the search
                     }}
                   >
-                    {products?.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
+                    {products
+                      ?.sort((a, b) => b.name.localeCompare(a.name))
+                      .map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
                   </Select>
                 </>
               )}

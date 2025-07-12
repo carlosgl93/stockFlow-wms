@@ -28,7 +28,7 @@ import type { QueryClient } from "@tanstack/react-query";
 export const fetchEntries = async (): Promise<IEntry[]> => {
   try {
     const entriesRef = collection(db, "entries");
-    const q = query(entriesRef, orderBy("createdAt"));
+    const q = query(entriesRef, orderBy("docNumber", "desc"));
     const snapshot = await getDocs(q);
     const entries = snapshot.docs.map(
       (doc) => ({ ...doc.data(), id: doc.id } as IEntry)

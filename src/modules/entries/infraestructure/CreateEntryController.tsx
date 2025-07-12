@@ -483,7 +483,13 @@ export const CreateEntryController = ({
   ];
 
   const validateProductToEnter = (product: IEntryForm) => {
-    const { totalUnitsNumber, lotId, expirityDate, productId } = product;
+    const {
+      totalUnitsNumber,
+      lotId,
+      expirityDate,
+      productId,
+      looseUnitsNumber,
+    } = product;
 
     if (!productId) {
       toast({
@@ -495,7 +501,11 @@ export const CreateEntryController = ({
       });
       return false;
     }
-    if (totalUnitsNumber === 0 || totalUnitsNumber === undefined) {
+    if (
+      totalUnitsNumber === undefined ||
+      totalUnitsNumber === null ||
+      totalUnitsNumber <= 0
+    ) {
       toast({
         title: "Error",
         description: t("Total units number is required"),

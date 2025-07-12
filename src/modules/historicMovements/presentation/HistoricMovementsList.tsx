@@ -148,7 +148,6 @@ export const HistoricMovementsList = ({
           Export to Excel
         </Button>
         <DataGrid
-          autoPageSize
           rows={rows}
           columns={columns}
           loading={isLoading}

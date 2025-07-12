@@ -91,4 +91,6 @@ export const dispatches = {
   "Unknown Transporter": "Transportista Desconocido",
   Product: "Producto",
   "Pallet Number": "Número de Pallet",
+  Optional: "Opcional",
+  "Document number is required.": "Se requiere el número de documento.",
 };

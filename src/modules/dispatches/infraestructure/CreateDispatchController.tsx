@@ -57,7 +57,12 @@ export const CreateDispatchController = ({
   const { t } = useTranslate();
   const { getSuppliersData, isLoadingGetSuppliers } = useSuppliers({});
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
-  const { getTransporters, isLoadingGetTransporters } = useTransporters();
+  const {
+    getTransporters,
+    isLoadingGetTransporters,
+    isLoadingSaveTransporter,
+    saveTransporter,
+  } = useTransporters();
   const { products: getProductsData, isFetching } = useProducts();
   const { getPlacesData, isLoadingGetPlaces } = usePlaces();
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
@@ -132,7 +137,8 @@ export const CreateDispatchController = ({
   );
 
   const handleNewTransporter = useCallback(
-    (newTransporter: ITransporter) => {
+    async (newTransporter: ITransporter) => {
+      // await saveTransporter(newTransporter);
       setTransporters((prev) => [...prev, newTransporter]);
       setValue("transporterId", newTransporter.id || "");
       onCloseCreateTransporter();
@@ -193,7 +199,11 @@ export const CreateDispatchController = ({
       });
       return false;
     }
-    if (totalUnitsNumber === 0 || totalUnitsNumber === undefined) {
+    if (
+      totalUnitsNumber === undefined ||
+      totalUnitsNumber === null ||
+      totalUnitsNumber <= 0
+    ) {
       toast({
         title: "Error",
         description: t("Total units number is required"),
@@ -274,7 +284,7 @@ export const CreateDispatchController = ({
       supplierId: data.supplierId,
       transporterId: data.transporterId,
       dispatchDate: data.dispatchDate,
-      deliveryDate: data.deliveryDate,
+      // deliveryDate: data.deliveryDate,
       docNumber: data.docNumber,
       dispatchedStatus: data.dispatchedStatus, // Include the new field
       products: addedToDispatch,
@@ -399,7 +409,7 @@ export const CreateDispatchController = ({
     },
     { field: "extCode", headerName: t("Ext Code"), width: 150 },
     { field: "productName", headerName: t("Product Name"), width: 250 },
-    { field: "lotId", headerName: t("Lot"), width: 100 },
+    { field: "lotId", headerName: t("Lot"), width: 250 },
     { field: "palletNumber", headerName: t("Pallet"), width: 150 },
     { field: "unitsNumber", headerName: t("Units Number"), width: 150 },
     {
@@ -686,5 +696,6 @@ export const CreateDispatchController = ({
     setSelectedProduct,
     register,
     inStockValue,
+    isLoadingSaveTransporter,
   };
 };
