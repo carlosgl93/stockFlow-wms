@@ -211,3 +211,33 @@ export const getStockByProdIdAndLotId = async (
     throw new APIError("Failed to fetch stock", error);
   }
 };
+
+export const fetchAllStock = async (): Promise<IRenderStock[]> => {
+  try {
+    const stockRef = collection(db, "stock");
+    // No limit, fetch all stock entries
+    const q = query(stockRef, orderBy("createdAt"));
+    const snapshot = await getDocs(q);
+    const stockEntries = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as IStock)
+    );
+
+    // Fetch all product details in a single batch
+    const productPromises = stockEntries.map((stock) =>
+      getDoc(doc(db, "products", stock.productId))
+    );
+    const productDocs = await Promise.all(productPromises);
+
+    // Map the product details to their respective stock entries
+    const stockWithProducts = stockEntries.map((stock, index) => {
+      const productDoc = productDocs[index];
+      const productData = productDoc.exists()
+        ? (productDoc.data() as IProduct)
+        : null;
+      return { ...stock, product: productData as IProduct };
+    });
+    return stockWithProducts;
+  } catch (error) {
+    throw new APIError("Failed to fetch all stock", error);
+  }
+};

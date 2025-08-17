@@ -11,6 +11,7 @@ import { Logger } from "utils/logger";
 import { IProduct } from "modules/products/types";
 import dayjs from "dayjs";
 import { ILotProductWithProduct } from "modules/lotProduct/infraestructure/queries/getLotProducts";
+import { Tooltip } from "@mui/material";
 
 interface IProps {
   entries: IEntry[];
@@ -73,6 +74,44 @@ export const StockList = ({
       },
     },
     { field: "unitsNumber", headerName: t("Total Units"), width: 150 },
+    {
+      field: "unitOfMeasure",
+      headerName: t("Unit of Measure"),
+      renderCell: (params) => {
+        return (
+          <Tooltip
+            title={
+              `${params.row.unitsNumber} ${t(params.row.unitOfMeasure)}` ||
+              t("N/A")
+            }
+          >
+            <Text>{t(params.formattedValue) || t("N/A")}</Text>
+          </Tooltip>
+        );
+      },
+      width: 150,
+    },
+    {
+      field: "totalUnits",
+      headerName: t("Medida * Cantidad"),
+      renderCell: (params) => {
+        return (
+          <Tooltip title={params.row.totalUnitsTooltipLabel}>
+            <Text>{params.row.totalUnits}</Text>
+          </Tooltip>
+        );
+      },
+      width: 150,
+    },
+
+    {
+      field: "expirityDate",
+      headerName: t("Expiry Date"),
+      width: 150,
+      renderCell: (params) => {
+        return <Text>{params.formattedValue || t("N/A")}</Text>;
+      },
+    },
     {
       field: "expirityDate",
       headerName: t("Expiry Date"),
@@ -144,10 +183,19 @@ export const StockList = ({
             item.product?.name.toLocaleUpperCase("es-CL") || t("N/A"),
           lotId: item.lotId,
           placeId: placeName,
-          totalUnits: `${totalQuantity} ${unitOfMeasure}`,
+          totalUnits: `${totalQuantity} ${t(unitOfMeasure || "")}`,
+          totalUnitsTooltipLabel: `Cada unidad esta conformada por ${
+            item.product?.boxDetails.quantity
+          } ${t(
+            item.product?.boxDetails.unitOfMeasure || ""
+          )}, entonces el total es ${units} * ${
+            item.product?.boxDetails.quantity
+          }  = ${totalQuantity} ${t(unitOfMeasure || "")}`,
+          unitOfMeasure: unitOfMeasure,
           unitsNumber: units,
           looseUnitsNumber: looseUnits,
           expirityDate: expDate,
+          ...item.product?.boxDetails,
         };
       });
 
@@ -247,6 +295,7 @@ export const StockList = ({
           columns={columns}
           rowCount={rows?.length}
           loading={isLoading}
+          getRowId={(item) => item.id}
         />
       </AppThemeProvider>
     </Box>

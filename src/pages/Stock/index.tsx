@@ -50,7 +50,7 @@ const StockPage = () => {
   const { t } = useTranslate();
 
   const { control } = useForm();
-  const { stockData, isLoadingGetStock } = useStock();
+  const { stockData, isLoadingGetStock, handleDownloadAllStock } = useStock();
 
   const handleClearFilters = () => {
     setSearchedStockProduct("");
@@ -59,6 +59,11 @@ const StockPage = () => {
     setLotsResults([]);
     setProductStock([]);
     setSearchKey((prev) => prev + 1); // Force Search components to re-render and reset their internal state
+  };
+
+  const onDownloadAllStock = () => {
+    // using xlsx package to download all stock data
+    handleDownloadAllStock();
   };
 
   // fetch stock based on the entries
@@ -302,6 +307,19 @@ const StockPage = () => {
               size="md"
             >
               {t("Clear Filters")}
+            </Button>
+          </FormControl>
+          <FormControl mb={4}>
+            <FlexBox alignItems={"center"} mb={2}>
+              <FormLabel>&nbsp;</FormLabel>
+            </FlexBox>
+            <Button
+              colorScheme="gray"
+              variant="outline"
+              onClick={onDownloadAllStock}
+              size="md"
+            >
+              {t("Export All Stock")}
             </Button>
           </FormControl>
         </Box>
