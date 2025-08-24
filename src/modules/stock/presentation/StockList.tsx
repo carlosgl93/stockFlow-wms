@@ -10,7 +10,6 @@ import { IPlace } from "modules/places/infra";
 import { Logger } from "utils/logger";
 import { IProduct } from "modules/products/types";
 import dayjs from "dayjs";
-import { ILotProductWithProduct } from "modules/lotProduct/infraestructure/queries/getLotProducts";
 import { Tooltip } from "@mui/material";
 
 interface IProps {
@@ -22,7 +21,7 @@ interface IProps {
   placesInfo: IPlace[];
   isLoading: boolean;
   stockData: IRenderStock[];
-  lotProducts: ILotProductWithProduct[];
+  filteredStock: IStock[];
 }
 
 interface IRow {
@@ -47,7 +46,8 @@ export const StockList = ({
   selectedLot,
   placesInfo,
   isLoading,
-  lotProducts,
+  stockData,
+  filteredStock,
 }: IProps) => {
   const { t, dataGridLocaleText } = useTranslate();
   const [totalUnits, setTotalUnits] = useState<number>(0);
@@ -103,7 +103,6 @@ export const StockList = ({
       },
       width: 150,
     },
-
     {
       field: "expirityDate",
       headerName: t("Expiry Date"),
@@ -112,26 +111,6 @@ export const StockList = ({
         return <Text>{params.formattedValue || t("N/A")}</Text>;
       },
     },
-    {
-      field: "expirityDate",
-      headerName: t("Expiry Date"),
-      width: 150,
-      renderCell: (params) => {
-        return <Text>{params.formattedValue || t("N/A")}</Text>;
-      },
-    },
-    // { field: "docNumber", headerName: t("Doc Number"), width: 150 }, // Remove or adapt if not in stockData
-    // { field: "palletNumber", headerName: t("Pallet Number"), width: 150 }, // Remove or adapt
-    // { field: "unitsNumber", headerName: t("Units Number"), width: 150 }, // Remove or adapt
-    // {
-    //   field: "looseUnitsNumber",
-    //   headerName: t("Loose Units Number"), // Remove or adapt
-    //   width: 150,
-    // },
-    // { field: "expiryDate", headerName: t("Expiry Date"), width: 150 }, // Remove or adapt
-    // { field: "documentType", headerName: t("Document Type"), width: 150 }, // Remove or adapt
-    // { field: "supplier", headerName: t("Supplier"), width: 150 }, // Remove or adapt
-    // { field: "transporter", headerName: t("Transporter"), width: 150 }, // Remove or adapt
   ];
 
   const generateRows = useCallback((): {
@@ -146,63 +125,67 @@ export const StockList = ({
     let calculatedWholeUnitsTotal = 0;
     let calculatedLooseUnitsTotal = 0;
 
-    const newRows = lotProducts
-      ?.filter((item) => {
-        const productMatch = !productId || item.productId === productId;
-        const lotMatch = !selectedLot || item.lotId === selectedLot;
-        return productMatch && lotMatch;
-      })
-      .map((item) => {
-        Logger.info("Processing item in generateRows:", {
-          item,
-        });
-        const units = item.unitsNumber || 0;
-        const looseUnits = item.looseUnitsNumber || 0;
-        const currentTotal = units + looseUnits;
-        calculatedTotalUnits += currentTotal;
-        calculatedWholeUnitsTotal += units;
-        calculatedLooseUnitsTotal += looseUnits;
-        const placeName =
-          placesInfo.find((p) => p.id === item.placeId)?.name ||
-          (item.placeId && item.placeId !== "NO ESPECIFICARÉ UN LUGAR"
-            ? `${t("Place ID")}: ${item.placeId}`
-            : t("N/A"));
-        const unitOfMeasure = item.product?.boxDetails?.unitOfMeasure || "";
-        const quantityString = String(
-          item.product?.boxDetails?.quantity || "0"
-        );
-        const quantityPerUnit = parseFloat(quantityString);
-        const totalQuantity = currentTotal * quantityPerUnit;
-        const expDate = item.expirationDate
-          ? dayjs(item.expirationDate).format("DD/MM/YYYY")
-          : t("N/A");
+    // Use filtered stock when filters are applied, otherwise use full stockData
+    let dataToUse: IRenderStock[] = [];
 
-        return {
-          id: item.id!,
-          productName:
-            item.product?.name.toLocaleUpperCase("es-CL") || t("N/A"),
-          lotId: item.lotId,
-          placeId: placeName,
-          totalUnits: `${totalQuantity} ${t(unitOfMeasure || "")}`,
-          totalUnitsTooltipLabel: `Cada unidad esta conformada por ${
-            item.product?.boxDetails.quantity
-          } ${t(
-            item.product?.boxDetails.unitOfMeasure || ""
-          )}, entonces el total es ${units} * ${
-            item.product?.boxDetails.quantity
-          }  = ${totalQuantity} ${t(unitOfMeasure || "")}`,
-          unitOfMeasure: unitOfMeasure,
-          unitsNumber: units,
-          looseUnitsNumber: looseUnits,
-          expirityDate: expDate,
-          ...item.product?.boxDetails,
-        };
+    if ((productId || selectedLot) && filteredStock.length > 0) {
+      // Map filtered stock items to their corresponding stockData items to get product details
+      dataToUse = filteredStock
+        .map((stock) => stockData.find((item) => item.id === stock.id))
+        .filter((item): item is IRenderStock => item !== undefined);
+    } else {
+      // Use full stockData when no filters are applied
+      dataToUse = stockData || [];
+    }
+
+    const newRows = dataToUse?.map((item) => {
+      Logger.info("Processing item in generateRows:", {
+        item,
       });
+      const units = item.unitsNumber || 0;
+      const looseUnits = item.looseUnitsNumber || 0;
+      const currentTotal = units + looseUnits;
+      calculatedTotalUnits += currentTotal;
+      calculatedWholeUnitsTotal += units;
+      calculatedLooseUnitsTotal += looseUnits;
+      const placeName =
+        placesInfo.find((p) => p.id === item.placeId)?.name ||
+        (item.placeId && item.placeId !== "NO ESPECIFICARÉ UN LUGAR"
+          ? `${t("Place ID")}: ${item.placeId}`
+          : t("N/A"));
+      const unitOfMeasure = item.product?.boxDetails?.unitOfMeasure || "";
+      const quantityString = String(item.product?.boxDetails?.quantity || "0");
+      const quantityPerUnit = parseFloat(quantityString);
+      const totalQuantity = currentTotal * quantityPerUnit;
+      const expDate = item.expirityDate
+        ? dayjs(item.expirityDate).format("DD/MM/YYYY")
+        : t("N/A");
 
-    const matchProduct = lotProducts?.find((i) => i.productId === productId);
+      return {
+        id: item.id!,
+        productName: item.product?.name.toLocaleUpperCase("es-CL") || t("N/A"),
+        lotId: item.lotId,
+        placeId: placeName,
+        totalUnits: `${totalQuantity} ${t(unitOfMeasure || "")}`,
+        totalUnitsTooltipLabel: `Cada unidad esta conformada por ${
+          item.product?.boxDetails.quantity
+        } ${t(
+          item.product?.boxDetails.unitOfMeasure || ""
+        )}, entonces el total es ${units} * ${
+          item.product?.boxDetails.quantity
+        }  = ${totalQuantity} ${t(unitOfMeasure || "")}`,
+        unitOfMeasure: unitOfMeasure,
+        unitsNumber: units,
+        looseUnitsNumber: looseUnits,
+        expirityDate: expDate,
+        ...item.product?.boxDetails,
+      };
+    });
+
+    const matchProduct = dataToUse?.find((i) => i.productId === productId);
     const unitsPerBox = matchProduct?.product?.boxDetails?.units;
     let calculatedTotalBoxes = 0;
-    if (lotProducts && unitsPerBox && calculatedWholeUnitsTotal > 0) {
+    if (dataToUse && unitsPerBox && calculatedWholeUnitsTotal > 0) {
       calculatedTotalBoxes = calculatedWholeUnitsTotal / unitsPerBox;
     }
 
@@ -214,17 +197,17 @@ export const StockList = ({
         matchedProduct: matchProduct?.product || null,
       },
     };
-  }, [lotProducts, productId, selectedLot, placesInfo, t]);
+  }, [stockData, filteredStock, productId, selectedLot, placesInfo, t]);
 
   useEffect(() => {
-    if (lotProducts) {
+    if (stockData) {
       const { rows, stats } = generateRows();
       setRows(rows);
       setTotalUnits(stats.totalUnits);
       setTotalBoxes(stats.totalBoxes);
       setMatchedProduct(stats.matchedProduct);
     }
-  }, [lotProducts, placesInfo]);
+  }, [stockData, filteredStock, placesInfo, generateRows]);
 
   return (
     <Box height={"100%"} width="100%">

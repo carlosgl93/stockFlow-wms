@@ -26,7 +26,6 @@ import { Controller, useForm } from "react-hook-form";
 import { IStock, ISuppsAndTrans } from "modules/stock/types";
 import { searchLot } from "modules/lots/infraestructure";
 import { getPlaceById, IPlace } from "modules/places/infra";
-import { useLotProduct } from "modules/lotProduct/infraestructure";
 
 const StockPage = () => {
   const [productEntries, setProductEntries] = useState<IEntry[]>([]);
@@ -43,10 +42,6 @@ const StockPage = () => {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingLotSearch, setIsLoadingLotSearch] = useState(false);
   const [searchKey, setSearchKey] = useState(0);
-  const { getLotProductsData, isLoadingGetLotProducts } = useLotProduct({
-    lotId: lotSelected,
-    productId: searchedStockProduct,
-  });
   const { t } = useTranslate();
 
   const { control } = useForm();
@@ -329,20 +324,18 @@ const StockPage = () => {
       {/* {(isLoadingGetLotProducts ||
         isLoadingProductSearch ||
         isLoadingLotSearch) && <Loading size="sm" />} */}
-      {getLotProductsData?.lotProducts ? (
+      {stockData && stockData.length > 0 ? (
         <StockList
           entries={productEntries}
           stock={productStock}
           stockData={stockData}
+          filteredStock={productStock} // Pass the filtered stock data
           productId={searchedStockProduct}
           selectedLot={lotSelected}
           suppsAndTrans={suppsAndTrans}
           placesInfo={placesInfo}
-          lotProducts={getLotProductsData?.lotProducts}
           isLoading={
-            isLoadingGetStock ||
-            isLoadingProductSearch ||
-            isLoadingGetLotProducts
+            isLoadingGetStock || isLoadingProductSearch || isLoadingLotSearch
           }
         />
       ) : (

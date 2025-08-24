@@ -65,7 +65,7 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
 
         // Query stock using productId and lotId
         const stockQuery = query(
-          collection(db, "lotProducts"),
+          collection(db, "stock"),
           where("productId", "==", product.id),
           where("lotId", "==", product.lotId)
         );
@@ -79,9 +79,12 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
           stockRef = stockSnapshot.docs[0].ref;
           stockData = stockSnapshot.docs[0].data() as IStock;
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber - product.unitsNumber,
+            unitsNumber:
+              Number(stockData.unitsNumber || 0) -
+              Number(product.unitsNumber || 0),
             looseUnitsNumber:
-              stockData.looseUnitsNumber - product.looseUnitsNumber,
+              Number(stockData.looseUnitsNumber || 0) -
+              Number(product.looseUnitsNumber || 0),
             updatedAt: now,
           });
         } else {
@@ -128,35 +131,6 @@ export const addDispatch = async (dispatch: IDispatch): Promise<IDispatch> => {
 
       const dispatchRef = await addDoc(dispatchesRef, cleanDispatchData);
       dispatch.id = dispatchRef.id;
-
-      // Add or update LotProduct entry
-      for (const product of dispatch.products) {
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", product.lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductRef = doc(
-            db,
-            "lotProducts",
-            lotProductSnapshot.docs[0].id
-          );
-          const lotProductData = lotProductSnapshot.docs[0].data();
-          transaction.update(lotProductRef, {
-            unitsNumber:
-              (lotProductData.unitsNumber || 0) - product.unitsNumber,
-            looseUnitsNumber:
-              (lotProductData.looseUnitsNumber || 0) - product.looseUnitsNumber,
-          });
-        } else {
-          throw new ValidationError(
-            "LotProduct entry not found for the given product and lot."
-          );
-        }
-      }
 
       // Add to historicMovements collection
       const historicMovementsRef = collection(db, "historicMovements");
@@ -401,7 +375,7 @@ export const updateDispatch = async ({
 
       // Remove products that are no longer in the updated dispatch
       for (const existingProduct of productsToRemove) {
-        // Update stock for deleted product
+        // Update stock for deleted product (restore stock)
         const stockQuery = query(
           collection(db, "stock"),
           where("productId", "==", existingProduct.id),
@@ -412,39 +386,15 @@ export const updateDispatch = async ({
           const stockRef = stockSnapshot.docs[0].ref;
           const stockData = stockSnapshot.docs[0].data() as IStock;
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber + existingProduct.unitsNumber,
+            // Add back quantities because product is being removed from dispatch
+            unitsNumber:
+              Number(stockData.unitsNumber || 0) +
+              Number(existingProduct.unitsNumber || 0),
             looseUnitsNumber:
-              stockData.looseUnitsNumber + existingProduct.looseUnitsNumber,
+              Number(stockData.looseUnitsNumber || 0) +
+              Number(existingProduct.looseUnitsNumber || 0),
             updatedAt: now,
           });
-        }
-        // Update LotProduct entry for deleted product
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", existingProduct.id),
-          where("lotId", "==", existingProduct.lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            (lotProductData.unitsNumber || 0) + existingProduct.unitsNumber;
-          const newLooseUnitsNumber =
-            (lotProductData.looseUnitsNumber || 0) +
-            existingProduct.looseUnitsNumber;
-
-          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-            transaction.update(lotProductRef, {
-              unitsNumber: Math.max(0, newUnitsNumber),
-              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            });
-          } else {
-            transaction.delete(lotProductRef);
-          }
         }
       }
 
@@ -483,7 +433,7 @@ export const updateDispatch = async ({
           stockData = {
             id: stockRef.id,
             productId: product.id,
-            lotId: lotId,
+            lotId,
             unitsNumber: 0,
             looseUnitsNumber: 0,
             createdAt: now,
@@ -503,61 +453,24 @@ export const updateDispatch = async ({
         let unitsDifference = 0;
         let looseUnitsDifference = 0;
         if (existingProduct) {
-          unitsDifference = product.unitsNumber - existingProduct.unitsNumber;
+          unitsDifference =
+            Number(product.unitsNumber || 0) -
+            Number(existingProduct.unitsNumber || 0);
           looseUnitsDifference =
-            product.looseUnitsNumber - existingProduct.looseUnitsNumber;
+            Number(product.looseUnitsNumber || 0) -
+            Number(existingProduct.looseUnitsNumber || 0);
         } else {
-          unitsDifference = product.unitsNumber;
-          looseUnitsDifference = product.looseUnitsNumber;
+          unitsDifference = Number(product.unitsNumber || 0);
+          looseUnitsDifference = Number(product.looseUnitsNumber || 0);
         }
 
         // Update stock quantities based on the difference (dispatch = subtract)
         transaction.update(stockRef, {
-          unitsNumber: stockData.unitsNumber - unitsDifference,
-          looseUnitsNumber: stockData.looseUnitsNumber - looseUnitsDifference,
+          unitsNumber: Number(stockData.unitsNumber || 0) - unitsDifference,
+          looseUnitsNumber:
+            Number(stockData.looseUnitsNumber || 0) - looseUnitsDifference,
           updatedAt: now,
         });
-
-        // Update LotProduct entry
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            (lotProductData.unitsNumber || 0) - unitsDifference;
-          const newLooseUnitsNumber =
-            (lotProductData.looseUnitsNumber || 0) - looseUnitsDifference;
-
-          transaction.update(lotProductRef, {
-            id: lotProductRef.id,
-            lotId: lotId,
-            productId: product.id,
-            unitsNumber: Math.max(0, newUnitsNumber),
-            expirationDate: product?.expirityDate || "",
-            looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            placeId: product?.placeId,
-          });
-        } else {
-          const lotProductRef = doc(collection(db, "lotProducts"));
-          transaction.set(lotProductRef, {
-            id: lotProductRef.id,
-            lotId: lotId,
-            productId: product.id,
-            unitsNumber: Math.max(0, -unitsDifference),
-            looseUnitsNumber: Math.max(0, -looseUnitsDifference),
-            expirationDate: product?.expirityDate || "",
-            placeId:
-              values.products.find((p) => p.id === product.id)?.placeId || "",
-          });
-        }
       }
 
       // Delete products that are no longer in the updated dispatch (already handled above)
@@ -606,41 +519,14 @@ export const removeDispatch = async (dispatchId: string): Promise<void> => {
         if (stockDoc.exists()) {
           const stockData = stockDoc.data() as IStock;
           transaction.update(stockRef, {
-            unitsNumber: stockData.unitsNumber + product.unitsNumber,
+            unitsNumber:
+              Number(stockData.unitsNumber || 0) +
+              Number(product.unitsNumber || 0),
             looseUnitsNumber:
-              stockData.looseUnitsNumber + product.looseUnitsNumber,
+              Number(stockData.looseUnitsNumber || 0) +
+              Number(product.looseUnitsNumber || 0),
             updatedAt: dateVO.now(),
           });
-        }
-
-        // Remove corresponding LotProduct entry
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", product.lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            lotProductData.unitsNumber + product.unitsNumber;
-          const newLooseUnitsNumber =
-            lotProductData.looseUnitsNumber + product.looseUnitsNumber;
-
-          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-            // If more units exist, update the quantity
-            transaction.update(lotProductRef, {
-              unitsNumber: Math.max(0, newUnitsNumber),
-              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            });
-          } else {
-            // If all units are removed, delete the lotProduct entry
-            transaction.delete(lotProductRef);
-          }
         }
       }
 

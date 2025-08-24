@@ -20,10 +20,10 @@ export const db = getFirestore(app);
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
 
-// if (process.env.NODE_ENV === "development") {
-//   connectAuthEmulator(auth, "http://localhost:9099");
-//   connectFirestoreEmulator(db, "localhost", 8080);
-//   connectFunctionsEmulator(functions, "localhost", 5001);
-//   connectStorageEmulator(storage, "localhost", 9199);
-//   Logger.info("Running on emulators, localhost:4000");
-// }
+if (process.env.NODE_ENV === "development") {
+  connectAuthEmulator(auth, "http://localhost:9099");
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectFunctionsEmulator(functions, "localhost", 5001);
+  connectStorageEmulator(storage, "localhost", 9199);
+  Logger.info("Running on emulators, localhost:4000");
+}
