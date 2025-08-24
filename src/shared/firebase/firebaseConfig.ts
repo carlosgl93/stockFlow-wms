@@ -6,12 +6,13 @@ import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { Logger } from "utils/logger";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBaZ2ewJw0Hf-dtAJKn2AXzjT9_5U44PTo",
-  authDomain: "stockflow-wms.firebaseapp.com",
-  projectId: "stockflow-wms",
-  storageBucket: "stockflow-wms.firebasestorage.app",
-  messagingSenderId: "289133893802",
-  appId: "1:289133893802:web:ab96e7ade0170d27d7d8d3",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
