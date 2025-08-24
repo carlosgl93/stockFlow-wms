@@ -15,6 +15,7 @@ export const Layout = () => {
         display="flex"
         flexDirection="column"
         minHeight="75vh"
+        // backgroundColor={"white"}
       >
         <Outlet />
       </chakra.div>

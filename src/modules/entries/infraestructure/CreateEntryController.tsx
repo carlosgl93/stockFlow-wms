@@ -171,6 +171,7 @@ export const CreateEntryController = ({
     }
 
     const dataToSave: EntryDTO = makeEntryFromForm(data);
+    console.log({ dataToSave });
 
     try {
       if (entryToEdit) {

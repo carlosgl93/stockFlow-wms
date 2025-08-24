@@ -24,14 +24,14 @@ export const DesktopNav = () => {
   const { pathname } = useLocation();
   const navItems = useNavItems();
 
-  const linkColor = useColorModeValue("gray.600", "gray.200");
-  const popoverContentBgColor = useColorModeValue("white", "white");
+  const linkColor = "#FDBA74";
+  const popoverContentBgColor = useColorModeValue("white", "black");
   const brandColor = useBrandColor();
   const { t } = useTranslate();
 
   return (
     <Box maxW={"90vw"}>
-      <Stack direction="row" spacing={4}>
+      <Stack direction="row" spacing={4} align="center" mt={1}>
         {navItems.map((navItem) => (
           <Box key={navItem.label}>
             <Popover trigger="hover" placement="bottom-start">

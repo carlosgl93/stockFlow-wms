@@ -185,7 +185,8 @@ const LogoutButton = ({
 
   return (
     <Button
-      fontWeight={400}
+      fontWeight={600}
+      color={"orange.300"}
       variant="link"
       onClick={mobile ? handleLogout : () => logout().then(() => navigate("/"))}
       w={mobile ? "100%" : undefined}

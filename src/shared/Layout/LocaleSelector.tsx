@@ -6,6 +6,13 @@ const LocaleSelector: React.FC = () => {
 
   return (
     <select
+      style={{
+        padding: "0.5rem",
+        borderRadius: "0.25rem",
+        border: "1px solid #ccc",
+        backgroundColor: "#fff",
+        color: "#333",
+      }}
       value={locale}
       onChange={(e) => setLocale(e.target.value as LocaleEnum)}
     >
