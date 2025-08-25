@@ -25,7 +25,7 @@ export const DesktopNav = () => {
   const navItems = useNavItems();
 
   const linkColor = "#FDBA74";
-  const popoverContentBgColor = useColorModeValue("white", "black");
+  const popoverContentBgColor = useColorModeValue("white", "#FDBA74");
   const brandColor = useBrandColor();
   const { t } = useTranslate();
 
@@ -127,7 +127,15 @@ const DesktopSubNav = ({ label, href, subLabel }: INavItem) => {
           >
             {t(label)}
           </Text>
-          {subLabel && <Text fontSize={"sm"}>{t(subLabel)}</Text>}
+          {subLabel && (
+            <Text
+              fontSize={"sm"}
+              _groupHover={{ color: brandColor }}
+              fontWeight="bold"
+            >
+              {t(subLabel)}
+            </Text>
+          )}
         </Box>
         <Flex
           transition="all .3s ease"
