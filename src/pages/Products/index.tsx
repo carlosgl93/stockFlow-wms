@@ -10,6 +10,7 @@ import { loadProductsFromExcel } from "modules/products/utils/loadProductsFromEx
 import { IProduct } from "modules/products/types";
 import { Logger } from "utils/logger";
 import { ConfirmationModal } from "../../shared/ConfirmationModal";
+import { OrangeButton } from "modules/components";
 
 const ProductsPage = () => {
   const redirect = useRedirect();
@@ -76,12 +77,10 @@ const ProductsPage = () => {
         description={t("Create, edit, remove products.")}
       >
         <Box display="flex" alignItems="center" gap={4}>
-          <Text>
+          <Text color={"blackAlpha.700"}>
             {t("Total registers: ")} {total} {t("Pages:")} {pages}
           </Text>
-          <Button leftIcon={<AddIcon />} onClick={handleCreate}>
-            {t("Create")}
-          </Button>
+          <OrangeButton onClick={handleCreate} text={t("Create")} />
         </Box>
       </PageHeader>
       {isPreviewFromExcelLoad && uploadedProducts && (
@@ -116,7 +115,6 @@ const ProductsPage = () => {
           isPreview={isPreviewFromExcelLoad}
         />
       )}
-
       <ConfirmationModal
         isOpen={isConfirmationModalOpen}
         onClose={() => {

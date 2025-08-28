@@ -232,6 +232,9 @@ const StockPage = () => {
                   )}
                   <Select
                     {...field}
+                    sx={{
+                      border: "1px solid orange",
+                    }}
                     onChange={(e) => {
                       setSearchedStockProduct(e.target.value);
                     }}
@@ -272,6 +275,9 @@ const StockPage = () => {
                   )}
                   <Select
                     {...field}
+                    sx={{
+                      border: "1px solid orange",
+                    }}
                     onChange={(e) => {
                       Logger.info(e.target.value);
                       setLotSelected(e.target.value);
@@ -296,7 +302,7 @@ const StockPage = () => {
               <FormLabel>&nbsp;</FormLabel>
             </FlexBox>
             <Button
-              colorScheme="gray"
+              colorScheme="black"
               variant="outline"
               onClick={handleClearFilters}
               size="md"
@@ -309,7 +315,7 @@ const StockPage = () => {
               <FormLabel>&nbsp;</FormLabel>
             </FlexBox>
             <Button
-              colorScheme="gray"
+              colorScheme="black"
               variant="outline"
               onClick={onDownloadAllStock}
               size="md"

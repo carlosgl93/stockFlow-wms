@@ -94,6 +94,7 @@ export const CreateDispatchForm = ({
     setIsSearchingLot,
     getProductLotsData,
     setProductId,
+    lotId,
     setLotId,
     totalStockByLotAndProduct,
     isLoadingTotalStockByLotAndProduct,
@@ -140,7 +141,14 @@ export const CreateDispatchForm = ({
               render={({ field }) => (
                 <RadioGroup {...field} display={"flex"} gap={4} mt={4}>
                   {Object.values(DocumentType).map((type) => (
-                    <Radio key={type} value={type}>
+                    <Radio
+                      sx={{
+                        border: "1px solid black",
+                        colorScheme: "black",
+                      }}
+                      key={type}
+                      value={type}
+                    >
                       {t(type)}
                     </Radio>
                   ))}
@@ -160,7 +168,13 @@ export const CreateDispatchForm = ({
               control={control}
               defaultValue=""
               rules={{ required: dispatchToEdit ? false : true }}
-              render={({ field }) => <Input {...field} mt={4} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                  mt={4}
+                />
+              )}
             />
             {errors.docNumber && (
               <Text color="red.500" fontSize="sm">
@@ -205,6 +219,7 @@ export const CreateDispatchForm = ({
                       watch("supplierId") === undefined ? null : (
                       <Select
                         {...field}
+                        sx={{ border: "1px solid black", colorScheme: "black" }}
                         onChange={(e) => {
                           setIsSearchingSupplier(false); // Close the search
                           field.onChange(e); // Update the form state
@@ -264,6 +279,7 @@ export const CreateDispatchForm = ({
                       watch("transporterId") === undefined ? null : (
                       <Select
                         {...field}
+                        sx={{ border: "1px solid black", colorScheme: "black" }}
                         onChange={(e) => {
                           field.onChange(e); // Update the form state
                           setIsSearchingTransporter(false); // Close the search
@@ -299,6 +315,7 @@ export const CreateDispatchForm = ({
                 render={({ field }) => (
                   <Input
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     type="date"
                     size="md"
                     variant="outline"
@@ -351,6 +368,7 @@ export const CreateDispatchForm = ({
                   )}
                   <Select
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     onChange={(e) => {
                       field.onChange(e); // Update the form state
                       setProductId(e.target.value); // Update the product ID
@@ -411,6 +429,7 @@ export const CreateDispatchForm = ({
                   )} */}
                   <Select
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     onChange={(e) => {
                       field.onChange(e);
                       setIsSearchingLot(false);
@@ -435,19 +454,24 @@ export const CreateDispatchForm = ({
           </FormControl>
           <FormControl mb={4} isInvalid={!!errors.placeId}>
             <FormLabel my={3}>{t("Place")}</FormLabel>
-
             <Controller
               name="placeId"
               control={control}
               defaultValue={undefined}
               rules={{ required: true }}
               render={({ field }) =>
-                isLoadingGetPlaces || isLoadingTotalStockByLotAndProduct ? (
+                selectedProduct &&
+                lotId &&
+                (isLoadingGetPlaces || isLoadingTotalStockByLotAndProduct) ? (
                   <FlexBox justifyContent="center" w={"100%"}>
                     <Loading size="xs" />
                   </FlexBox>
                 ) : (
-                  <Select {...field} value={field.value ?? undefined}>
+                  <Select
+                    {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
+                    value={field.value ?? undefined}
+                  >
                     {getPlacesData?.places?.length === 0 && (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
@@ -492,7 +516,12 @@ export const CreateDispatchForm = ({
               control={control}
               defaultValue=""
               rules={{ required: false }}
-              render={({ field }) => <Input {...field} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                />
+              )}
             />
           </FormControl>
           <FormControl mb={4} isInvalid={!!errors.unitsNumber}>
@@ -547,6 +576,7 @@ export const CreateDispatchForm = ({
               render={({ field }) => (
                 <Input
                   {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
                   type="number"
                   isInvalid={!!errors.unitsNumber}
                 />
@@ -592,6 +622,7 @@ export const CreateDispatchForm = ({
                   <Input
                     type="number"
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     isInvalid={!!errors.looseUnitsNumber}
                   />
                 )}
@@ -711,10 +742,11 @@ export const CreateDispatchForm = ({
                   <Input
                     type="number"
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     {...register("totalUnitsNumber", {
                       valueAsNumber: true,
                     })}
-                    value={displayValue}
+                    value={totalValue}
                     disabled
                   />
                 );
@@ -740,7 +772,11 @@ export const CreateDispatchForm = ({
               <RadioGroup {...field} display={"flex"} gap={4} mt={4}>
                 {Object.values(DispatchedStatus).map((status) => {
                   return (
-                    <Radio key={status} value={status}>
+                    <Radio
+                      sx={{ border: "1px solid black", colorScheme: "black" }}
+                      key={status}
+                      value={status}
+                    >
                       {t(status)}
                     </Radio>
                   );

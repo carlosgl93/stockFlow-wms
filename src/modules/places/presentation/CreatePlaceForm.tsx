@@ -67,13 +67,27 @@ export const CreatePlaceForm = ({ placeToEdit }: { placeToEdit?: IPlace }) => {
       flexDirection={"column"}
     >
       <FormControl mb={4}>
-        <FormLabel>{t("Name")}</FormLabel>
+        <FormLabel
+          sx={{
+            color: "orange",
+          }}
+        >
+          {t("Name")}
+        </FormLabel>
         <Controller
           name="name"
           control={control}
           defaultValue=""
           rules={{ required: true }}
-          render={({ field }) => <Input {...field} />}
+          render={({ field }) => (
+            <Input
+              {...field}
+              sx={{
+                border: "1px solid orange",
+                color: "orange",
+              }}
+            />
+          )}
         />
         {errors.name && <Box color="red">{t("This field is required")}</Box>}
       </FormControl>
@@ -110,7 +124,7 @@ export const CreatePlaceForm = ({ placeToEdit }: { placeToEdit?: IPlace }) => {
           control={control}
           defaultValue=""
           rules={{ required: true }}
-          render={({ field }) => <Input {...field} />}
+          render={({ field }) => <Input {...field} sx={{ border: "1px solid black", colorScheme: "black" }} />}
         />
         {errors.movementHistory && (
           <Box color="red">{t("This field is required")}</Box>

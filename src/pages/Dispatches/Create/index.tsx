@@ -4,6 +4,7 @@ import { ErrorPageStrategy } from "shared/Result";
 import { useTranslate } from "utils";
 import { useNavigate } from "shared/Router";
 import { CreateDispatchForm } from "modules/dispatches/presentation";
+import { Box } from "@chakra-ui/react";
 
 export const CreateDispatchPage = () => {
   const { t } = useTranslate();
@@ -15,8 +16,18 @@ export const CreateDispatchPage = () => {
         title={t("Create Dispatch")}
         description={t("Create your dispatch.")}
         position="sticky"
-      />
-      <Cancel onCancel={() => redirect(-1)} />
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "end",
+            alignItems: "center",
+            mt: 4,
+          }}
+        >
+          <Cancel onCancel={() => redirect(-1)} />
+        </Box>
+      </PageHeader>
       <CreateDispatchForm />
     </Page>
   );

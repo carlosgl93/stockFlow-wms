@@ -26,8 +26,8 @@ const PageHeader = ({
   position = "static",
 }: IProps) => {
   const descriptionColor = useSecondaryTextColor();
-  const secondaryColor = useSecondaryTextColor();
   const colors = useBrandColor();
+
   return (
     <Stack
       direction={{ base: "column", lg: "row" }}
@@ -38,9 +38,10 @@ const PageHeader = ({
       position={position}
       padding={4}
       borderRadius={6}
+      bgColor={"white"}
     >
       <VStack align="start" spacing={1}>
-        <Heading size={size} color={secondaryColor}>
+        <Heading size={size} color={colors}>
           {title}
         </Heading>
         {description && <Text color={descriptionColor}>{description}</Text>}

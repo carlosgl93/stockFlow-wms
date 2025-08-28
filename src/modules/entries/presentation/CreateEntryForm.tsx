@@ -147,6 +147,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
         p={5}
         display={"flex"}
         flexDirection={"column"}
+        // bgColor={"#4D8B31"}
       >
         <Box display="flex" justifyContent="space-around" gap={16}>
           <FormControl mb={4}>
@@ -185,6 +186,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                       watch("supplierId") === undefined ? null : (
                       <Select
                         {...field}
+                        sx={{ border: "1px solid black", colorScheme: "black" }}
                         onChange={(e) => {
                           field.onChange(e); // Update the form state
                           setIsSearchingSupplier(false); // Close the search
@@ -212,7 +214,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               control={control}
               defaultValue=""
               rules={{ required: true }}
-              render={({ field }) => <Input {...field} mt={4} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                  mt={4}
+                />
+              )}
             />
             {errors.docNumber && (
               <Box color="red">{t("This field is required")}</Box>
@@ -255,6 +263,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                       watch("transporterId") === undefined ? null : (
                       <Select
                         {...field}
+                        sx={{ border: "1px solid black", colorScheme: "black" }}
                         onChange={(e) => {
                           field.onChange(e); // Update the form state
                           setIsSearchingTransporter(false); // Close the search
@@ -282,7 +291,16 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               control={control}
               defaultValue={dayjs().format("DD-MM-YYYY")}
               rules={{ required: true }}
-              render={({ field }) => <Input {...field} type="date" />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{
+                    border: "1px solid black",
+                    colorScheme: "black",
+                  }}
+                  type="date"
+                />
+              )}
             />
             {errors.entryDate && (
               <Box color="red">{t("This field is required")}</Box>
@@ -324,6 +342,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   )}
                   <Select
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     value={field.value || ""} // Ensure controlled component
                     onChange={(e) => {
                       field.onChange(e);
@@ -358,7 +377,12 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               control={control}
               defaultValue=""
               rules={{}}
-              render={({ field }) => <Input {...field} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                />
+              )}
             />
             {errors.lotId && (
               <Box color="red">{t("This field is required")}</Box>
@@ -377,7 +401,10 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                     <Loading size="xs" />
                   </FlexBox>
                 ) : (
-                  <Select {...field}>
+                  <Select
+                    {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
+                  >
                     {getPlacesData?.places?.length === 0 ? (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}
@@ -411,7 +438,13 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               control={control}
               defaultValue=""
               rules={{}}
-              render={({ field }) => <Input {...field} type="date" />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                  type="date"
+                />
+              )}
             />
             {errors.expirityDate && (
               <Box color="red">{t("This field is required")}</Box>
@@ -427,7 +460,12 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
               name="palletNumber"
               control={control}
               defaultValue=""
-              render={({ field }) => <Input {...field} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                />
+              )}
             />
           </FormControl>
           <FormControl mb={4}>
@@ -481,6 +519,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                 <Input
                   type="number"
                   {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
                   {...register("unitsNumber", {
                     valueAsNumber: true,
                   })}
@@ -519,6 +558,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                 render={({ field }) => (
                   <Input
                     type="number"
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     {...field}
                     {...register("looseUnitsNumber", {
                       valueAsNumber: true,
@@ -623,6 +663,7 @@ export const CreateEntryForm = ({ entryToEdit }: { entryToEdit?: IEntry }) => {
                   <Input
                     type="number"
                     {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
                     {...register("totalUnitsNumber", {
                       valueAsNumber: true,
                     })}

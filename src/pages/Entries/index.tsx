@@ -1,5 +1,6 @@
 import { AddIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
+import { OrangeButton } from "modules/components";
 import { EntriesListController } from "modules/entries/infraestructure";
 import { EntriesList } from "modules/entries/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -25,9 +26,7 @@ const EntriesPage = () => {
           {/* <Text>
             {t("Total registers: ")} {total} {t("Pages:")} {pages}
           </Text> */}
-          <Button leftIcon={<AddIcon />} onClick={handleCreate}>
-            {t("Create")}
-          </Button>
+          <OrangeButton onClick={handleCreate} text={t("Create")} />
         </Box>
       </PageHeader>
       {isLoadingGetEntries ? <Loading size="md" /> : <EntriesList />}

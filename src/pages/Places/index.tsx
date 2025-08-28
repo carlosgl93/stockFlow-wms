@@ -1,5 +1,6 @@
 import { AddIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
+import { OrangeButton } from "modules/components";
 import { usePlaces } from "modules/places/infra";
 import { PlacesList } from "modules/places/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -32,9 +33,7 @@ const PlacesPage = () => {
             {t("Search")}
           </Button> */}
 
-          <Button leftIcon={<AddIcon />} onClick={handleCreate}>
-            {t("Create")}
-          </Button>
+          <OrangeButton text={t("Create")} onClick={handleCreate} />
         </Box>
       </PageHeader>
       <PlacesList

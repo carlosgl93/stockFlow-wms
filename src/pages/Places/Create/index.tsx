@@ -23,8 +23,8 @@ export const CreatePlace = () => {
         <Button leftIcon={<CheckIcon />} onClick={() => {}}>
           {t("Create")}
         </Button> */}
+        <Cancel onCancel={() => redirect(-1)} />
       </PageHeader>
-      <Cancel onCancel={() => redirect(-1)} />
       <CreatePlaceForm />
     </Page>
   );

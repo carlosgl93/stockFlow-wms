@@ -201,7 +201,12 @@ export const CreateStockForm = ({ stockToEdit }: { stockToEdit?: IStock }) => {
               control={control}
               defaultValue=""
               rules={{ required: true }}
-              render={({ field }) => <Input {...field} />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                />
+              )}
             />
             {errors.lotId && (
               <Box color="red">{t("This field is required")}</Box>
@@ -223,7 +228,10 @@ export const CreateStockForm = ({ stockToEdit }: { stockToEdit?: IStock }) => {
                     <Loading size="xs" />
                   </FlexBox>
                 ) : (
-                  <Select {...field}>
+                  <Select
+                    {...field}
+                    sx={{ border: "1px solid black", colorScheme: "black" }}
+                  >
                     {getPlacesData?.places.length === 0 ? (
                       <option value="" style={{ color: "red" }}>
                         {t("There are no places created!")}

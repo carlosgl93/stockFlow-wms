@@ -10,6 +10,30 @@ export const theme = extendTheme({
     heading: `'Inter', sans-serif`,
     body: `'Inter', sans-serif`,
   },
+  buttons: {
+    base: {
+      borderRadius: "md",
+      fontWeight: "semibold",
+      textTransform: "uppercase",
+      backgroundColor: "orange",
+    },
+    solid: {
+      bg: "orange",
+      color: "white",
+      _hover: {
+        bg: "primaryHover",
+      },
+    },
+    outline: {
+      border: "2px solid",
+      borderColor: "primary",
+      color: "primary",
+      _hover: {
+        bg: "primary",
+        color: "white",
+      },
+    },
+  },
 });
 
 export const lightTheme = extendTheme({

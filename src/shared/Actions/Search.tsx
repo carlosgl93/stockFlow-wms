@@ -7,7 +7,12 @@ type SearchProps = {
 
 export const Search = ({ onSearch }: SearchProps) => {
   return (
-    <Button onClick={onSearch}>
+    <Button
+      onClick={onSearch}
+      sx={{
+        backgroundColor: "orange",
+      }}
+    >
       <SearchIcon />
     </Button>
   );

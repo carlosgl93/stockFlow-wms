@@ -15,8 +15,9 @@ export const CreateEntryPage = () => {
         title={t("Create Entry")}
         description={t("Create your entry.")}
         position="sticky"
-      />
-      <Cancel onCancel={() => redirect(-1)} />
+      >
+        <Cancel onCancel={() => redirect(-1)} />
+      </PageHeader>
       <CreateEntryForm />
     </Page>
   );

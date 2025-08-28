@@ -110,7 +110,12 @@ export const CreateTransporterForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>

@@ -22,7 +22,7 @@ export const Search = <T,>({
   setIsLoading,
 }: SearchProps<T>) => {
   const [query, setQuery] = useState("");
-  const textColor = useBrandColor();
+  const textColor = "black";
   const [displayFeedback, setDisplayFeedback] = useState(false);
   const { t } = useTranslate();
 
@@ -77,6 +77,11 @@ export const Search = <T,>({
         placeholder={t(placeholderText)}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        sx={{
+          border: "1px solid orange",
+          color: "black",
+          _placeholder: { color: "gray" },
+        }}
       />
       {displayFeedback && (
         <Box px={2} py={1}>

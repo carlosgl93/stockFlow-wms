@@ -1,19 +1,7 @@
 import { db } from "shared/firebase";
 import { Logger } from "utils/logger";
 import { getHumanReadableError } from "shared/Error";
-import { dateVO } from "utils/format";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  doc,
-  getDoc,
-  query,
-  orderBy,
-  where,
-  runTransaction,
-  DocumentReference,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { IStock } from "modules/stock/types";
 
 export const getTotalStockByProductIdAndLotId = async (
@@ -22,7 +10,7 @@ export const getTotalStockByProductIdAndLotId = async (
 ): Promise<IStock | null> => {
   try {
     const stockQuery = query(
-      collection(db, "lotProducts"),
+      collection(db, "stock"),
       where("productId", "==", productId),
       where("lotId", "==", lotId)
     );

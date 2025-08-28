@@ -112,7 +112,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.company && (
             <Box color="red">{t("This field is required")}</Box>
@@ -125,7 +130,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.idNumber && (
             <Box color="red">{t("This field is required")}</Box>
@@ -138,7 +148,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.businessCategory && (
             <Box color="red">{t("This field is required")}</Box>
@@ -151,7 +166,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.county && (
             <Box color="red">{t("This field is required")}</Box>
@@ -164,7 +184,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.region && (
             <Box color="red">{t("This field is required")}</Box>
@@ -176,7 +201,12 @@ export const CreateSupplierForm = ({
             name="fax"
             control={control}
             defaultValue=""
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.fax && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
@@ -187,7 +217,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.phone && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
@@ -197,7 +232,12 @@ export const CreateSupplierForm = ({
             name="website"
             control={control}
             defaultValue=""
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.website && (
             <Box color="red">{t("This field is required")}</Box>
@@ -210,7 +250,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.email && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
@@ -221,7 +266,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.address && (
             <Box color="red">{t("This field is required")}</Box>
@@ -234,7 +284,12 @@ export const CreateSupplierForm = ({
             control={control}
             defaultValue=""
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.contact?.name && (
             <Box color="red">{t("This field is required")}</Box>
@@ -246,7 +301,12 @@ export const CreateSupplierForm = ({
             name="contact.email"
             control={control}
             defaultValue=""
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.contact?.email && (
             <Box color="red">{t("This field is required")}</Box>
@@ -258,7 +318,12 @@ export const CreateSupplierForm = ({
             name="contact.phone"
             control={control}
             defaultValue=""
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.contact?.phone && (
             <Box color="red">{t("This field is required")}</Box>

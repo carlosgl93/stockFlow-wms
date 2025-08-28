@@ -12,13 +12,24 @@ export const AddButton = ({ onAdd, text }: AddProps) => {
 
   if (text) {
     return (
-      <Button onClick={onAdd} leftIcon={<AddIcon m={0} />}>
+      <Button
+        sx={{
+          backgroundColor: "orange",
+        }}
+        onClick={onAdd}
+        leftIcon={<AddIcon m={0} />}
+      >
         {t(text)}
       </Button>
     );
   }
   return (
-    <Button onClick={onAdd}>
+    <Button
+      onClick={onAdd}
+      sx={{
+        backgroundColor: "orange",
+      }}
+    >
       <AddIcon />
     </Button>
   );

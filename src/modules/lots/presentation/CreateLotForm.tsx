@@ -74,7 +74,12 @@ export const CreateLotForm = ({ lotToEdit }: { lotToEdit?: ILot }) => {
           control={control}
           defaultValue=""
           rules={{ required: true }}
-          render={({ field }) => <Input {...field} />}
+          render={({ field }) => (
+            <Input
+              {...field}
+              sx={{ border: "1px solid black", colorScheme: "black" }}
+            />
+          )}
         />
         {errors.name && <Box color="red">{t("This field is required")}</Box>}
       </FormControl>
@@ -111,7 +116,7 @@ export const CreateLotForm = ({ lotToEdit }: { lotToEdit?: ILot }) => {
           control={control}
           defaultValue=""
           rules={{ required: true }}
-          render={({ field }) => <Input {...field} />}
+          render={({ field }) => <Input {...field} sx={{ border: "1px solid black", colorScheme: "black" }} />}
         />
         {errors.movementHistory && (
           <Box color="red">{t("This field is required")}</Box>

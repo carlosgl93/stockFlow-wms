@@ -21,6 +21,7 @@ const Page = ({ children, maxW = "container.xl", ...props }: IProps) => {
       maxW={maxW}
       m="0 auto"
       {...props}
+      bgColor="white"
     >
       {children}
     </VStack>

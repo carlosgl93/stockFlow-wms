@@ -679,6 +679,7 @@ export const CreateDispatchController = ({
     isLoadingGetProductLots,
     setProductId,
     setValue,
+    lotId,
     setLotId,
     totalStockByLotAndProduct,
     isLoadingTotalStockByLotAndProduct,

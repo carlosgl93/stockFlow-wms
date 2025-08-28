@@ -24,6 +24,7 @@ import { useLocation } from "shared/Router";
 import { useProducts } from "../infrastructure";
 import { Loading } from "shared/Layout";
 import { calculateUnitsPerSurface } from "../utils";
+import { useSecondaryTextColor } from "theme";
 
 export const CreateProductForm = ({
   productToEdit,
@@ -97,6 +98,7 @@ export const CreateProductForm = ({
   const unitsPerBox = watch("boxDetails.units") || 0;
   const kilos = watch("boxDetails.kilos") || 0;
 
+  const secondaryColor = useSecondaryTextColor();
   useEffect(() => {
     setValue("selectionType", "unit");
   }, []);
@@ -116,6 +118,7 @@ export const CreateProductForm = ({
       p={5}
       display={"flex"}
       flexDirection={"column"}
+      // bgColor={"#4D8B31"}
     >
       {/* PRODUCT */}
       <Box display="flex" justifyContent="space-around" gap={16}>
@@ -126,7 +129,12 @@ export const CreateProductForm = ({
             control={control}
             defaultValue="ext123"
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.extCode && (
             <Box color="red">{t("This field is required")}</Box>
@@ -139,7 +147,7 @@ export const CreateProductForm = ({
             control={control}
             rules={{ required: false}}
             defaultValue="int123"
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => <Input {...field} sx={{ border: "1px solid black", colorScheme: "black" }} />}
           />
           {errors.internalCode && (
             <Box color="red">{t("This field is required")}</Box>
@@ -152,7 +160,12 @@ export const CreateProductForm = ({
             control={control}
             defaultValue="Valor 4%"
             rules={{ required: true }}
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              />
+            )}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
         </FormControl>
@@ -174,7 +187,10 @@ export const CreateProductForm = ({
             defaultValue={RiskCategory.Toxic}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              >
                 <option value="">{t("Select Risk Category")}</option>
                 {Object.values(RiskCategory).map((category) => (
                   <option key={category} value={category}>
@@ -194,7 +210,10 @@ export const CreateProductForm = ({
             defaultValue={Category.Acaricide}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              >
                 <option value="">{t("Select Category")}</option>
                 {Object.values(Category).map((category) => (
                   <option key={category} value={category}>
@@ -274,7 +293,10 @@ export const CreateProductForm = ({
             defaultValue={IUnitOfMeasure.CC}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              >
                 <option value="">{t("Select Unit of Measure")}</option>
                 {Object.values(IUnitOfMeasure).map((measure) => {
                   return (
@@ -355,7 +377,14 @@ export const CreateProductForm = ({
               if (["ML", "Gram", "C.C"].includes(unit || "")) {
                 value = value ? value / 1000 : 0;
               }
-              return <Input {...field} value={value} disabled />;
+              return (
+                <Input
+                  {...field}
+                  sx={{ border: "1px solid black", colorScheme: "black" }}
+                  value={value}
+                  disabled
+                />
+              );
             }}
           />
           {errors.name && <Box color="red">{t("This field is required")}</Box>}
@@ -402,7 +431,10 @@ export const CreateProductForm = ({
             defaultValue={IContainer.Bidon}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              >
                 <option value="">{t("Select Container")}</option>
                 {Object.values(IContainer).map((container) => (
                   <option key={container} value={container}>
@@ -422,7 +454,10 @@ export const CreateProductForm = ({
             defaultValue={IMaterialType.Plastic}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select {...field}>
+              <Select
+                {...field}
+                sx={{ border: "1px solid black", colorScheme: "black" }}
+              >
                 <option value="">{t("Select Type")}</option>
                 {Object.values(IMaterialType).map((type) => (
                   <option key={type} value={type}>
@@ -547,7 +582,7 @@ export const CreateProductForm = ({
           <Controller
             name="boxDetails.unitsPerSurface"
             control={control}
-            render={({ field }) => <Input {...field} readOnly disabled />}
+            render={({ field }) => <Input {...field} sx={{ border: "1px solid black", colorScheme: "black" }} readOnly disabled />}
           />
         </FormControl>
       </Box> */}

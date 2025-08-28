@@ -1,5 +1,6 @@
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { Box, Button, Text } from "@chakra-ui/react";
+import { OrangeButton } from "modules/components";
 import { useDispatches } from "modules/dispatches/infraestructure";
 import { DispatchesList } from "modules/dispatches/presentation";
 import { Loading, Page, PageHeader } from "shared/Layout";
@@ -26,14 +27,8 @@ const DispatchesPage = () => {
         title={t("Dispatches list")}
         description={t("Create, edit, remove dispatches.")}
       >
-        <Box display="flex" alignItems="center" gap={4}>
-          <Text>
-            {/* {t("Total registers: ")} {total} {t("Pages:")} {pages} */}
-          </Text>
-
-          <Button leftIcon={<AddIcon />} onClick={handleCreate}>
-            {t("Create")}
-          </Button>
+        <Box display="flex" alignItems="end" gap={4}>
+          <OrangeButton onClick={handleCreate} text={t("Create")} />
         </Box>
       </PageHeader>
       {isLoadingGetDispatches ? (

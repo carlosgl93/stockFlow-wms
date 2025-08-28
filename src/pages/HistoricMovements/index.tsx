@@ -136,6 +136,9 @@ const HistoricMovements = () => {
                     )}
                     <Select
                       {...field}
+                      sx={{
+                        border: "1px solid orange",
+                      }}
                       onChange={(e) => {
                         const value = e.target.value;
                         setSearchedStockProduct(value);
@@ -158,7 +161,13 @@ const HistoricMovements = () => {
           <Box display={"flex"} flexDirection="column" gap={4} flex={1.25}>
             <FormControl mb={4}>
               <FormLabel>{t("Type")}</FormLabel>
-              <Select onChange={handleTypeChange} value={selectedType || ""}>
+              <Select
+                onChange={handleTypeChange}
+                value={selectedType || ""}
+                sx={{
+                  border: "1px solid orange",
+                }}
+              >
                 <option value="">{t("All")}</option>
                 <option value="entry">{t("Entries")}</option>
                 <option value="dispatch">{t("Dispatches")}</option>
@@ -170,7 +179,7 @@ const HistoricMovements = () => {
             <FormControl mb={4}>
               <FormLabel>&nbsp;</FormLabel>
               <Button
-                colorScheme="gray"
+                colorScheme="black"
                 variant="outline"
                 onClick={handleClearFilters}
                 size="md"

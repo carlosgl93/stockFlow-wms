@@ -6,7 +6,17 @@ export const Cancel = ({ onCancel }: { onCancel: () => void }) => {
   const { t } = useTranslate();
 
   return (
-    <Button onClick={onCancel} leftIcon={<ArrowBackIcon />}>
+    <Button
+      sx={{
+        backgroundColor: "orange",
+        mb: 2,
+      }}
+      onClick={onCancel}
+      leftIcon={<ArrowBackIcon />}
+      _hover={{
+        bgColor: "orange.400",
+      }}
+    >
       {t("Cancel")}
     </Button>
   );

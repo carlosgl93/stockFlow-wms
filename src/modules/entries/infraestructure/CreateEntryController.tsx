@@ -376,7 +376,7 @@ export const CreateEntryController = ({
         ) {
           totalUnitsnumber = (p.unitsNumber * p.qPerUnit) / 1000;
         } else {
-          totalUnitsnumber = p.unitsNumber;
+          totalUnitsnumber = p.unitsNumber * p.qPerUnit;
         }
 
         if (!acc.find((row) => row.id === uniqueId)) {

@@ -1,10 +1,6 @@
-import { DeleteIcon, CheckIcon } from "@chakra-ui/icons";
-import { Button } from "@chakra-ui/react";
-
 import { Page, PageHeader } from "shared/Layout";
 import { ErrorPageStrategy } from "shared/Result";
 
-import { withRequireAuth } from "modules/auth/application";
 import { CreateProductForm } from "modules/products/presentation";
 import { useTranslate } from "utils";
 import { useNavigate } from "shared/Router";
