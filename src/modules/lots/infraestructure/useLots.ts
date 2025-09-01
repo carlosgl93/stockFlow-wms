@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@chakra-ui/react";
-import { UpdateLotParams, addLot, removeLot, updateLot } from "./mutations";
+import { addLot, removeLot } from "./mutations";
 import { queryClient, useQuery, useRedirect, useTranslate } from "utils";
 import { getLots } from "./queries/getLots";
 import { getProductLots } from "./queries";
@@ -34,29 +34,6 @@ export const useLots = ({ productId = "" }: UseLotsProps) => {
       });
     },
   });
-
-  const {
-    mutate: updateLotMutation,
-    isLoading: isLoadingUpdateLot,
-    isError: isErrorUpdateLot,
-  } = useMutation(
-    ({ lotId, values }: UpdateLotParams) => updateLot({ lotId, values }),
-    {
-      onSuccess: () => {
-        toast({
-          title: t("Lot updated successfully."),
-          status: "success",
-        });
-        queryClient.invalidateQueries(["lots"]);
-      },
-      onError: () => {
-        toast({
-          title: t("Failed to update lot."),
-          status: "error",
-        });
-      },
-    }
-  );
 
   const {
     mutate: removeLotMutation,
@@ -114,9 +91,6 @@ export const useLots = ({ productId = "" }: UseLotsProps) => {
     addLotMutation,
     isLoadingAddLot,
     isErrorAddLot,
-    updateLotMutation,
-    isLoadingUpdateLot,
-    isErrorUpdateLot,
     removeLotMutation,
     isLoadingRemoveLot,
     isErrorRemoveLot,

@@ -89,12 +89,7 @@ export const CreateDispatchController = ({
     register,
   } = useForm<IDispatchForm>();
 
-  const {
-    getLotsData,
-    isLoadingGetLots,
-    getProductLotsData,
-    isLoadingGetProductLots,
-  } = useLots({
+  const { getProductLotsData, isLoadingGetProductLots } = useLots({
     productId,
   });
 
@@ -577,7 +572,6 @@ export const CreateDispatchController = ({
     getTransporters,
     getProductsData,
     getPlacesData,
-    getLotsData,
     getProductLotsData,
   ]);
 
@@ -675,7 +669,6 @@ export const CreateDispatchController = ({
     isSearchingLot,
     setIsSearchingLot,
     getProductLotsData,
-    isLoadingGetLots,
     isLoadingGetProductLots,
     setProductId,
     setValue,

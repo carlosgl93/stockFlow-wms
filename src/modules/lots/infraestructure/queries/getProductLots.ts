@@ -24,8 +24,8 @@ export const getProductLots = async ({
 }: {
   productId?: string;
 }): Promise<{ lots: IStock[]; lastVisible: string }> => {
-  const lotProductRef = collection(db, "lotProducts");
-  let q = query(lotProductRef, where("productId", "==", productId));
+  const stockRef = collection(db, "stock");
+  let q = query(stockRef, where("productId", "==", productId));
 
   try {
     const querySnapshot = await getDocs(q);
@@ -37,7 +37,7 @@ export const getProductLots = async ({
     const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
     return { lots, lastVisible: lastVisibleDoc?.id };
   } catch (error) {
-    Logger.error("Failed to retrieve LotProducts", [error]);
-    throw new APIError("Failed to retrieve LotProducts", error);
+    Logger.error("Failed to retrieve Stock", [error]);
+    throw new APIError("Failed to retrieve Stock", error);
   }
 };

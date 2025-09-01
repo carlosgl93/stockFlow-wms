@@ -207,43 +207,6 @@ export const addEntry = async (entry: EntryDTO): Promise<void> => {
           lotId: lotId,
           createdAt: now,
         });
-
-        // Add or update LotProduct entry
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductRef = doc(
-            db,
-            "lotProducts",
-            lotProductSnapshot.docs[0].id
-          );
-          const lotProductData = lotProductSnapshot.docs[0].data();
-          transaction.update(lotProductRef, {
-            unitsNumber:
-              (lotProductData.unitsNumber || 0) + product.unitsNumber,
-            looseUnitsNumber:
-              (lotProductData.looseUnitsNumber || 0) + product.looseUnitsNumber,
-            placeId: product?.placeId,
-            expirationDate:
-              product?.expirityDate || lotProductData.expirationDate,
-          });
-        } else {
-          const lotProductRef = doc(collection(db, "lotProducts"));
-          transaction.set(lotProductRef, {
-            id: lotProductRef.id,
-            lotId: lotId,
-            productId: product.id,
-            unitsNumber: product.unitsNumber,
-            looseUnitsNumber: product.looseUnitsNumber || 0,
-            placeId: product?.placeId,
-            expirationDate: product?.expirityDate,
-          });
-        }
       }
     });
   } catch (error) {
@@ -444,36 +407,6 @@ export const updateEntry = async ({
             updatedAt: dateVO.now(),
           });
         }
-
-        // Update LotProduct entry for deleted product
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", existingProduct.id),
-          where("lotId", "==", existingProduct.lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            lotProductData.unitsNumber - existingProduct.unitsNumber;
-          const newLooseUnitsNumber =
-            lotProductData.looseUnitsNumber - existingProduct.looseUnitsNumber;
-
-          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-            // If more units exist, update the quantity
-            transaction.update(lotProductRef, {
-              unitsNumber: Math.max(0, newUnitsNumber),
-              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            });
-          } else {
-            // If all units are removed, delete the lotProduct entry
-            transaction.delete(lotProductRef);
-          }
-        }
       }
 
       // Process each product in productsToEnter
@@ -594,49 +527,6 @@ export const updateEntry = async ({
             createdAt: dateVO.now(),
           });
         }
-
-        // Update LotProduct entry
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", product.id),
-          where("lotId", "==", lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            (lotProductData.unitsNumber || 0) + (unitsDifference || 0);
-          const newLooseUnitsNumber =
-            (lotProductData.looseUnitsNumber || 0) +
-            (looseUnitsDifference || 0);
-
-          transaction.update(lotProductRef, {
-            id: lotProductRef.id,
-            lotId: lotId,
-            productId: product.id,
-            unitsNumber: Math.max(0, newUnitsNumber),
-            expirationDate:
-              product?.expirityDate || lotProductData.expirationDate,
-            looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            placeId: product?.placeId,
-          });
-        } else {
-          const lotProductRef = doc(collection(db, "lotProducts"));
-          transaction.set(lotProductRef, {
-            id: lotProductRef.id,
-            lotId: lotId,
-            productId: product.id,
-            unitsNumber: product.unitsNumber,
-            looseUnitsNumber: product.looseUnitsNumber || 0,
-            expirationDate: product?.expirityDate,
-            placeId:
-              values.products.find((p) => p.id === product.id)?.placeId || "",
-          });
-        }
       }
 
       // Delete products that are no longer in the updated entry
@@ -667,37 +557,6 @@ export const updateEntry = async ({
                 stockData.looseUnitsNumber - existingProduct.looseUnitsNumber,
               updatedAt: dateVO.now(),
             });
-          }
-
-          // Update LotProduct entry for deleted product
-          const lotProductQuery = query(
-            collection(db, "lotProducts"),
-            where("productId", "==", existingProduct.id),
-            where("lotId", "==", existingProduct.lotId)
-          );
-          const lotProductSnapshot = await getDocs(lotProductQuery);
-
-          if (!lotProductSnapshot.empty) {
-            const lotProductDoc = lotProductSnapshot.docs[0];
-            const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-            const lotProductData = lotProductDoc.data();
-
-            const newUnitsNumber =
-              lotProductData.unitsNumber - existingProduct.unitsNumber;
-            const newLooseUnitsNumber =
-              lotProductData.looseUnitsNumber -
-              existingProduct.looseUnitsNumber;
-
-            if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-              // If more units exist, update the quantity
-              transaction.update(lotProductRef, {
-                unitsNumber: Math.max(0, newUnitsNumber),
-                looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-              });
-            } else {
-              // If all units are removed, delete the lotProduct entry
-              transaction.delete(lotProductRef);
-            }
           }
         }
       }
@@ -762,36 +621,6 @@ export const removeEntry = async (entryId: string): Promise<void> => {
               stockData.looseUnitsNumber - existingProduct.looseUnitsNumber,
             updatedAt: dateVO.now(),
           });
-        }
-
-        // Update LotProduct entry for each product
-        const lotProductQuery = query(
-          collection(db, "lotProducts"),
-          where("productId", "==", existingProduct.id),
-          where("lotId", "==", existingProduct.lotId)
-        );
-        const lotProductSnapshot = await getDocs(lotProductQuery);
-
-        if (!lotProductSnapshot.empty) {
-          const lotProductDoc = lotProductSnapshot.docs[0];
-          const lotProductRef = doc(db, "lotProducts", lotProductDoc.id);
-          const lotProductData = lotProductDoc.data();
-
-          const newUnitsNumber =
-            lotProductData.unitsNumber - existingProduct.unitsNumber;
-          const newLooseUnitsNumber =
-            lotProductData.looseUnitsNumber - existingProduct.looseUnitsNumber;
-
-          if (newUnitsNumber > 0 || newLooseUnitsNumber > 0) {
-            // If more units exist, update the quantity
-            transaction.update(lotProductRef, {
-              unitsNumber: Math.max(0, newUnitsNumber),
-              looseUnitsNumber: Math.max(0, newLooseUnitsNumber),
-            });
-          } else {
-            // If all units are removed, delete the lotProduct entry
-            transaction.delete(lotProductRef);
-          }
         }
 
         // Delete the product entry
